@@ -6,7 +6,7 @@ from quarry.mojang.profile import Profile
 ###   logs in and prints the player list
 ###
 
-class PlayerListClientProtocol(ClientProtocol):
+class PlayerListProtocol(ClientProtocol):
     protocol_mode_next = "login"
 
     def setup(self):
@@ -20,8 +20,6 @@ class PlayerListClientProtocol(ClientProtocol):
 
         if p_online:
             self.players[p_player_name] = p_ping
-        else:
-            del self.players[p_player_name]
 
     @register("play", 0x08)
     def player_position_and_look(self, buff):
@@ -33,8 +31,9 @@ class PlayerListClientProtocol(ClientProtocol):
         self.factory.stop()
 
 
-class PlayerListClientFactory(ClientFactory):
-    protocol = PlayerListClientProtocol
+class PlayerListFactory(ClientFactory):
+    protocol = PlayerListProtocol
+
 
 def main():
     # Parse options
@@ -51,7 +50,7 @@ def main():
     profile = Profile()
 
     # Create factory
-    factory = PlayerListClientFactory()
+    factory = PlayerListFactory()
     factory.profile = profile
 
     def login_ok(data):

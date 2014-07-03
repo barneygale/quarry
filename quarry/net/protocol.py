@@ -15,7 +15,6 @@ protocol_modes = {
     2: 'login',
     3: 'play'
 }
-
 protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.iteritems()))
 
 
@@ -32,6 +31,8 @@ class ProtocolError(Exception):
 
 
 class Protocol(protocol.Protocol, object):
+    """Shared logic between the client and server"""
+
     protocol_mode = "init"
 
     def __init__(self, factory, addr):
@@ -67,18 +68,16 @@ class Protocol(protocol.Protocol, object):
 
     ### Convenience functions -------------------------------------------------
 
-    def close(self):
-        """
-        Closes the connection
-        """
+    def close(self, reason=None):
+        """Closes the connection"""
 
+        if reason:
+            self.logger.debug("Closing connection: %s" % reason)
         self.connection_timer.stop()
         self.transport.loseConnection()
 
     def log_packet(self, prefix, ident):
-        """
-        Logs a packet at debug level
-        """
+        """Logs a packet at debug level"""
 
         self.logger.debug("packet %s %s/%02x" % (
             prefix,
@@ -88,38 +87,46 @@ class Protocol(protocol.Protocol, object):
     ### General callbacks -----------------------------------------------------
 
     def setup(self):
-        """
-        Called when the object's initialiser is finished
-        """
+        """Called when the object's initialiser is finished"""
 
         pass
 
     ### Auth callbacks --------------------------------------------------------
 
     def auth_ok(self, data):
-        """
-        Called when auth with mojang succeeded (online mode only)
-        """
-        raise NotImplementedError
+        """Called when auth with mojang succeeded (online mode only)"""
 
-    def auth_failed(self, error):
-        raise NotImplementedError
+        pass
+
+    def auth_failed(self, err):
+        """Called when auth with mojang failed (online mode only)"""
+
+        self.close("Auth failed: %s" % err.value)
 
     ### Player callbacks ------------------------------------------------------
 
     def player_joined(self):
-        raise NotImplementedError
+        """Called when the protocol mode has switched to "play" """
+
+        pass
 
     def player_left(self):
-        raise NotImplementedError
+        """Called when the player leaves"""
+
+
+        pass
 
     ### Error callbacks -------------------------------------------------------
 
-    def protocol_error(self, error):
-        raise NotImplementedError
+    def protocol_error(self, err):
+        """Called when a protocol error occurs"""
+
+        self.close("Protocol error: %s" % err.value)
 
     def connection_timed_out(self):
-        raise NotImplementedError
+        """Called when the connection has been idle too long"""
+
+        self.close("Connection timed out")
 
     ### Packet handling -------------------------------------------------------
 
@@ -168,6 +175,8 @@ class Protocol(protocol.Protocol, object):
             self.connection_timer.reset()
 
     def packet_received(self, buff, ident):
+        """ Dispatches packet to registered handler """
+
         self.log_packet("<<", ident)
 
         handler = self.packet_handlers.get((self.protocol_mode, ident), None)
@@ -177,9 +186,13 @@ class Protocol(protocol.Protocol, object):
             return self.packet_unhandled(buff, ident)
 
     def packet_unhandled(self, buff, ident):
+        """Called when a packet has no registered handler"""
+
         buff.discard()
 
     def send_packet(self, ident, data=""):
+        """ Sends a packet """
+
         self.log_packet(">>", ident)
 
         # Prepend length and ident

@@ -9,10 +9,12 @@ class DowntimeProtocol(ServerProtocol):
     @register("login", 0)
     def packet_login_start(self, buff):
         buff.discard()
-        self.kick(self.factory.motd)
+        self.close(self.factory.motd)
+
 
 class DowntimeFactory(ServerFactory):
     protocol = DowntimeProtocol
+
 
 def main():
     # Parse options

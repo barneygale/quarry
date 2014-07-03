@@ -2,8 +2,9 @@ from quarry.net.proxy import ProxyServerFactory
 
 ###
 ### PROXY SERVER
-###   TODO
+###   Proxy support is not finished yet!
 ###
+
 
 def main():
     # Parse options

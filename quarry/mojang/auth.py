@@ -35,7 +35,6 @@ def join(timeout, digest, access_token, selected_profile):
         method = 'POST',
         postdata = json.dumps(data),
         timeout = timeout)
-
     d1.addCallbacks(_auth_ok, _auth_err)
 
     return d0
@@ -53,7 +52,8 @@ def has_joined(timeout, digest, username):
         d0.errback(err)
 
     d1 = client.getPage(
-        "https://sessionserver.mojang.com/session/minecraft/hasJoined?username={username}&serverId={serverId}".format(
+        "https://sessionserver.mojang.com/session/minecraft/hasJoined"
+        "?username={username}&serverId={serverId}".format(
             username = username,
             serverId = digest),
         timeout = timeout)

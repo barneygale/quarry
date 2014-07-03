@@ -7,15 +7,16 @@ from quarry.net.server import ServerFactory, ServerProtocol
 
 class AuthProtocol(ServerProtocol):
     def player_joined(self):
-        self.logger.info("%s auth OK" % self.username)
-        self.kick("Thanks")
+        self.logger.info("Auth OK: %s" % self.username)
 
-    def auth_failed(self, err):
-        ServerProtocol.auth_failed(self, err)
-        self.logger.info("%s auth failed: %s" % (self.username, err.value))
+        # Some logic here
+
+        self.close("Thanks, you are now registered!")
+
 
 class AuthFactory(ServerFactory):
     protocol = AuthProtocol
+
 
 def main():
     # Parse options

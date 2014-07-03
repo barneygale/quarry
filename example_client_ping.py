@@ -6,7 +6,7 @@ from quarry.mojang.profile import Profile
 ###   gets some data about the server
 ###
 
-class PingClientProtocol(ClientProtocol):
+class PingProtocol(ClientProtocol):
     protocol_mode_next = "status"
 
     @register("status", 0)
@@ -19,8 +19,8 @@ class PingClientProtocol(ClientProtocol):
         self.factory.stop()
 
 
-class PingClientFactory(ClientFactory):
-    protocol = PingClientProtocol
+class PingFactory(ClientFactory):
+    protocol = PingProtocol
 
 def main():
     # Parse options
@@ -38,7 +38,7 @@ def main():
     profile.login_offline("quarry")
 
     # Create factory
-    factory = PingClientFactory()
+    factory = PingFactory()
     factory.profile = profile
 
     factory.connect(host, int(port))

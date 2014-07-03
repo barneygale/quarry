@@ -1,9 +1,11 @@
 from twisted.internet import reactor
 
+from quarry import crypto
 from quarry.buffer import Buffer
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes, register
-from quarry import crypto, mojang
+from quarry.mojang import auth
+
 
 class ServerProtocol(Protocol):
     """This class represents a connection with a client"""
@@ -24,40 +26,24 @@ class ServerProtocol(Protocol):
 
     ### Convenience functions -------------------------------------------------
 
-    def kick(self, message):
-        """Kicks the player"""
-
+    def close(self, reason=None):
+        # Kick the player if possible.
         if self.protocol_mode == "login":
-            ident = 0x00
+            self.send_packet(0x00, Buffer.pack_json({"text": reason}))
         elif self.protocol_mode == "play":
-            ident = 0x40
-        else:
-            raise ProtocolError("Could not kick player in %s mode" %
-                                self.protocol_mode)
+            self.send_packet(0x40, Buffer.pack_json({"text": reason}))
 
-        self.send_packet(ident, Buffer.pack_json({"text": message}))
-        self.close()
+        Protocol.close(self, reason)
 
-    ### Auth callbacks --------------------------------------------------------
+    ### Callbacks -------------------------------------------------------------
 
     def auth_ok(self, data):
-        """Called when auth with mojang succeeded (online mode only)"""
-
         self.username_confirmed = True
         self.uuid = data['id']
 
         self.player_joined()
 
-    def auth_failed(self, err):
-        """Called when auth with mojang failed (online mode only)"""
-
-        self.kick("Failed to authenticate you!")
-
-    ### Player callbacks ------------------------------------------------------
-
     def player_joined(self):
-        """Called when the player is ready to receive map chunks etc"""
-
         # Send login success
         self.send_packet(2,
             Buffer.pack_string(self.uuid) +
@@ -65,22 +51,6 @@ class ServerProtocol(Protocol):
         )
 
         self.protocol_mode = "play"
-
-    def player_left(self):
-        """Called when the player leaves"""
-        pass
-
-    ### Error callbacks -------------------------------------------------------
-
-    def protocol_error(self, error):
-        self.logger.error("Protocol error: %s" % error)
-
-        # TODO: what if self.kick raises a ProtocolError?
-        self.kick("Protocol error")
-
-    def connection_timed_out(self):
-        self.logger.error("Connection timed out")
-        self.kick("Connection timed out")
 
     ### Packet handlers -------------------------------------------------------
 
@@ -91,9 +61,10 @@ class ServerProtocol(Protocol):
         p_server_port = buff.unpack("H")
         p_protocol_mode = buff.unpack_varint()
 
-        #TODO: kick on wrong protocol version
-
         self.protocol_mode = protocol_modes[p_protocol_mode]
+
+        if p_protocol_version != self.factory.protocol_version:
+            self.close("Wrong protocol version")
 
     @register("login", 0x00)
     def packet_login_start(self, buff):
@@ -117,8 +88,8 @@ class ServerProtocol(Protocol):
 
             # send login success
             self.send_packet(2,
-                Buffer.pack_string(self.username) +
-                Buffer.pack_string("")) # TODO: what here?
+                Buffer.pack_string("") +
+                Buffer.pack_string(self.username))
 
     @register("login", 0x01)
     def packet_encryption_response(self, buff):
@@ -147,7 +118,7 @@ class ServerProtocol(Protocol):
             self.factory.public_key)
 
         # do auth
-        deferred = mojang.auth.has_joined(
+        deferred = auth.has_joined(
             self.factory.auth_timeout,
             digest,
             self.username)
@@ -177,6 +148,7 @@ class ServerProtocol(Protocol):
     @register("status", 0x01)
     def packet_status_ping(self, buff):
         time = buff.unpack("Q")
+
         # send ping
         self.send_packet(1, Buffer.pack("Q", time))
         self.close()

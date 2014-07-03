@@ -1,16 +1,36 @@
 from twisted.internet import reactor, protocol
 
+from quarry import crypto
 from quarry.buffer import Buffer
-from quarry.net.protocol import Factory, Protocol, ProtocolError, protocol_modes_inv, register
-from quarry import crypto, mojang
+from quarry.net.protocol import Factory, Protocol, ProtocolError, \
+    protocol_modes_inv, register
+from quarry.mojang import auth
 
 
 class ClientProtocol(Protocol):
-    protocol_mode = "init"
+    """This class represents a connection to a server"""
+
     protocol_mode_next = "login"
 
     def __init__(self, factory, addr):
         Protocol.__init__(self, factory, addr)
+
+    ### Callbacks -------------------------------------------------------------
+
+    def auth_ok(self, data):
+        # Send encryption response
+        self.send_packet(1,
+            Buffer.pack_array(crypto.encrypt_secret(
+                self.public_key,
+                self.shared_secret)) +
+            Buffer.pack_array(crypto.encrypt_secret(
+                self.public_key,
+                self.verify_token)))
+
+        # Enable encryption
+        self.cipher.enable(self.shared_secret)
+
+    ### Packet handlers -------------------------------------------------------
 
     def connectionMade(self):
         # Send handshake
@@ -31,46 +51,6 @@ class ClientProtocol(Protocol):
             self.send_packet(0, Buffer.pack_string(
                 self.factory.profile.username))
 
-    ### Auth callbacks --------------------------------------------------------
-
-    def auth_ok(self, data):
-        # Send encryption response
-        self.send_packet(1,
-            Buffer.pack_array(crypto.encrypt_secret(
-                self.public_key,
-                self.shared_secret)) +
-            Buffer.pack_array(crypto.encrypt_secret(
-                self.public_key,
-                self.verify_token)))
-
-        # Enable encryption
-        self.cipher.enable(self.shared_secret)
-
-    def auth_failed(self, err):
-        print err #TODO
-
-    ### Player callbacks ------------------------------------------------------
-
-    def player_joined(self):
-        pass #TODO
-
-    def player_left(self):
-        pass #TODO
-
-    ### Error callbacks -------------------------------------------------------
-
-    def protocol_error(self, error):
-        self.logger.error("Protocol error: %s" % error)
-
-        self.close()
-
-    def connection_timed_out(self):
-        self.logger.error("Connection timed out")
-
-        self.close()
-
-    ### Packet handlers -------------------------------------------------------
-
     @register("login", 0x00)
     def packet_kick(self, buff):
         p_data = buff.unpack_json()
@@ -84,10 +64,8 @@ class ClientProtocol(Protocol):
         p_verify_token = buff.unpack_array()
 
         if not self.factory.profile.logged_in:
-            raise ProtocolError("Can't log into online-mode server while using offline profile")
-
-        # TODO
-        #print "encryption req", len(p_server_id), ",", len(p_public_key), ",", len(p_verify_token)
+            raise ProtocolError("Can't log into online-mode server while using"
+                                " offline profile")
 
         self.shared_secret = crypto.make_shared_secret()
         self.public_key = crypto.import_public_key(p_public_key)
@@ -100,7 +78,7 @@ class ClientProtocol(Protocol):
             p_public_key)
 
         # do auth
-        deferred = mojang.auth.join(
+        deferred = auth.join(
             self.factory.auth_timeout,
             digest,
             self.factory.profile.access_token,
@@ -109,8 +87,7 @@ class ClientProtocol(Protocol):
 
     @register("login", 0x02)
     def packet_login_success(self, buff):
-        p_username = buff.unpack_string()
-        p_uuid     = buff.unpack_string()
+        buff.discard()
 
         self.protocol_mode = "play"
         self.player_joined()
