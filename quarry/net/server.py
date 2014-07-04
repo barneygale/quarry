@@ -75,7 +75,6 @@ class ServerProtocol(Protocol):
 
         if self.factory.online_mode:
             self.login_expecting = 1
-            self.username_confirmed = True
 
             # send encryption request
             self.send_packet(1,
@@ -85,6 +84,7 @@ class ServerProtocol(Protocol):
 
         else:
             self.login_expecting = None
+            self.username_confirmed = True
 
             # send login success
             self.send_packet(2,
