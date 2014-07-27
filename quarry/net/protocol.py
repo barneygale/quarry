@@ -72,7 +72,7 @@ class Protocol(protocol.Protocol, object):
         """Closes the connection"""
 
         if reason:
-            self.logger.debug("Closing connection: %s" % reason)
+            self.logger.info("Closing connection: %s" % reason)
         self.connection_timer.stop()
         self.transport.loseConnection()
 
@@ -121,7 +121,7 @@ class Protocol(protocol.Protocol, object):
     def protocol_error(self, err):
         """Called when a protocol error occurs"""
 
-        self.close("Protocol error: %s" % err.value)
+        self.close("Protocol error: %s" % err)
 
     def connection_timed_out(self):
         """Called when the connection has been idle too long"""
@@ -205,11 +205,11 @@ class Protocol(protocol.Protocol, object):
         # Send
         self.transport.write(data)
 
-class Factory(protocol.Factory):
+class Factory(protocol.Factory, object):
     protocol = Protocol
     log_level = logging.INFO
-    protocol_version = 4
-    minecraft_version = "1.7.2"
+    protocol_version = 5
+    minecraft_version = "1.7.9"
     connection_timeout = 30
     auth_timeout = 30
 
