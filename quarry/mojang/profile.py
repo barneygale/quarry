@@ -93,7 +93,7 @@ class Profile:
 
         return d0
 
-    def refresh(self, client_token, access_token, selected_profile):
+    def refresh(self, client_token, access_token, username, uuid):
         d0 = defer.Deferred()
 
         def _callback(data):
@@ -107,7 +107,10 @@ class Profile:
         d1 = Yggdasil.refresh(
             clientToken = client_token,
             accessToken = access_token,
-            selectedProfile = selected_profile
+            selectedProfile = {
+                "name": username,
+                "id": uuid
+            }
         )
         d1.addCallbacks(_callback, _errback)
 
