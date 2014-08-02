@@ -31,7 +31,7 @@ class ClientProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    def connectionMade(self):
+    def connection_made(self):
         # Send handshake
         self.send_packet(0,
             self.buff_type.pack_varint(self.factory.protocol_version) +

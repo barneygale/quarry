@@ -3,7 +3,7 @@ from twisted.internet import protocol, reactor
 
 from quarry.util.crypto import Cipher
 from quarry.util.buffer import Buffer, BufferUnderrun
-from quarry.util.timer import Timer
+from quarry.util.tasks import Tasks
 
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
@@ -41,6 +41,7 @@ class Protocol(protocol.Protocol, object):
         self.buff_type = self.factory.buff_type
         self.recv_buff = self.buff_type()
         self.cipher = Cipher()
+        self.tasks = Tasks()
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
@@ -49,10 +50,9 @@ class Protocol(protocol.Protocol, object):
 
         self.register_handlers()
 
-        self.connection_timer = Timer(
+        self.connection_timer = self.tasks.add_delay(
             self.factory.connection_timeout,
             self.connection_timed_out)
-        self.connection_timer.start()
 
         self.setup()
 
@@ -66,6 +66,17 @@ class Protocol(protocol.Protocol, object):
                 data  = getattr(field, "_packet_handler", None)
                 if data:
                     self.packet_handlers[data] = field_name
+
+    ### Fix ugly twisted methods ----------------------------------------------
+
+    def dataReceived(self, data):
+        return self.data_received(data)
+
+    def connectionMade(self):
+        return self.connection_made()
+
+    def connectionLost(self, reason=None):
+        return self.connection_lost(reason)
 
     ### Convenience functions -------------------------------------------------
 
@@ -92,6 +103,30 @@ class Protocol(protocol.Protocol, object):
 
         pass
 
+    def protocol_error(self, err):
+        """Called when a protocol error occurs"""
+
+        self.close("Protocol error: %s" % err)
+
+    ### Connection callbacks --------------------------------------------------
+
+    def connection_made(self):
+        """Called when the connection is established"""
+
+        pass
+
+    def connection_lost(self, reason=None):
+        """Called when the connection is lost"""
+
+        self.logger.info("Connection lost")
+        self.tasks.stop_all()
+        pass
+
+    def connection_timed_out(self):
+        """Called when the connection has been idle too long"""
+
+        self.close("Connection timed out")
+
     ### Auth callbacks --------------------------------------------------------
 
     def auth_ok(self, data):
@@ -114,24 +149,11 @@ class Protocol(protocol.Protocol, object):
     def player_left(self):
         """Called when the player leaves"""
 
-
         pass
-
-    ### Error callbacks -------------------------------------------------------
-
-    def protocol_error(self, err):
-        """Called when a protocol error occurs"""
-
-        self.close("Protocol error: %s" % err)
-
-    def connection_timed_out(self):
-        """Called when the connection has been idle too long"""
-
-        self.close("Connection timed out")
 
     ### Packet handling -------------------------------------------------------
 
-    def dataReceived(self, data):
+    def data_received(self, data):
         # Decrypt data
         data = self.cipher.decrypt(data)
 
@@ -173,7 +195,7 @@ class Protocol(protocol.Protocol, object):
                 break
 
             # We've read a complete packet, so reset the inactivity timeout
-            self.connection_timer.reset()
+            self.connection_timer.restart()
 
     def packet_received(self, buff, ident):
         """ Dispatches packet to registered handler """

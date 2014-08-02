@@ -1,33 +1,11 @@
 import re
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from twisted.internet.protocol import ReconnectingClientFactory
 
 from quarry.net.client import ClientFactory, ClientProtocol, register
 
 # exception
 
-class Tasks(object):
-    def __init__(self):
-        self._tasks = []
 
-    def add_loop(self, time, callback, *args):
-        task = LoopingCall(callback, *args)
-        task.start(time, now=False)
-        self._tasks.append(task)
-
-    def add_delay(self, time, callback, *args):
-        task = reactor.callLater(time, callback, *args)
-        def stop():
-            if task.active():
-                task.cancel()
-        task.stop = stop
-        self._tasks.append(task)
-
-    def stop_all(self):
-        while len(self._tasks) > 0:
-            task = self._tasks.pop(0)
-            task.stop()
 
 
 
@@ -49,18 +27,12 @@ class BotProtocol(ClientProtocol):
         self.chat_throttled = False
         self.pending_chat = []
 
-        self.tasks = Tasks()
-
         self.register_chat_handlers()
 
     def register_chat_handlers(self):
         self.command_handlers = [] # command, callback
         self.chat_handlers = [] # regex, callback
         self.raw_handlers = [] # regex, callbac
-
-    def connectionLost(self, reason=None):
-        print reason
-        self.tasks.stop_all()
 
     #-- LOOPS/TASKS -----------------------------------------------------------
 
