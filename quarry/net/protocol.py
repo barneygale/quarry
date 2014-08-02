@@ -208,8 +208,6 @@ class Protocol(protocol.Protocol, object):
 class Factory(protocol.Factory, object):
     protocol = Protocol
     log_level = logging.INFO
-    protocol_version = 5
-    minecraft_version = "1.7.9"
     connection_timeout = 30
     auth_timeout = 30
 

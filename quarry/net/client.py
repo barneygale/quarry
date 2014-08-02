@@ -95,7 +95,7 @@ class ClientProtocol(Protocol):
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
-
+    protocol_version = 5
     profile = None
 
     def connect(self, addr, port=25565):

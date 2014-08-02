@@ -63,8 +63,12 @@ class ServerProtocol(Protocol):
 
         self.protocol_mode = protocol_modes[p_protocol_mode]
 
-        if p_protocol_version != self.factory.protocol_version:
+        if self.factory.enforce_protocol_versions \
+                and p_protocol_version not in self.factory.protocol_versions:
+
             self.close("Wrong protocol version")
+
+        self.protocol_version = p_protocol_version
 
     @register("login", 0x00)
     def packet_login_start(self, buff):
@@ -135,8 +139,10 @@ class ServerProtocol(Protocol):
                 "max":      self.factory.max_players
             },
             "version": {
-                "name":     self.factory.minecraft_version,
-                "protocol": self.factory.protocol_version
+                "name":     self.factory.protocol_versions.get(
+                                self.protocol_version,
+                                "???"),
+                "protocol": self.protocol_version
             }
         }
         if self.factory.favicon:
@@ -161,6 +167,12 @@ class ServerFactory(Factory):
     max_players = 20
     favicon = None
     online_mode = True
+    enforce_protocol_versions = True
+
+    protocol_versions = {
+        4: "1.7.4",
+        5: "1.7.10",
+    }
 
     def __init__(self):
         self.players = []
