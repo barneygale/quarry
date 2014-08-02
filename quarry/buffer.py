@@ -38,8 +38,9 @@ class Buffer(object):
         return d
 
     def unpack(self, ty):
-        s = struct.unpack(">"+ty, self.unpack_raw(struct.calcsize(ty)))
-        return s[0] if len(ty) == 1 else s
+        ty = ">"+ty
+        s = struct.unpack(ty, self.unpack_raw(struct.calcsize(ty)))
+        return s[0] if len(s) == 1 else s
 
     def unpack_string(self):
         l = self.unpack_varint()
