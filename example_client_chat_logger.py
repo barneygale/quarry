@@ -2,7 +2,6 @@ from twisted.internet import task
 
 from quarry.net.client import ClientFactory, ClientProtocol, register
 from quarry.mojang.profile import Profile
-from quarry.buffer import Buffer
 
 ###
 ### CHAT LOGGER CLIENT
@@ -22,7 +21,7 @@ class ChatLoggerProtocol(ClientProtocol):
     def update_player(self):
         self.yaw = (self.yaw + 5) % 360
 
-        self.send_packet(0x05, Buffer.pack('ff?',
+        self.send_packet(0x05, self.buff_type.pack('ff?',
             self.yaw,
             self.pitch,
             self.on_ground))
@@ -40,7 +39,7 @@ class ChatLoggerProtocol(ClientProtocol):
         self.on_ground = buff.unpack('?')
 
         # Send Player Position And Look
-        self.send_packet(0x06, Buffer.pack('ddddff?',
+        self.send_packet(0x06, self.buff_type.pack('ddddff?',
             self.coords[0],
             self.coords[1] - 1.62,
             self.coords[1],

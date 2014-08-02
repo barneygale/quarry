@@ -1,10 +1,9 @@
 import logging
-
 from twisted.internet import protocol, reactor
 
-from quarry.crypto import Cipher
-from quarry.buffer import Buffer, BufferUnderrun
-from quarry.timer import Timer
+from quarry.util.crypto import Cipher
+from quarry.util.buffer import Buffer, BufferUnderrun
+from quarry.util.timer import Timer
 
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
@@ -38,7 +37,9 @@ class Protocol(protocol.Protocol, object):
     def __init__(self, factory, addr):
         self.factory = factory
         self.recv_addr = addr
-        self.recv_buff = Buffer()
+
+        self.buff_type = self.factory.buff_type
+        self.recv_buff = self.buff_type()
         self.cipher = Cipher()
 
         self.logger = logging.getLogger("%s{%s}" % (
@@ -153,7 +154,7 @@ class Protocol(protocol.Protocol, object):
                 break
 
             # Load the packet body into a buffer
-            packet_buff = Buffer()
+            packet_buff = self.buff_type()
             packet_buff.add(packet_body)
 
             try: # Catch protocol errors
@@ -196,8 +197,8 @@ class Protocol(protocol.Protocol, object):
         self.log_packet(">>", ident)
 
         # Prepend length and ident
-        data = Buffer.pack_varint(ident) + data
-        data = Buffer.pack_varint(len(data)) + data
+        data = self.buff_type.pack_varint(ident) + data
+        data = self.buff_type.pack_varint(len(data)) + data
 
         # Encrypt
         data = self.cipher.encrypt(data)
@@ -207,6 +208,7 @@ class Protocol(protocol.Protocol, object):
 
 class Factory(protocol.Factory, object):
     protocol = Protocol
+    buff_type = Buffer
     log_level = logging.INFO
     connection_timeout = 30
     auth_timeout = 30

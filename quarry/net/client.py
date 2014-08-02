@@ -1,10 +1,9 @@
 from twisted.internet import reactor, protocol
 
-from quarry import crypto
-from quarry.buffer import Buffer
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes_inv, register
 from quarry.mojang import auth
+from quarry.util import crypto
 
 
 class ClientProtocol(Protocol):
@@ -20,10 +19,10 @@ class ClientProtocol(Protocol):
     def auth_ok(self, data):
         # Send encryption response
         self.send_packet(1,
-            Buffer.pack_array(crypto.encrypt_secret(
+            self.buff_type.pack_array(crypto.encrypt_secret(
                 self.public_key,
                 self.shared_secret)) +
-            Buffer.pack_array(crypto.encrypt_secret(
+            self.buff_type.pack_array(crypto.encrypt_secret(
                 self.public_key,
                 self.verify_token)))
 
@@ -35,10 +34,11 @@ class ClientProtocol(Protocol):
     def connectionMade(self):
         # Send handshake
         self.send_packet(0,
-            Buffer.pack_varint(self.factory.protocol_version) +
-            Buffer.pack_string(self.recv_addr.host) +
-            Buffer.pack('H', self.recv_addr.port) +
-            Buffer.pack_varint(protocol_modes_inv[self.protocol_mode_next]))
+            self.buff_type.pack_varint(self.factory.protocol_version) +
+            self.buff_type.pack_string(self.recv_addr.host) +
+            self.buff_type.pack('H', self.recv_addr.port) +
+            self.buff_type.pack_varint(
+                protocol_modes_inv[self.protocol_mode_next]))
 
         self.protocol_mode = self.protocol_mode_next
 
@@ -48,7 +48,7 @@ class ClientProtocol(Protocol):
 
         elif self.protocol_mode == "login":
             # Send login start
-            self.send_packet(0, Buffer.pack_string(
+            self.send_packet(0, self.buff_type.pack_string(
                 self.factory.profile.username))
 
     @register("login", 0x00)

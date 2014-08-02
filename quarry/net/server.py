@@ -1,10 +1,9 @@
 from twisted.internet import reactor
 
-from quarry import crypto
-from quarry.buffer import Buffer
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes, register
 from quarry.mojang import auth
+from quarry.util import crypto
 
 
 class ServerProtocol(Protocol):
@@ -29,9 +28,9 @@ class ServerProtocol(Protocol):
     def close(self, reason=None):
         # Kick the player if possible.
         if self.protocol_mode == "login":
-            self.send_packet(0x00, Buffer.pack_json({"text": reason}))
+            self.send_packet(0x00, self.buff_type.pack_json({"text": reason}))
         elif self.protocol_mode == "play":
-            self.send_packet(0x40, Buffer.pack_json({"text": reason}))
+            self.send_packet(0x40, self.buff_type.pack_json({"text": reason}))
 
         Protocol.close(self, reason)
 
@@ -46,8 +45,8 @@ class ServerProtocol(Protocol):
     def player_joined(self):
         # Send login success
         self.send_packet(2,
-            Buffer.pack_string(self.uuid) +
-            Buffer.pack_string(self.username)
+            self.buff_type.pack_string(self.uuid) +
+            self.buff_type.pack_string(self.username)
         )
 
         self.protocol_mode = "play"
@@ -82,9 +81,9 @@ class ServerProtocol(Protocol):
 
             # send encryption request
             self.send_packet(1,
-                Buffer.pack_string(self.server_id) +
-                Buffer.pack_array(self.factory.public_key) +
-                Buffer.pack_array(self.verify_token))
+                self.buff_type.pack_string(self.server_id) +
+                self.buff_type.pack_array(self.factory.public_key) +
+                self.buff_type.pack_array(self.verify_token))
 
         else:
             self.login_expecting = None
@@ -92,8 +91,8 @@ class ServerProtocol(Protocol):
 
             # send login success
             self.send_packet(2,
-                Buffer.pack_string("") +
-                Buffer.pack_string(self.username))
+                self.buff_type.pack_string("") +
+                self.buff_type.pack_string(self.username))
 
     @register("login", 0x01)
     def packet_encryption_response(self, buff):
@@ -149,14 +148,14 @@ class ServerProtocol(Protocol):
             d["favicon"] = self.factory.favicon
 
         # send status response
-        self.send_packet(0, Buffer.pack_json(d))
+        self.send_packet(0, self.buff_type.pack_json(d))
 
     @register("status", 0x01)
     def packet_status_ping(self, buff):
         time = buff.unpack("Q")
 
         # send ping
-        self.send_packet(1, Buffer.pack("Q", time))
+        self.send_packet(1, self.buff_type.pack("Q", time))
         self.close()
 
 

@@ -1,11 +1,9 @@
 import re
-
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.internet.protocol import ReconnectingClientFactory
 
 from quarry.net.client import ClientFactory, ClientProtocol, register
-from quarry.buffer import Buffer
 
 # exception
 
@@ -67,12 +65,14 @@ class BotProtocol(ClientProtocol):
     #-- LOOPS/TASKS -----------------------------------------------------------
 
     def update_position(self):
-        self.send_packet(0x03, Buffer.pack('?', self.on_ground))
+        self.send_packet(0x03,
+            self.buff_type.pack('?', self.on_ground))
 
     def update_chat(self):
         if len(self.pending_chat) > 0:
             message = self.pending_chat.pop(0)
-            self.send_packet(0x01, Buffer.pack_string(message))
+            self.send_packet(0x01,
+                self.buff_type.pack_string(message))
 
     #-- CHAT HELPERS ----------------------------------------------------------
 
@@ -180,7 +180,7 @@ class BotProtocol(ClientProtocol):
         self.on_ground = p_on_ground
 
         # Send Player Position And Look
-        self.send_packet(0x06, Buffer.pack('ddddff?',
+        self.send_packet(0x06, self.buff_type.pack('ddddff?',
             p_coords[0],
             p_coords[1] - 1.62,
             p_coords[1],
