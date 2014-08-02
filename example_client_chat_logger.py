@@ -28,8 +28,8 @@ class ChatLoggerProtocol(ClientProtocol):
 
     @register("play", 0x02)
     def packet_chat_message(self, buff):
-        p_data = buff.unpack_json()
-        self.logger.info(p_data)
+        p_text = buff.unpack_chat()
+        self.logger.info(p_text)
 
     @register("play", 0x08)
     def packet_player_position_and_look(self, buff):

@@ -53,7 +53,7 @@ class ClientProtocol(Protocol):
 
     @register("login", 0x00)
     def packet_kick(self, buff):
-        p_data = buff.unpack_json()
+        p_data = buff.unpack_chat()
         self.logger.warn("Kicked: %s" % p_data)
         self.close()
 

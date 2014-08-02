@@ -49,6 +49,22 @@ class Buffer(object):
     def unpack_json(self):
         return json.loads(self.unpack_string())
 
+    def unpack_chat(self):
+        def parse(obj):
+            if isinstance(obj, basestring):
+                return obj
+            if isinstance(obj, list):
+                return "".join((parse(e) for e in obj))
+            if isinstance(obj, dict):
+                out = ""
+                if "text" in obj:
+                    out += obj["text"]
+                if "extra" in obj:
+                    out += parse(obj["extra"])
+                return out
+
+        return parse(self.unpack_json())
+
     def unpack_array(self):
         l = self.unpack("h")
         return self.unpack_raw(l)
@@ -74,6 +90,10 @@ class Buffer(object):
     @classmethod
     def pack_json(cls, data):
         return cls.pack_string(json.dumps(data))
+
+    @classmethod
+    def pack_chat(cls, data):
+        return cls.pack_json({"text": data})
 
     @classmethod
     def pack_array(cls, data):

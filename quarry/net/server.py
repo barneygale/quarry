@@ -28,9 +28,9 @@ class ServerProtocol(Protocol):
     def close(self, reason=None):
         # Kick the player if possible.
         if self.protocol_mode == "login":
-            self.send_packet(0x00, self.buff_type.pack_json({"text": reason}))
+            self.send_packet(0x00, self.buff_type.pack_chat(reason))
         elif self.protocol_mode == "play":
-            self.send_packet(0x40, self.buff_type.pack_json({"text": reason}))
+            self.send_packet(0x40, self.buff_type.pack_chat(reason))
 
         Protocol.close(self, reason)
 

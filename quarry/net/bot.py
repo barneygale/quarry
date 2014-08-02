@@ -107,19 +107,6 @@ class BotProtocol(ClientProtocol):
 
     #-- CHAT PARSERS ----------------------------------------------------------
 
-    def parse_json(self, obj):
-        if isinstance(obj, basestring):
-            return obj
-        if isinstance(obj, list):
-            return "".join((self.parse_json(e) for e in obj))
-        if isinstance(obj, dict):
-            out = ""
-            if "text" in obj:
-                out += obj["text"]
-            if "extra" in obj:
-                out += self.parse_json(obj["extra"])
-            return out
-
     def parse_command(self, text):
         command_regex = re.escape(self.command_prefix) + '([a-z]+)\s?(.*)'
         whispered = False
@@ -143,8 +130,7 @@ class BotProtocol(ClientProtocol):
 
     @register("play", 0x02)
     def packet_chat_message(self, buff):
-        p_data = buff.unpack_json()
-        p_text = self.parse_json(p_data)
+        p_text = buff.unpack_chat()
 
         self.logger.info(p_text)
 
@@ -196,8 +182,7 @@ class BotProtocol(ClientProtocol):
 
     @register("play", 0x40)
     def packet_play_kick(self, buff):
-        p_reason = buff.unpack_json()
-        p_reason = self.parse_json(p_reason)
+        p_reason = buff.unpack_chat()
         self.logger.warn("Kicked: %s" % p_reason)
 
 class BotFactory(ClientFactory, ReconnectingClientFactory):
