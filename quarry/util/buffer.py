@@ -79,6 +79,10 @@ class Buffer(object):
         return d
 
     @classmethod
+    def pack_raw(cls, data):
+        return data
+
+    @classmethod
     def pack(cls, ty, *data):
         return struct.pack(">"+ty, *data)
 
