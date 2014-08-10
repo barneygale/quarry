@@ -11,12 +11,12 @@ from quarry.mojang.profile import Profile
 class ChatLoggerProtocol(ClientProtocol):
     protocol_mode_next = "login"
 
-    coords = (0, 0, 0)
-    yaw = 0
-    pitch = 0
-    on_ground = 0
+    spawned = False
 
-    loop = None
+    def setup(self):
+        self.coords = [0, 0, 0]
+        self.yaw = 0
+        self.pitch = 0
 
     def update_player(self):
         self.yaw = (self.yaw + 5) % 360
@@ -24,33 +24,81 @@ class ChatLoggerProtocol(ClientProtocol):
         self.send_packet(0x05, self.buff_type.pack('ff?',
             self.yaw,
             self.pitch,
-            self.on_ground))
+            True))
 
     @register("play", 0x02)
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat()
-        self.logger.info(p_text)
+
+        # 1.7.x
+        if self.factory.protocol_version <= 5:
+            pass
+        # 1.8.x
+        else:
+            p_position = buff.unpack('B')
+
+        self.logger.info("CHAT :: %s" % p_text)
+
 
     @register("play", 0x08)
     def packet_player_position_and_look(self, buff):
-        self.coords = buff.unpack('ddd')
-        self.yaw = buff.unpack('f')
-        self.pitch = buff.unpack('f')
-        self.on_ground = buff.unpack('?')
+        p_coords = buff.unpack('ddd')
+        p_yaw = buff.unpack('f')
+        p_pitch = buff.unpack('f')
+
+        # 1.7.x
+        if self.factory.protocol_version <= 5:
+            p_on_ground = buff.unpack('?')
+
+            self.coords = p_coords
+            self.yaw = p_yaw
+            self.pitch = p_pitch
+
+        # 1.8.x
+        else:
+            p_position_flags = buff.unpack('B')
+
+            if p_position_flags & 1 >> 0:
+                self.coords[0] = 0
+            if p_position_flags & 1 >> 1:
+                self.coords[1] = 0
+            if p_position_flags & 1 >> 2:
+                self.coords[2] = 0
+            if p_position_flags & 1 >> 3:
+                self.pitch = 0
+            if p_position_flags & 1 >> 4:
+                self.yaw = 0
+
+        self.coords = [old+new for old, new in zip(p_coords, self.coords)]
+        self.yaw += p_yaw
+        self.pitch += p_pitch
 
         # Send Player Position And Look
-        self.send_packet(0x06, self.buff_type.pack('ddddff?',
-            self.coords[0],
-            self.coords[1] - 1.62,
-            self.coords[1],
-            self.coords[2],
-            self.yaw,
-            self.pitch,
-            self.on_ground))
 
-        if not self.loop:
-            self.loop = task.LoopingCall(self.update_player)
-            self.loop.start(1.0/20, now=False)
+        # 1.7.x
+        if self.factory.protocol_version <= 5:
+            self.send_packet(0x06, self.buff_type.pack('ddddff?',
+                self.coords[0],
+                self.coords[1] - 1.62,
+                self.coords[1],
+                self.coords[2],
+                self.yaw,
+                self.pitch,
+                True))
+
+        # 1.8.x
+        else:
+            self.send_packet(0x06, self.buff_type.pack('dddff?',
+                self.coords[0],
+                self.coords[1],
+                self.coords[2],
+                self.yaw,
+                self.pitch,
+                True))
+
+        if not self.spawned:
+            self.tasks.add_loop(1.0/20, self.update_player)
+            self.spawned = True
 
 
 class ChatLoggerFactory(ClientFactory):

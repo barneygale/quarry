@@ -1,4 +1,6 @@
 import logging
+import zlib
+
 from twisted.internet import protocol, reactor
 
 from quarry.util.crypto import Cipher
@@ -33,6 +35,11 @@ class Protocol(protocol.Protocol, object):
     """Shared logic between the client and server"""
 
     protocol_mode = "init"
+    compression_threshold = None
+    compression_enabled = False
+
+    in_game = False
+    closed = False
 
     def __init__(self, factory, addr):
         self.factory = factory
@@ -83,15 +90,24 @@ class Protocol(protocol.Protocol, object):
     def close(self, reason=None):
         """Closes the connection"""
 
-        if reason:
-            self.logger.info("Closing connection: %s" % reason)
-        self.connection_timer.stop()
-        self.transport.loseConnection()
+        if not self.closed:
+            if reason:
+                reason = "Closing connection: %s" % reason
+            else:
+                reason = "Closing connection"
+
+            if self.in_game:
+                self.logger.info(reason)
+            else:
+                self.logger.debug(reason)
+
+            self.transport.loseConnection()
+            self.closed = True
 
     def log_packet(self, prefix, ident):
         """Logs a packet at debug level"""
 
-        self.logger.debug("packet %s %s/%02x" % (
+        self.logger.debug("Packet %s %s/%02x" % (
             prefix,
             self.protocol_mode,
             ident))
@@ -106,21 +122,26 @@ class Protocol(protocol.Protocol, object):
     def protocol_error(self, err):
         """Called when a protocol error occurs"""
 
-        self.close("Protocol error: %s" % err)
+        msg = "Protocol error: %s" % err
+        self.logger.error(msg)
+        self.close(msg)
 
     ### Connection callbacks --------------------------------------------------
 
     def connection_made(self):
         """Called when the connection is established"""
 
-        pass
+        self.logger.debug("Connection made")
 
     def connection_lost(self, reason=None):
         """Called when the connection is lost"""
 
-        self.logger.info("Connection lost")
+        self.closed = True
+        if self.in_game:
+            self.player_left()
+        self.logger.debug("Connection lost")
+
         self.tasks.stop_all()
-        pass
 
     def connection_timed_out(self):
         """Called when the connection has been idle too long"""
@@ -144,7 +165,7 @@ class Protocol(protocol.Protocol, object):
     def player_joined(self):
         """Called when the protocol mode has switched to "play" """
 
-        pass
+        self.in_game = True
 
     def player_left(self):
         """Called when the player leaves"""
@@ -161,7 +182,7 @@ class Protocol(protocol.Protocol, object):
         self.recv_buff.add(data)
 
         # Read some packets
-        while True:
+        while not self.closed:
             # Save the buffer, in case we read an incomplete packet
             self.recv_buff.save()
 
@@ -181,6 +202,13 @@ class Protocol(protocol.Protocol, object):
 
             try: # Catch protocol errors
                 try: # Catch buffer overrun/underrun
+                    if self.compression_enabled:
+                        uncompressed_length = packet_buff.unpack_varint()
+
+                        if uncompressed_length > 0:
+                            data = zlib.decompress(packet_buff.unpack_all())
+                            packet_buff = Buffer()
+                            packet_buff.add(data)
                     ident = packet_buff.unpack_varint()
                     self.packet_received(packet_buff, ident)
 
@@ -200,7 +228,7 @@ class Protocol(protocol.Protocol, object):
     def packet_received(self, buff, ident):
         """ Dispatches packet to registered handler """
 
-        self.log_packet("<<", ident)
+        self.log_packet(". recv", ident)
 
         handler = self.packet_handlers.get((self.protocol_mode, ident), None)
         if handler:
@@ -216,10 +244,22 @@ class Protocol(protocol.Protocol, object):
     def send_packet(self, ident, data=""):
         """ Sends a packet """
 
-        self.log_packet(">>", ident)
+        if self.closed:
+            return
 
-        # Prepend length and ident
-        data = self.buff_type.pack_varint(ident) + data
+        self.log_packet("# send", ident)
+
+        # Prepend ident
+        data = Buffer.pack_varint(ident) + data
+
+        if self.compression_enabled:
+            # Compress data and prepend uncompressed data length
+            if len(data) >= self.compression_threshold:
+                data = Buffer.pack_varint(len(data)) + zlib.compress(data)
+            else:
+                data = Buffer.pack_varint(0) + data
+
+        # Prepend packet length
         data = self.buff_type.pack_varint(len(data)) + data
 
         # Encrypt

@@ -27,7 +27,7 @@ def main():
                       dest="port", default="25565", type="int",
                       help="port to listen on")
     parser.add_option("-m", "--message",
-                      dest="message", default="down for maintenance",
+                      dest="message", default="We're down for maintenance",
                       help="message to kick users with")
     (options, args) = parser.parse_args()
 

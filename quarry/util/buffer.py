@@ -1,6 +1,8 @@
 import struct
 import json
 
+from quarry.util import types
+
 
 class BufferUnderrun(Exception):
     pass
@@ -57,6 +59,9 @@ class Buffer(object):
                 return "".join((parse(e) for e in obj))
             if isinstance(obj, dict):
                 out = ""
+                if "translate" in obj:
+                    args = ", ".join((parse(e) for e in obj["with"]))
+                    out += "%s{%s}" % (obj["translate"], args)
                 if "text" in obj:
                     out += obj["text"]
                 if "extra" in obj:
@@ -64,10 +69,6 @@ class Buffer(object):
                 return out
 
         return parse(self.unpack_json())
-
-    def unpack_array(self):
-        l = self.unpack("h")
-        return self.unpack_raw(l)
 
     def unpack_varint(self):
         d = 0
@@ -77,6 +78,9 @@ class Buffer(object):
             if not b & 0x80:
                 break
         return d
+
+    def unpack_uuid(self):
+        return types.UUID.from_bytes(self.unpack_raw(16))
 
     @classmethod
     def pack_raw(cls, data):
@@ -100,10 +104,6 @@ class Buffer(object):
         return cls.pack_json({"text": data})
 
     @classmethod
-    def pack_array(cls, data):
-        return cls.pack("h", len(data)) + data
-
-    @classmethod
     def pack_varint(cls, d):
         o = ""
         while True:
@@ -113,3 +113,7 @@ class Buffer(object):
             if d == 0:
                 break
         return o
+
+    @classmethod
+    def pack_uuid(cls, d):
+        return d.to_bytes()

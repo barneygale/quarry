@@ -3,7 +3,7 @@ from twisted.internet import reactor
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes, register
 from quarry.mojang import auth
-from quarry.util import crypto
+from quarry.util import crypto, types
 
 
 class ServerProtocol(Protocol):
@@ -26,11 +26,12 @@ class ServerProtocol(Protocol):
     ### Convenience functions -------------------------------------------------
 
     def close(self, reason=None):
-        # Kick the player if possible.
-        if self.protocol_mode == "login":
-            self.send_packet(0x00, self.buff_type.pack_chat(reason))
-        elif self.protocol_mode == "play":
-            self.send_packet(0x40, self.buff_type.pack_chat(reason))
+        if not self.closed and reason is not None:
+            # Kick the player if possible.
+            if self.protocol_mode == "login":
+                self.send_packet(0x00, self.buff_type.pack_chat(reason))
+            elif self.protocol_mode == "play":
+                self.send_packet(0x40, self.buff_type.pack_chat(reason))
 
         Protocol.close(self, reason)
 
@@ -38,18 +39,35 @@ class ServerProtocol(Protocol):
 
     def auth_ok(self, data):
         self.username_confirmed = True
-        self.uuid = data['id']
+        self.uuid = types.UUID.from_hex(data['id'])
 
         self.player_joined()
 
-    def player_joined(self):
-        # Send login success
-        self.send_packet(2,
-            self.buff_type.pack_string(self.uuid) +
-            self.buff_type.pack_string(self.username)
-        )
+    def player_joined(self, switch_to_play=True):
+        Protocol.player_joined(self)
 
-        self.protocol_mode = "play"
+        self.logger.info("%s has joined." % self.username)
+
+        if switch_to_play:
+            # 1.7.x
+            if self.protocol_version <= 5:
+                uuid = self.uuid.to_hex(withDashes=True)
+            # 1.8.x
+            else:
+                uuid = self.uuid.to_hex(withDashes=True)
+
+            # Send login success
+            self.send_packet(2,
+                self.buff_type.pack_string(uuid) +
+                self.buff_type.pack_string(self.username)
+            )
+
+            self.protocol_mode = "play"
+
+    def player_left(self):
+        Protocol.player_left(self)
+
+        self.logger.info("%s has left." % self.username)
 
     ### Packet handlers -------------------------------------------------------
 
@@ -80,31 +98,55 @@ class ServerProtocol(Protocol):
             self.login_expecting = 1
 
             # send encryption request
-            self.send_packet(1,
-                self.buff_type.pack_string(self.server_id) +
-                self.buff_type.pack_array(self.factory.public_key) +
-                self.buff_type.pack_array(self.verify_token))
+
+            # 1.7.x
+            if self.protocol_version <= 5:
+                self.send_packet(1,
+                    self.buff_type.pack_string(self.server_id) +
+                    self.buff_type.pack('H', len(self.factory.public_key)) +
+                    self.buff_type.pack_raw(self.factory.public_key) +
+                    self.buff_type.pack('H', len(self.verify_token)) +
+                    self.buff_type.pack_raw(self.verify_token))
+
+            # 1.8.x
+            else:
+                self.send_packet(1,
+                    self.buff_type.pack_string(self.server_id) +
+                    self.buff_type.pack_varint(len(self.factory.public_key)) +
+                    self.buff_type.pack_raw(self.factory.public_key) +
+                    self.buff_type.pack_varint(len(self.verify_token)) +
+                    self.buff_type.pack_raw(self.verify_token))
 
         else:
             self.login_expecting = None
             self.username_confirmed = True
+            self.uuid = types.UUID.from_offline_player(self.username)
 
-            # send login success
-            self.send_packet(2,
-                self.buff_type.pack_string("") +
-                self.buff_type.pack_string(self.username))
+            self.player_joined()
 
     @register("login", 0x01)
     def packet_encryption_response(self, buff):
         if self.login_expecting != 1:
             raise ProtocolError("Out-of-order login")
 
+        # 1.7.x
+        if self.protocol_version <= 5:
+            p_shared_secret = buff.unpack_raw(buff.unpack('h'))
+            p_verify_token = buff.unpack_raw(buff.unpack('h'))
+
+        # 1.8.x
+        else:
+            p_shared_secret = buff.unpack_raw(buff.unpack_varint())
+            p_verify_token = buff.unpack_raw(buff.unpack_varint())
+
         shared_secret = crypto.decrypt_secret(
             self.factory.keypair,
-            buff.unpack_array())
-        verify_token  = crypto.decrypt_secret(
+            p_shared_secret)
+
+        verify_token = crypto.decrypt_secret(
             self.factory.keypair,
-            buff.unpack_array())
+            p_verify_token
+        )
 
         self.login_expecting = None
 
@@ -113,6 +155,7 @@ class ServerProtocol(Protocol):
 
         # enable encryption
         self.cipher.enable(shared_secret)
+        self.logger.debug("Encryption enabled")
 
         # make digest
         digest = crypto.make_digest(
@@ -171,6 +214,7 @@ class ServerFactory(Factory):
     protocol_versions = {
         4: "1.7.4",
         5: "1.7.10",
+        36: "14w32d"
     }
 
     def __init__(self):

@@ -11,7 +11,7 @@ class AuthException(Exception):
     pass
 
 
-def join(timeout, digest, access_token, selected_profile):
+def join(timeout, digest, access_token, uuid):
     d0 = defer.Deferred()
 
     def _auth_ok(data):
@@ -25,7 +25,7 @@ def join(timeout, digest, access_token, selected_profile):
 
     data = {
         "accessToken": str(access_token),
-        "selectedProfile": str(selected_profile),
+        "selectedProfile": uuid.to_hex(withDashes=False),
         "serverId": digest
     }
 

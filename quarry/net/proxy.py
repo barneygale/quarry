@@ -22,7 +22,13 @@ class ProxyClientProtocol(ClientProtocol):
     def player_joined(self):
         self.factory.enable_passthrough()
 
+    def connection_lost(self, reason=None):
+        ClientProtocol.connection_lost(self, reason)
+        self.factory.server_protocol.close("Lost connection with server.")
+
+
 class ProxyServerProtocol(ServerProtocol):
+    client_factory = None
     def packet_received_passthrough(self, buff, ident):
         buff.save()
         consumed = ServerProtocol.packet_received(self, buff, ident)
@@ -44,9 +50,16 @@ class ProxyServerProtocol(ServerProtocol):
         self.client_factory = self.factory.client_factory_class()
         self.client_factory.profile = profile
         self.client_factory.server_protocol = self
+        self.client_factory.protocol_version = self.protocol_version
         self.client_factory.connect(
             self.factory.connect_host,
             self.factory.connect_port)
+
+    def connection_lost(self, reason=None):
+        ServerProtocol.connection_lost(self, reason)
+        if self.client_factory and self.client_factory.client_protocol:
+            self.client_factory.client_protocol.close()
+
 
 class ProxyClientFactory(ClientFactory):
     protocol = ProxyClientProtocol
@@ -56,6 +69,7 @@ class ProxyClientFactory(ClientFactory):
     def enable_passthrough(self):
         self.server_protocol.enable_passthrough()
         self.client_protocol.enable_passthrough()
+
 
 class ProxyServerFactory(ServerFactory):
     protocol = ProxyServerProtocol

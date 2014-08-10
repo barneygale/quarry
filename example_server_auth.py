@@ -7,7 +7,7 @@ from quarry.net.server import ServerFactory, ServerProtocol
 
 class AuthProtocol(ServerProtocol):
     def player_joined(self):
-        self.logger.info("Auth OK: %s" % self.username)
+        ServerProtocol.player_joined(self, switch_to_play=False)
 
         # Some logic here
 

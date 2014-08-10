@@ -18,20 +18,45 @@ class ClientProtocol(Protocol):
 
     def auth_ok(self, data):
         # Send encryption response
-        self.send_packet(1,
-            self.buff_type.pack_array(crypto.encrypt_secret(
-                self.public_key,
-                self.shared_secret)) +
-            self.buff_type.pack_array(crypto.encrypt_secret(
-                self.public_key,
-                self.verify_token)))
+        p_shared_secret = crypto.encrypt_secret(
+            self.public_key,
+            self.shared_secret)
+        p_verify_token = crypto.encrypt_secret(
+            self.public_key,
+            self.verify_token)
+
+        # 1.7.x
+        if self.factory.protocol_version <= 5:
+            self.send_packet(1,
+                self.buff_type.pack('h', len(p_shared_secret)) +
+                self.buff_type.pack_raw(p_shared_secret) +
+                self.buff_type.pack('h', len(p_verify_token)) +
+                self.buff_type.pack_raw(p_verify_token))
+        # 1.8.x
+        else:
+            self.send_packet(1,
+            self.buff_type.pack_varint(len(p_shared_secret)) +
+            self.buff_type.pack_raw(p_shared_secret) +
+            self.buff_type.pack_varint(len(p_verify_token)) +
+            self.buff_type.pack_raw(p_verify_token))
 
         # Enable encryption
         self.cipher.enable(self.shared_secret)
+        self.logger.debug("Encryption enabled")
+
+    def player_joined(self):
+        Protocol.player_joined(self)
+        self.logger.info("Game joined.")
+
+    def player_left(self):
+        Protocol.player_left(self)
+        self.logger.info("Game left.")
 
     ### Packet handlers -------------------------------------------------------
 
     def connection_made(self):
+        Protocol.connection_made(self)
+
         # Send handshake
         self.send_packet(0,
             self.buff_type.pack_varint(self.factory.protocol_version) +
@@ -60,8 +85,15 @@ class ClientProtocol(Protocol):
     @register("login", 0x01)
     def packet_encryption_request(self, buff):
         p_server_id    = buff.unpack_string()
-        p_public_key   = buff.unpack_array()
-        p_verify_token = buff.unpack_array()
+
+        # 1.7.x
+        if self.factory.protocol_version <= 5:
+            p_public_key   = buff.unpack_raw(buff.unpack('h'))
+            p_verify_token = buff.unpack_raw(buff.unpack('h'))
+        # 1.8.x
+        else:
+            p_public_key   = buff.unpack_raw(buff.unpack_varint())
+            p_verify_token = buff.unpack_raw(buff.unpack_varint())
 
         if not self.factory.profile.logged_in:
             raise ProtocolError("Can't log into online-mode server while using"
@@ -87,10 +119,18 @@ class ClientProtocol(Protocol):
 
     @register("login", 0x02)
     def packet_login_success(self, buff):
-        buff.discard()
+        p_uuid = buff.unpack_string()
+        p_username = buff.unpack_string()
 
         self.protocol_mode = "play"
         self.player_joined()
+
+    @register("login", 0x03)
+    def packet_set_compression(self, buff):
+        self.compression_threshold = buff.unpack_varint()
+        self.compression_enabled = True
+
+        self.logger.debug("Compression enabled (%d byte threshold)" % self.compression_threshold)
 
 
 class ClientFactory(Factory, protocol.ClientFactory):
