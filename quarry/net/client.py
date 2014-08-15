@@ -76,11 +76,11 @@ class ClientProtocol(Protocol):
 
     def player_joined(self):
         Protocol.player_joined(self)
-        self.logger.info("Game joined.")
+        self.logger.info("Joined the game.")
 
     def player_left(self):
         Protocol.player_left(self)
-        self.logger.info("Game left.")
+        self.logger.info("Left the game.")
 
     ### Packet handlers -------------------------------------------------------
 

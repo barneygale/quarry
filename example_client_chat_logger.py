@@ -37,7 +37,7 @@ class ChatLoggerProtocol(ClientProtocol):
         else:
             p_position = buff.unpack('B')
 
-        self.logger.info("CHAT :: %s" % p_text)
+        self.logger.info(":: %s" % p_text)
 
 
     @register("play", 0x08)
