@@ -14,7 +14,37 @@ class ClientProtocol(Protocol):
     def __init__(self, factory, addr):
         Protocol.__init__(self, factory, addr)
 
+    ### Convenience functions -------------------------------------------------
+
+    def switch_protocol_mode(self, mode):
+        self.check_protocol_mode_switch(mode)
+
+        if mode in ("status", "login"):
+            # Send handshake
+            self.send_packet(0,
+                self.buff_type.pack_varint(self.factory.protocol_version) +
+                self.buff_type.pack_string(self.recv_addr.host) +
+                self.buff_type.pack('H', self.recv_addr.port) +
+                self.buff_type.pack_varint(
+                    protocol_modes_inv[self.protocol_mode_next]))
+
+        self.protocol_mode = mode
+
+        if mode == "status":
+            # Send status request
+            self.send_packet(0)
+
+        elif mode == "login":
+            # Send login start
+            self.send_packet(0, self.buff_type.pack_string(
+                self.factory.profile.username))
+
+
     ### Callbacks -------------------------------------------------------------
+
+    def connection_made(self):
+        Protocol.connection_made(self)
+        self.switch_protocol_mode(self.protocol_mode_next)
 
     def auth_ok(self, data):
         # Send encryption response
@@ -53,28 +83,6 @@ class ClientProtocol(Protocol):
         self.logger.info("Game left.")
 
     ### Packet handlers -------------------------------------------------------
-
-    def connection_made(self):
-        Protocol.connection_made(self)
-
-        # Send handshake
-        self.send_packet(0,
-            self.buff_type.pack_varint(self.factory.protocol_version) +
-            self.buff_type.pack_string(self.recv_addr.host) +
-            self.buff_type.pack('H', self.recv_addr.port) +
-            self.buff_type.pack_varint(
-                protocol_modes_inv[self.protocol_mode_next]))
-
-        self.protocol_mode = self.protocol_mode_next
-
-        if self.protocol_mode == "status":
-            # Send status request
-            self.send_packet(0)
-
-        elif self.protocol_mode == "login":
-            # Send login start
-            self.send_packet(0, self.buff_type.pack_string(
-                self.factory.profile.username))
 
     @register("login", 0x00)
     def packet_kick(self, buff):
@@ -122,7 +130,7 @@ class ClientProtocol(Protocol):
         p_uuid = buff.unpack_string()
         p_username = buff.unpack_string()
 
-        self.protocol_mode = "play"
+        self.switch_protocol_mode("play")
         self.player_joined()
 
     @register("login", 0x03)
@@ -131,7 +139,6 @@ class ClientProtocol(Protocol):
         self.compression_enabled = True
 
         self.logger.debug("Compression enabled (%d byte threshold)" % self.compression_threshold)
-
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol

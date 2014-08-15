@@ -1,4 +1,4 @@
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes, register
@@ -17,6 +17,11 @@ class ServerProtocol(Protocol):
     # by sending packets out-of-order or duplicated
     login_expecting = 0
 
+    # the mojang 1.7.x client has a race condition where kicking immediately
+    # after switching to "play" mode will cause a cast error in the client.
+    # the fix is to set a deferred up which will fire when it's safe again
+    safe_kick = None
+
     def __init__(self, factory, addr):
         Protocol.__init__(self, factory, addr)
         self.server_id    = crypto.make_server_id()
@@ -25,30 +30,10 @@ class ServerProtocol(Protocol):
 
     ### Convenience functions -------------------------------------------------
 
-    def close(self, reason=None):
-        if not self.closed and reason is not None:
-            # Kick the player if possible.
-            if self.protocol_mode == "login":
-                self.send_packet(0x00, self.buff_type.pack_chat(reason))
-            elif self.protocol_mode == "play":
-                self.send_packet(0x40, self.buff_type.pack_chat(reason))
+    def switch_protocol_mode(self, mode):
+        self.check_protocol_mode_switch(mode)
 
-        Protocol.close(self, reason)
-
-    ### Callbacks -------------------------------------------------------------
-
-    def auth_ok(self, data):
-        self.username_confirmed = True
-        self.uuid = types.UUID.from_hex(data['id'])
-
-        self.player_joined()
-
-    def player_joined(self, switch_to_play=True):
-        Protocol.player_joined(self)
-
-        self.logger.info("%s has joined." % self.username)
-
-        if switch_to_play:
+        if mode == "play":
             # 1.7.x
             if self.protocol_version <= 5:
                 uuid = self.uuid.to_hex(withDashes=True)
@@ -59,10 +44,54 @@ class ServerProtocol(Protocol):
             # Send login success
             self.send_packet(2,
                 self.buff_type.pack_string(uuid) +
-                self.buff_type.pack_string(self.username)
-            )
+                self.buff_type.pack_string(self.username))
 
-            self.protocol_mode = "play"
+            if self.protocol_version <= 5:
+                def make_safe():
+                    self.safe_kick.callback(None)
+                    self.safe_kick = None
+
+                def make_unsafe():
+                    self.safe_kick = defer.Deferred()
+                    self.tasks.add_delay(0.5, make_safe)
+
+                make_unsafe()
+
+        self.protocol_mode = mode
+
+    def close(self, reason=None):
+        if not self.closed and reason is not None:
+            # Kick the player if possible.
+            if self.protocol_mode == "play":
+                def real_kick(*a):
+                    self.send_packet(0x40, self.buff_type.pack_chat(reason))
+                    Protocol.close(self, reason)
+
+                if self.safe_kick:
+                    self.safe_kick.addCallback(real_kick)
+                else:
+                    real_kick()
+            else:
+                if self.protocol_mode == "login":
+                    self.send_packet(0x00, self.buff_type.pack_chat(reason))
+                Protocol.close(self, reason)
+        else:
+            Protocol.close(self, reason)
+
+    ### Callbacks -------------------------------------------------------------
+
+    def auth_ok(self, data):
+        self.username_confirmed = True
+        self.uuid = types.UUID.from_hex(data['id'])
+
+        self.player_joined()
+
+    def player_joined(self):
+        Protocol.player_joined(self)
+
+        self.logger.info("%s has joined." % self.username)
+
+        self.switch_protocol_mode("play")
 
     def player_left(self):
         Protocol.player_left(self)
@@ -78,7 +107,8 @@ class ServerProtocol(Protocol):
         p_server_port = buff.unpack("H")
         p_protocol_mode = buff.unpack_varint()
 
-        self.protocol_mode = protocol_modes[p_protocol_mode]
+        mode = protocol_modes.get(p_protocol_mode, p_protocol_mode)
+        self.switch_protocol_mode(mode)
 
         if self.factory.enforce_protocol_versions \
                 and p_protocol_version not in self.factory.protocol_versions:

@@ -87,6 +87,21 @@ class Protocol(protocol.Protocol, object):
 
     ### Convenience functions -------------------------------------------------
 
+    def check_protocol_mode_switch(self, mode):
+        transitions = [
+            ("init", "status"),
+            ("init", "login"),
+            ("login", "play")
+        ]
+
+        if (self.protocol_mode, mode) not in transitions:
+            raise ProtocolError("Cannot switch protocol mode from %s to %s"
+                                % (self.protocol_mode, mode))
+
+    def switch_protocol_mode(self, mode):
+        self.check_protocol_mode_switch(mode)
+        self.protocol_mode = mode
+
     def close(self, reason=None):
         """Closes the connection"""
 
