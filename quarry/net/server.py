@@ -237,7 +237,7 @@ class ServerFactory(Factory):
     protocol_versions = {
         4: "1.7.4",
         5: "1.7.10",
-        36: "14w32d"
+        38: "14w33b"
     }
 
     def __init__(self):
