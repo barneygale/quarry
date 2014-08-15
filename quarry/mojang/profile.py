@@ -111,7 +111,7 @@ class Profile:
             accessToken = access_token,
             selectedProfile = {
                 "name": username,
-                "id": uuid.to_hex(withDashes=True)
+                "id": uuid.to_hex()
             }
         )
         d1.addCallbacks(_callback, _errback)

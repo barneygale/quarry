@@ -16,8 +16,8 @@ class UUID(uuid.UUID):
         base_uuid = uuid.uuid3(FakeNamespace(), username)
         return UUID(bytes=base_uuid.bytes)
 
-    def to_hex(self, withDashes=False):
-        if withDashes:
+    def to_hex(self, with_dashes=True):
+        if with_dashes:
             return "%s" % self
         else:
             return self.hex

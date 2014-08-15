@@ -34,16 +34,9 @@ class ServerProtocol(Protocol):
         self.check_protocol_mode_switch(mode)
 
         if mode == "play":
-            # 1.7.x
-            if self.protocol_version <= 5:
-                uuid = self.uuid.to_hex(withDashes=True)
-            # 1.8.x
-            else:
-                uuid = self.uuid.to_hex(withDashes=True)
-
             # Send login success
             self.send_packet(2,
-                self.buff_type.pack_string(uuid) +
+                self.buff_type.pack_string(self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.username))
 
             if self.protocol_version <= 5:
