@@ -6,6 +6,7 @@ from twisted.internet import protocol, reactor
 from quarry.util.crypto import Cipher
 from quarry.util.buffer import Buffer, BufferUnderrun
 from quarry.util.tasks import Tasks
+from quarry.util.dispatch import PacketDispatcher, register
 
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
@@ -19,19 +20,11 @@ protocol_modes = {
 protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.iteritems()))
 
 
-# Registers a packet handler by giving it a '_packet_handler' field
-def register(protocol_mode, packet_ident):
-    def inner(fnc):
-        fnc._packet_handler = (protocol_mode, packet_ident)
-        return fnc
-    return inner
-
-
 class ProtocolError(Exception):
     pass
 
 
-class Protocol(protocol.Protocol, object):
+class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
     protocol_mode = "init"
@@ -62,17 +55,6 @@ class Protocol(protocol.Protocol, object):
             self.connection_timed_out)
 
         self.setup()
-
-    def register_handlers(self):
-        self.packet_handlers = {}
-
-        cls = self.__class__
-        for field_name in dir(cls):
-            if not field_name.startswith("__"):
-                field = getattr(cls, field_name)
-                data  = getattr(field, "_packet_handler", None)
-                if data:
-                    self.packet_handlers[data] = field_name
 
     ### Fix ugly twisted methods ----------------------------------------------
 
@@ -245,11 +227,10 @@ class Protocol(protocol.Protocol, object):
 
         self.log_packet(". recv", ident)
 
-        handler = self.packet_handlers.get((self.protocol_mode, ident), None)
-        if handler:
-            return getattr(self, handler)(buff)
-        else:
-            return self.packet_unhandled(buff, ident)
+        dispatched = self.dispatch((self.protocol_mode, ident), buff)
+
+        if not dispatched:
+            self.packet_unhandled(buff, ident)
 
     def packet_unhandled(self, buff, ident):
         """Called when a packet has no registered handler"""
