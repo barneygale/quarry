@@ -103,7 +103,7 @@ class ServerProtocol(Protocol):
         mode = protocol_modes.get(p_protocol_mode, p_protocol_mode)
         self.switch_protocol_mode(mode)
 
-        if self.factory.enforce_protocol_versions \
+        if mode == "login" \
                 and p_protocol_version not in self.factory.protocol_versions:
 
             self.close("Wrong protocol version")
@@ -232,7 +232,6 @@ class ServerFactory(Factory):
     max_players = 20
     favicon = None
     online_mode = True
-    enforce_protocol_versions = True
 
     protocol_versions = {
         4: "1.7.4",
