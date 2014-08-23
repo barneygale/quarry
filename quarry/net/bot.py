@@ -3,11 +3,7 @@ from twisted.internet.protocol import ReconnectingClientFactory
 
 from quarry.net.client import ClientFactory, ClientProtocol, register
 
-# exception
-
-
-
-
+# 1.7.x only!
 
 class BotProtocol(ClientProtocol):
     protocol_mode_next = "login"
