@@ -1,4 +1,4 @@
-from quarry.net.proxy import ProxyServerFactory, Bridge, register
+from quarry.net.proxy import DownstreamFactory, Bridge, register
 
 ###
 ### PROXY SERVER
@@ -6,13 +6,13 @@ from quarry.net.proxy import ProxyServerFactory, Bridge, register
 ###
 
 
-class ExampleProxyBridge(Bridge):
+class QuietBridge(Bridge):
     quiet_mode = False
 
-    @register("play", 0x01, "downstream")
+    @register("play", 0x01, "upstream")
     def packet_client_chat(self, buff):
         buff.save()
-        chat_message = buff.unpack_string()
+        chat_message = self.read_chat(buff, "upstream")
         self.logger.info(" >> %s" % chat_message)
 
 
@@ -20,14 +20,14 @@ class ExampleProxyBridge(Bridge):
             # Switch mode
             self.quiet_mode = not self.quiet_mode
 
-            msg = "Quiet mode %s" % \
-                  (self.quiet_mode and "enabled" or "disabled")
-            self.downstream.send_packet(0x02, self.buff_type.pack_chat(msg))
+            action = self.quiet_mode and "enabled" or "disabled"
+            msg = "Quiet mode %s" % action
+            self.downstream.send_packet(0x02, self.write_chat(msg, "downstream"))
 
         elif self.quiet_mode and not chat_message.startswith("/"):
             # Don't let the player send chat messages in quiet mode
             msg = "Can't send messages while in quiet mode"
-            self.downstream.send_packet(0x02, self.buff_type.pack_chat(msg))
+            self.downstream.send_packet(0x02, self.write_chat(msg, "downstream"))
 
         else:
             # Pass to upstream
@@ -35,10 +35,9 @@ class ExampleProxyBridge(Bridge):
             self.upstream.send_packet(0x01,
                 buff.unpack_all())
 
-    @register("play", 0x02, "upstream")
+    @register("play", 0x02, "downstream")
     def packet_server_chat(self, buff):
-        buff.save()
-        chat_message = buff.unpack_chat()
+        chat_message = self.read_chat(buff, "downstream")
         self.logger.info(" :: %s" % chat_message)
 
         if self.quiet_mode and  chat_message.startswith("<"):
@@ -50,9 +49,43 @@ class ExampleProxyBridge(Bridge):
             buff.restore()
             self.downstream.send_packet(0x02, buff.unpack_all())
 
+    def read_chat(self, buff, direction):
+        buff.save()
+        if direction == "upstream":
+            p_text = buff.unpack_string()
+            return p_text
+        elif direction == "downstream":
+            p_text = buff.unpack_chat()
 
-class ExampleProxyServerFactory(ProxyServerFactory):
-    bridge_class = ExampleProxyBridge
+            # 1.7.x
+            if self.upstream_factory.protocol_version <= 5:
+                p_position = 0
+
+            # 1.8.x
+            else:
+                p_position = buff.unpack('B')
+
+            if p_position in (0, 1):
+                return p_text
+
+    def write_chat(self, text, direction):
+        if direction == "upstream":
+            return self.buff_type.pack_string(text)
+        elif direction == "downstream":
+            data = self.buff_type.pack_chat(text)
+
+            # 1.7.x
+            if self.downstream.protocol_version <= 5:
+                pass
+
+            # 1.8.x
+            else:
+                data += self.buff_type.pack('B', 0)
+
+            return data
+
+class QuietDownstreamFactory(DownstreamFactory):
+    bridge_class = QuietBridge
     motd = "Proxy Server"
 
 
@@ -72,7 +105,7 @@ def main():
         return parser.print_usage()
 
     # Create factory
-    factory = ExampleProxyServerFactory()
+    factory = QuietDownstreamFactory()
     factory.motd = "Proxy Server"
     factory.connect_host = args[0]
     factory.connect_port = int(args[1])
