@@ -25,6 +25,10 @@ The distribution includes a few example uses of the `quarry` module.
 * Auth server: authenticate users with the mojang session server, then kick
   them
 
+### proxies
+
+* Quiet proxy: Lets users turn on "quiet" mode that hides chat from the server
+
 ## requirements
 
 * python 2.7
