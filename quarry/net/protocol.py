@@ -27,6 +27,7 @@ class ProtocolError(Exception):
 class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
+    protocol_version = None
     protocol_mode = "init"
     compression_threshold = None
     compression_enabled = False

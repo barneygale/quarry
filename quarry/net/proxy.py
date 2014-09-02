@@ -104,7 +104,7 @@ class Bridge(PacketDispatcher):
         self.upstream_factory.bridge = self
         self.upstream_factory.buff_type = self.buff_type
         self.upstream_factory.profile = profile
-        self.upstream_factory.protocol_version = \
+        self.upstream_factory.protocol.protocol_version = \
             self.downstream.protocol_version
 
         # Connect!

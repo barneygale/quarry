@@ -31,7 +31,7 @@ class ChatLoggerProtocol(ClientProtocol):
         p_text = buff.unpack_chat()
 
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             pass
         # 1.8.x
         else:
@@ -47,7 +47,7 @@ class ChatLoggerProtocol(ClientProtocol):
         p_pitch = buff.unpack('f')
 
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             p_on_ground = buff.unpack('?')
 
             self.coords = p_coords
@@ -76,7 +76,7 @@ class ChatLoggerProtocol(ClientProtocol):
         # Send Player Position And Look
 
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             self.send_packet(0x06, self.buff_type.pack('ddddff?',
                 self.coords[0],
                 self.coords[1] - 1.62,

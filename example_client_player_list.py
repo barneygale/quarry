@@ -15,7 +15,7 @@ class PlayerListProtocol(ClientProtocol):
     @register("play", 0x38)
     def packet_player_list_item(self, buff):
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             p_player_name = buff.unpack_string()
             p_online = buff.unpack('?')
             p_ping = buff.unpack('h')

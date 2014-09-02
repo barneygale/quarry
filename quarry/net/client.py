@@ -9,6 +9,7 @@ from quarry.util import crypto
 class ClientProtocol(Protocol):
     """This class represents a connection to a server"""
 
+    protocol_version = 5
     protocol_mode_next = "login"
 
     def __init__(self, factory, addr):
@@ -22,7 +23,7 @@ class ClientProtocol(Protocol):
         if mode in ("status", "login"):
             # Send handshake
             self.send_packet(0,
-                self.buff_type.pack_varint(self.factory.protocol_version) +
+                self.buff_type.pack_varint(self.protocol_version) +
                 self.buff_type.pack_string(self.recv_addr.host) +
                 self.buff_type.pack('H', self.recv_addr.port) +
                 self.buff_type.pack_varint(
@@ -56,7 +57,7 @@ class ClientProtocol(Protocol):
             self.verify_token)
 
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             self.send_packet(1,
                 self.buff_type.pack('h', len(p_shared_secret)) +
                 self.buff_type.pack_raw(p_shared_secret) +
@@ -95,7 +96,7 @@ class ClientProtocol(Protocol):
         p_server_id    = buff.unpack_string()
 
         # 1.7.x
-        if self.factory.protocol_version <= 5:
+        if self.protocol_version <= 5:
             p_public_key   = buff.unpack_raw(buff.unpack('h'))
             p_verify_token = buff.unpack_raw(buff.unpack('h'))
         # 1.8.x
@@ -142,7 +143,6 @@ class ClientProtocol(Protocol):
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
-    protocol_version = 5
     profile = None
 
     def connect(self, addr, port=25565):

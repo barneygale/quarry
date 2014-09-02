@@ -58,7 +58,7 @@ class QuietBridge(Bridge):
             p_text = buff.unpack_chat()
 
             # 1.7.x
-            if self.upstream_factory.protocol_version <= 5:
+            if self.upstream.protocol_version <= 5:
                 p_position = 0
 
             # 1.8.x
