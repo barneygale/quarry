@@ -271,6 +271,12 @@ class Factory(protocol.Factory, object):
     connection_timeout = 30
     auth_timeout = 30
 
+    protocol_versions = {
+        4: "1.7.4",
+        5: "1.7.10",
+        44: "1.8-pre1"
+    }
+
     def buildProtocol(self, addr):
         return self.protocol(self, addr)
 

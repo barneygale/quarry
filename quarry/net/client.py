@@ -1,4 +1,4 @@
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, defer
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes_inv, register
@@ -147,3 +147,28 @@ class ClientFactory(Factory, protocol.ClientFactory):
 
     def connect(self, addr, port=25565):
         reactor.connectTCP(addr, port, self, self.connection_timeout)
+
+class AgnosticClientProtocol(ClientProtocol):
+    protocol_mode_next = "status"
+
+    @register("status", 0x00)
+    def packet_status_response(self, buff):
+        p_response = buff.unpack_json()
+        p_version = int(p_response["version"]["protocol"])
+
+        self.factory.version_request.callback(p_version)
+
+class AgnosticClientFactory(ClientFactory):
+    def connect(self, addr, port=25565):
+        def _callback(protocol_version):
+            if protocol_version in self.protocol_versions:
+                self.protocol_version = protocol_version
+                ClientFactory.connect(self, addr, port)
+            else:
+                pass #TODO
+
+        factory = ClientFactory()
+        factory.protocol = AgnosticClientProtocol
+        factory.version_request = defer.Deferred()
+        factory.version_request.addCallback(_callback)
+        factory.connect(addr, port)
