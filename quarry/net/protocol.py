@@ -85,6 +85,14 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.check_protocol_mode_switch(mode)
         self.protocol_mode = mode
 
+    def set_compression(self, compression_threshold):
+        if not self.compression_enabled:
+            self.compression_enabled = True
+            self.logger.debug("Compression enabled")
+
+        self.compression_threshold = compression_threshold
+        self.logger.debug("Compression threshold set to %d bytes" % compression_threshold)
+
     def close(self, reason=None):
         """Closes the connection"""
 

@@ -7,8 +7,6 @@ from quarry.mojang.profile import Profile
 ###
 
 class PlayerListProtocol(ClientProtocol):
-    protocol_mode_next = "login"
-
     def setup(self):
         self.players = {}
 

@@ -9,8 +9,7 @@ from quarry.util import crypto
 class ClientProtocol(Protocol):
     """This class represents a connection to a server"""
 
-    protocol_version = 5
-    protocol_mode_next = "login"
+    protocol_mode_next = None
 
     def __init__(self, factory, addr):
         Protocol.__init__(self, factory, addr)
@@ -83,7 +82,15 @@ class ClientProtocol(Protocol):
         Protocol.player_left(self)
         self.logger.info("Left the game.")
 
+    def status_response(self, data):
+        self.close()
+
     ### Packet handlers -------------------------------------------------------
+
+    @register("status", 0x00)
+    def packet_status_response(self, buff):
+        p_data = buff.unpack_json()
+        self.status_response(p_data)
 
     @register("login", 0x00)
     def packet_kick(self, buff):
@@ -135,40 +142,35 @@ class ClientProtocol(Protocol):
         self.player_joined()
 
     @register("login", 0x03)
-    def packet_set_compression(self, buff):
-        self.compression_threshold = buff.unpack_varint()
-        self.compression_enabled = True
+    def packet_login_set_compression(self, buff):
+        self.set_compression(buff.unpack_varint())
 
-        self.logger.debug("Compression enabled (%d byte threshold)" % self.compression_threshold)
+    @register("play", 0x46)
+    def packet_play_set_compression(self, buff):
+        self.set_compression(buff.unpack_varint())
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
     profile = None
 
-    def connect(self, addr, port=25565):
-        reactor.connectTCP(addr, port, self, self.connection_timeout)
+    def connect(self, addr, port=25565, protocol_mode_next="login",
+                protocol_version=0):
 
-class AgnosticClientProtocol(ClientProtocol):
-    protocol_mode_next = "status"
+        if protocol_mode_next == "status" or protocol_version > 0:
+            self.protocol.protocol_mode_next = protocol_mode_next
+            self.protocol.protocol_version = protocol_version
+            reactor.connectTCP(addr, port, self, self.connection_timeout)
 
-    @register("status", 0x00)
-    def packet_status_response(self, buff):
-        p_response = buff.unpack_json()
-        p_version = int(p_response["version"]["protocol"])
+        else:
+            def _callback(protocol_obj, data):
+                protocol_obj.close()
+                detected_version = int(data["version"]["protocol"])
+                if detected_version in self.protocol_versions:
+                    self.connect(addr, port, protocol_mode_next,
+                                 detected_version)
+                else:
+                    pass #TODO
 
-        self.factory.version_request.callback(p_version)
-
-class AgnosticClientFactory(ClientFactory):
-    def connect(self, addr, port=25565):
-        def _callback(protocol_version):
-            if protocol_version in self.protocol_versions:
-                self.protocol_version = protocol_version
-                ClientFactory.connect(self, addr, port)
-            else:
-                pass #TODO
-
-        factory = ClientFactory()
-        factory.protocol = AgnosticClientProtocol
-        factory.version_request = defer.Deferred()
-        factory.version_request.addCallback(_callback)
-        factory.connect(addr, port)
+            factory = ClientFactory()
+            factory.protocol.status_response = _callback
+            factory.connect(addr, port, "status")

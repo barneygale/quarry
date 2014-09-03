@@ -104,13 +104,13 @@ class Bridge(PacketDispatcher):
         self.upstream_factory.bridge = self
         self.upstream_factory.buff_type = self.buff_type
         self.upstream_factory.profile = profile
-        self.upstream_factory.protocol.protocol_version = \
-            self.downstream.protocol_version
 
         # Connect!
         self.upstream_factory.connect(
             self.downstream_factory.connect_host,
-            self.downstream_factory.connect_port)
+            self.downstream_factory.connect_port,
+            "login",
+            self.downstream.protocol_version)
 
     def upstream_connected(self):
         self.downstream.enable_passthrough()

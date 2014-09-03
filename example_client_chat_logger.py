@@ -9,8 +9,6 @@ from quarry.mojang.profile import Profile
 ###
 
 class ChatLoggerProtocol(ClientProtocol):
-    protocol_mode_next = "login"
-
     spawned = False
 
     def setup(self):

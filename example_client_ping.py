@@ -7,12 +7,8 @@ from quarry.mojang.profile import Profile
 ###
 
 class PingProtocol(ClientProtocol):
-    protocol_mode_next = "status"
-
-    @register("status", 0)
-    def packet_status_response(self, buff):
-        p_response = buff.unpack_json()
-        for k, v in sorted(p_response.items()):
+    def status_response(self, data):
+        for k, v in sorted(data.items()):
             if k != "favicon":
                 self.logger.info("%s --> %s" % (k, v))
 
@@ -41,7 +37,7 @@ def main():
     factory = PingFactory()
     factory.profile = profile
 
-    factory.connect(host, int(port))
+    factory.connect(host, int(port), "status")
     factory.run()
 
 if __name__ == "__main__":
