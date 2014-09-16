@@ -23,7 +23,7 @@ class ClientProtocol(Protocol):
             # Send handshake
             self.send_packet(0,
                 self.buff_type.pack_varint(self.protocol_version) +
-                self.buff_type.pack_string(self.recv_addr.host) +
+                self.buff_type.pack_string(self.factory.addr) +
                 self.buff_type.pack('H', self.recv_addr.port) +
                 self.buff_type.pack_varint(
                     protocol_modes_inv[self.protocol_mode_next]))
@@ -152,9 +152,12 @@ class ClientProtocol(Protocol):
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
     profile = None
+    addr = None
 
     def connect(self, addr, port=25565, protocol_mode_next="login",
                 protocol_version=0):
+
+        self.addr = addr
 
         if protocol_mode_next == "status" or protocol_version > 0:
             self.protocol.protocol_mode_next = protocol_mode_next
