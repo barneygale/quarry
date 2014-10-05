@@ -162,15 +162,16 @@ class ClientFactory(Factory, protocol.ClientFactory):
             reactor.connectTCP(addr, port, self, self.connection_timeout)
 
         else:
-            def _callback(protocol_obj, data):
-                protocol_obj.close()
-                detected_version = int(data["version"]["protocol"])
-                if detected_version in self.protocol_versions:
-                    self.connect(addr, port, protocol_mode_next,
-                                 detected_version)
-                else:
-                    pass #TODO
-
             factory = ClientFactory()
-            factory.protocol.status_response = _callback
+            class PingProtocol(factory.protocol):
+                def status_response(s, data):
+                    s.close()
+                    detected_version = int(data["version"]["protocol"])
+                    if detected_version in self.protocol_versions:
+                        self.connect(addr, port, protocol_mode_next,
+                                     detected_version)
+                    else:
+                        pass #TODO
+
+            factory.protocol = PingProtocol
             factory.connect(addr, port, "status")
