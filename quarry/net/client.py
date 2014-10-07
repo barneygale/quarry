@@ -21,10 +21,11 @@ class ClientProtocol(Protocol):
 
         if mode in ("status", "login"):
             # Send handshake
+            addr = self.transport.connector.getDestination()
             self.send_packet(0,
                 self.buff_type.pack_varint(self.protocol_version) +
-                self.buff_type.pack_string(self.recv_addr.host) +
-                self.buff_type.pack('H', self.recv_addr.port) +
+                self.buff_type.pack_string(addr.host) +
+                self.buff_type.pack('H', addr.port) +
                 self.buff_type.pack_varint(
                     protocol_modes_inv[self.protocol_mode_next]))
 
