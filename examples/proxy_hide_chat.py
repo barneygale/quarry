@@ -89,17 +89,19 @@ class QuietDownstreamFactory(DownstreamFactory):
     motd = "Proxy Server"
 
 
-def main():
+def main(args):
     # Parse options
     import optparse
-    parser = optparse.OptionParser("usage: %prog [options] connect-host connect-port")
+    parser = optparse.OptionParser(
+        usage="usage: %prog proxy_hide_chat "
+              "[options] <connect-host> <connect-port>")
     parser.add_option("-a", "--listen-host",
                       dest="listen_host", default="",
                       help="address to listen on")
     parser.add_option("-p", "--listen-port",
                       dest="listen_port", default="25565", type="int",
                       help="port to listen on")
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(args)
 
     if len(args) != 2:
         return parser.print_usage()
@@ -113,6 +115,3 @@ def main():
     # Listen
     factory.listen(options.listen_host, options.listen_port)
     factory.run()
-
-if __name__ == "__main__":
-    main()

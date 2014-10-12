@@ -16,10 +16,12 @@ class DowntimeFactory(ServerFactory):
     protocol = DowntimeProtocol
 
 
-def main():
+def main(args):
     # Parse options
     import optparse
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(
+        usage="usage: %prog server_downtime "
+              "[options]")
     parser.add_option("-a", "--host",
                       dest="host", default="",
                       help="address to listen on")
@@ -29,7 +31,7 @@ def main():
     parser.add_option("-m", "--message",
                       dest="message", default="We're down for maintenance",
                       help="message to kick users with")
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(args)
 
     # Create factory
     factory = DowntimeFactory()
@@ -38,6 +40,3 @@ def main():
     # Listen
     factory.listen(options.host, options.port)
     factory.run()
-
-if __name__ == "__main__":
-    main()

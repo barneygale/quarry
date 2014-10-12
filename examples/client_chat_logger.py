@@ -103,12 +103,13 @@ class ChatLoggerFactory(ClientFactory):
     protocol = ChatLoggerProtocol
 
 
-def main():
+def main(args):
     # Parse options
     import optparse
     parser = optparse.OptionParser(
-        usage="usage: %prog host port username password")
-    (options, args) = parser.parse_args()
+        usage="usage: %prog chat_logger "
+              "<connect-host> <connect-port> <username> <password>")
+    (options, args) = parser.parse_args(args)
 
     if len(args) != 4:
         return parser.print_usage()
@@ -132,6 +133,3 @@ def main():
     deferred = profile.login(username, password)
     deferred.addCallbacks(login_ok, login_failed)
     factory.run()
-
-if __name__ == "__main__":
-    main()

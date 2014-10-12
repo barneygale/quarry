@@ -18,11 +18,13 @@ class PingProtocol(ClientProtocol):
 class PingFactory(ClientFactory):
     protocol = PingProtocol
 
-def main():
+def main(args):
     # Parse options
     import optparse
-    parser = optparse.OptionParser(usage="usage: %prog host port")
-    (options, args) = parser.parse_args()
+    parser = optparse.OptionParser(
+        usage="usage: %prog client_ping "
+              "<connect-host> <connect-port>")
+    (options, args) = parser.parse_args(args)
 
     if len(args) != 2:
         return parser.print_usage()
@@ -39,6 +41,3 @@ def main():
 
     factory.connect(host, int(port), "status")
     factory.run()
-
-if __name__ == "__main__":
-    main()
