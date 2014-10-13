@@ -7,10 +7,22 @@ from quarry.net.server import ServerFactory, ServerProtocol
 
 class AuthProtocol(ServerProtocol):
     def player_joined(self):
+        # This method gets called when a player successfully joins the server.
+        #   If we're in online mode (the default), this means auth with the
+        #   session server was successful and the user definitely owns the
+        #   username they claim to.
+
+        # Call super. This switches us to "play" mode, marks the player as
+        #   in-game, and does some logging.
         ServerProtocol.player_joined(self)
 
-        # Some logic here
+        # Define your own logic here. It could be an HTTP request to an API,
+        #   or perhaps an update to a database table.
+        username = self.username
+        ip_addr  = self.recv_addr.host
+        self.logger.info("[%s authed with IP %s]" % (username, ip_addr))
 
+        # Kick the player.
         self.close("Thanks, you are now registered!")
 
 
