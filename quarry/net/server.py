@@ -1,3 +1,5 @@
+import base64
+
 from twisted.internet import reactor, defer
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
@@ -231,6 +233,7 @@ class ServerFactory(Factory):
     motd = "A Minecraft Server"
     max_players = 20
     favicon = None
+    favicon_path = None
     online_mode = True
 
     def __init__(self):
@@ -238,6 +241,11 @@ class ServerFactory(Factory):
 
         self.keypair = crypto.make_keypair()
         self.public_key = crypto.export_public_key(self.keypair)
+
+        if self.favicon_path is not None:
+            favicon_data = open(self.favicon_path).read()
+            favicon_data = base64.encodestring(favicon_data)
+            self.favicon = "data:image/png;base64," + favicon_data
 
     def listen(self, addr, port=25565):
         reactor.listenTCP(port, self, interface=addr)
