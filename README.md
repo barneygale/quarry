@@ -32,5 +32,5 @@ The distribution includes a few example uses of the `quarry` module.
 ## requirements
 
 * python 2.7
-* pycrypto
+* pyca/cryptography >= 0.9
 * twisted

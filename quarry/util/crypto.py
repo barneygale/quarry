@@ -1,11 +1,15 @@
+import os
+import hashlib
+
 from twisted.web.client import HTTPClientFactory
 HTTPClientFactory.noisy = False
 
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
+from cryptography.hazmat.primitives import ciphers, serialization
+from cryptography.hazmat.primitives.ciphers import algorithms, modes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.backends import default_backend
 
-import hashlib
+backend = default_backend()
 
 
 class Cipher:
@@ -13,25 +17,41 @@ class Cipher:
         self.disable()
 
     def enable(self, key):
-        self.encrypt = AES.new(key, AES.MODE_CFB, key).encrypt
-        self.decrypt = AES.new(key, AES.MODE_CFB, key).decrypt
+        cipher = ciphers.Cipher(algorithms.AES(key), modes.CFB8(key), backend=backend)
+        self.encryptor = cipher.encryptor()
+        self.decryptor = cipher.decryptor()
 
     def disable(self):
-        self.encrypt = lambda d: d
-        self.decrypt = lambda d: d
+        self.encryptor = None
+        self.decryptor = None
+
+    def encrypt(self, data):
+        if self.encryptor:
+            return self.encryptor.update(data)
+        else:
+            return data
+
+    def decrypt(self, data):
+        if self.decryptor:
+            return self.decryptor.update(data)
+        else:
+            return data
 
 
 def make_keypair():
-    return RSA.generate(1024)
+    return rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=1024,
+        backend=default_backend())
 
 def make_server_id():
-    return "".join("%02x" % ord(c) for c in get_random_bytes(10))
+    return "".join("%02x" % ord(c) for c in os.urandom(10))
 
 def make_verify_token():
-    return get_random_bytes(4)
+    return os.urandom(4)
 
 def make_shared_secret():
-    return get_random_bytes(16)
+    return os.urandom(16)
 
 def make_digest(*data):
     sha1 = hashlib.sha1()
@@ -44,28 +64,21 @@ def make_digest(*data):
         return "%x" % digest
 
 def export_public_key(keypair):
-    return keypair.publickey().exportKey(format="DER")
+    return keypair.public_key().public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
 def import_public_key(data):
-    return RSA.importKey(data)
-
-def _pkcs1_unpad(data):
-    pos = data.find('\x00')
-    if pos > 0:
-        return data[pos+1:]
-
-def _pkcs1_pad(data):
-    assert len(data) < 117
-    padding = ""
-    while len(padding) < 125-len(data):
-        byte = get_random_bytes(1)
-        if byte != '\x00':
-            padding += byte
-    return '\x00\x02%s\x00%s' % (padding, data)
+    return serialization.load_der_public_key(
+        data=data,
+        backend=default_backend())
 
 def encrypt_secret(public_key, shared_secret):
-    d = _pkcs1_pad(shared_secret)
-    return public_key.encrypt(d, 0)[0]
+    return public_key.encrypt(
+        plaintext=shared_secret,
+        padding=padding.PKCS1v15())
 
 def decrypt_secret(keypair, data):
-    return _pkcs1_unpad(keypair.decrypt(data))
+    return keypair.decrypt(
+        ciphertext=data,
+        padding=padding.PKCS1v15())
