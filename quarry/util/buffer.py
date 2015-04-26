@@ -10,8 +10,8 @@ class BufferUnderrun(Exception):
 
 class Buffer(object):
     def __init__(self):
-        self.buff1 = ""
-        self.buff2 = ""
+        self.buff1 = bytearray()
+        self.buff2 = bytearray()
 
     def length(self):
         return len(self.buff1)
@@ -20,24 +20,21 @@ class Buffer(object):
         self.buff1 += d
 
     def discard(self):
-        self.buff1 = ""
+        del self.buff1[:]
 
     def save(self):
-        self.buff2 = self.buff1
+        self.buff2[:] = self.buff1[:]
 
     def restore(self):
-        self.buff1 = self.buff2
+        self.buff1[:] = self.buff2[:]
 
     def unpack_all(self):
-        d = self.buff1
-        self.discard()
-        return d
+        return self.unpack_raw(len(self.buff1))
 
     def unpack_raw(self, l):
         if len(self.buff1) < l:
             raise BufferUnderrun()
-        d, self.buff1 = self.buff1[:l], self.buff1[l:]
-        return d
+        return "".join((chr(self.buff1.pop(0)) for i in range(l)))
 
     def unpack(self, ty):
         ty = ">"+ty
