@@ -1,9 +1,6 @@
 import os
 import hashlib
 
-from twisted.web.client import HTTPClientFactory
-HTTPClientFactory.noisy = False
-
 from cryptography.hazmat.primitives import ciphers, serialization
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
