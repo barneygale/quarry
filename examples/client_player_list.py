@@ -105,8 +105,8 @@ def main(args):
     # Parse options
     import optparse
     parser = optparse.OptionParser(
-        usage="usage: %prog client_player_list "
-              "<connect-host> <connect-port> <username> <password>")
+        usage="usage: %prog <connect-host> <connect-port> "
+              "<username> <password>")
     (options, args) = parser.parse_args(args)
 
     if len(args) != 4:
@@ -131,3 +131,8 @@ def main(args):
     deferred = profile.login(username, password)
     deferred.addCallbacks(login_ok, login_failed)
     factory.run()
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1:])

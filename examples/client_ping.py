@@ -22,8 +22,7 @@ def main(args):
     # Parse options
     import optparse
     parser = optparse.OptionParser(
-        usage="usage: %prog client_ping "
-              "<connect-host> <connect-port>")
+        usage="usage: %prog <connect-host> <connect-port>")
     (options, args) = parser.parse_args(args)
 
     if len(args) != 2:
@@ -41,3 +40,8 @@ def main(args):
 
     factory.connect(host, int(port), "status")
     factory.run()
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1:])

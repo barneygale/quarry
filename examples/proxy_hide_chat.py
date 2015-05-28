@@ -93,8 +93,7 @@ def main(args):
     # Parse options
     import optparse
     parser = optparse.OptionParser(
-        usage="usage: %prog proxy_hide_chat "
-              "[options] <connect-host> <connect-port>")
+        usage="usage: %prog [options] <connect-host> <connect-port>")
     parser.add_option("-a", "--listen-host",
                       dest="listen_host", default="",
                       help="address to listen on")
@@ -115,3 +114,8 @@ def main(args):
     # Listen
     factory.listen(options.listen_host, options.listen_port)
     factory.run()
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1:])

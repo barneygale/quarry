@@ -20,8 +20,7 @@ def main(args):
     # Parse options
     import optparse
     parser = optparse.OptionParser(
-        usage="usage: %prog server_downtime "
-              "[options]")
+        usage="usage: %prog [options]")
     parser.add_option("-a", "--host",
                       dest="host", default="",
                       help="address to listen on")
@@ -40,3 +39,8 @@ def main(args):
     # Listen
     factory.listen(options.host, options.port)
     factory.run()
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1:])
