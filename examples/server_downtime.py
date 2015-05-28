@@ -1,9 +1,11 @@
+"""
+Example "downtime" server
+
+When a user tries to connect, the server will kick them with the MOTD
+"""
+
 from quarry.net.server import ServerFactory, ServerProtocol, register
 
-###
-### DOWNTIME SERVER
-###   when a user tries to connect, the server will kick them with the MOTD
-###
 
 class DowntimeProtocol(ServerProtocol):
     @register("login", 0)

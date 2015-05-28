@@ -1,10 +1,12 @@
+"""
+Player lister example client
+
+Logs in and prints the player list
+"""
+
 from quarry.net.client import ClientFactory, ClientProtocol, register
 from quarry.mojang.profile import Profile
 
-###
-### PLAYER LIST CLIENT
-###   logs in and prints the player list
-###
 
 class PlayerListProtocol(ClientProtocol):
     def setup(self):
@@ -31,7 +33,7 @@ class PlayerListProtocol(ClientProtocol):
             p_count = buff.unpack_varint()
             for i in range(p_count):
                 p_uuid = buff.unpack_uuid()
-                if p_action == 0: # ADD_PLAYER
+                if p_action == 0:  # ADD_PLAYER
                     p_player_name = buff.unpack_string()
                     p_properties_count = buff.unpack_varint()
                     p_properties = {}
@@ -59,17 +61,17 @@ class PlayerListProtocol(ClientProtocol):
                         'display_name': p_display_name
                     }
 
-                elif p_action == 1: # UPDATE_GAMEMODE
+                elif p_action == 1:  # UPDATE_GAMEMODE
                     p_gamemode = buff.unpack_varint()
 
                     if p_uuid in self.players:
                         self.players[p_uuid]['gamemode'] = p_gamemode
-                elif p_action == 2: # UPDATE_LATENCY
+                elif p_action == 2:  # UPDATE_LATENCY
                     p_ping = buff.unpack_varint()
 
                     if p_uuid in self.players:
                         self.players[p_uuid]['ping'] = p_ping
-                elif p_action == 3: # UPDATE_DISPLAY_NAME
+                elif p_action == 3:  # UPDATE_DISPLAY_NAME
                     p_has_display_name = buff.unpack('?')
                     if p_has_display_name:
                         p_display_name = buff.unpack_chat()
@@ -78,7 +80,7 @@ class PlayerListProtocol(ClientProtocol):
 
                     if p_uuid in self.players:
                         self.players[p_uuid]['display_name'] = p_display_name
-                elif p_action == 4: # REMOVE_PLAYER
+                elif p_action == 4:  # REMOVE_PLAYER
                     if p_uuid in self.players:
                         del self.players[p_uuid]
 

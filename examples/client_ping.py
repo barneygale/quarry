@@ -1,10 +1,13 @@
-from quarry.net.client import ClientFactory, ClientProtocol, register
+"""
+Pinger example client
+
+Asks the server for the information normally displayed in the minecraft
+multiplayer menu.
+"""
+
+from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
 
-###
-### PING CLIENT
-###   gets some data about the server
-###
 
 class PingProtocol(ClientProtocol):
     def status_response(self, data):
@@ -17,6 +20,7 @@ class PingProtocol(ClientProtocol):
 
 class PingFactory(ClientFactory):
     protocol = PingProtocol
+
 
 def main(args):
     # Parse options

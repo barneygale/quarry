@@ -1,12 +1,12 @@
-from twisted.internet import task
+"""
+Chat logger example client
+
+Stays in game and prints player chat to console.
+"""
 
 from quarry.net.client import ClientFactory, ClientProtocol, register
 from quarry.mojang.profile import Profile
 
-###
-### CHAT LOGGER CLIENT
-###   stays in game and prints player chat to console
-###
 
 class ChatLoggerProtocol(ClientProtocol):
     spawned = False
@@ -19,10 +19,8 @@ class ChatLoggerProtocol(ClientProtocol):
     def update_player(self):
         self.yaw = (self.yaw + 5) % 360
 
-        self.send_packet(0x05, self.buff_type.pack('ff?',
-            self.yaw,
-            self.pitch,
-            True))
+        self.send_packet(0x05, self.buff_type.pack('ff?', self.yaw, self.pitch,
+                                                   True))
 
     @register("play", 0x02)
     def packet_chat_message(self, buff):
@@ -36,7 +34,6 @@ class ChatLoggerProtocol(ClientProtocol):
             p_position = buff.unpack('B')
 
         self.logger.info(":: %s" % p_text)
-
 
     @register("play", 0x08)
     def packet_player_position_and_look(self, buff):
@@ -75,7 +72,8 @@ class ChatLoggerProtocol(ClientProtocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            self.send_packet(0x06, self.buff_type.pack('ddddff?',
+            self.send_packet(0x06, self.buff_type.pack(
+                'ddddff?',
                 self.coords[0],
                 self.coords[1] - 1.62,
                 self.coords[1],
@@ -86,7 +84,8 @@ class ChatLoggerProtocol(ClientProtocol):
 
         # 1.8.x
         else:
-            self.send_packet(0x06, self.buff_type.pack('dddff?',
+            self.send_packet(0x06, self.buff_type.pack(
+                'dddff?',
                 self.coords[0],
                 self.coords[1],
                 self.coords[2],
