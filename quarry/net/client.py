@@ -154,13 +154,13 @@ class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
     profile = None
 
-    def connect(self, addr, port=25565, protocol_mode_next="login",
+    def connect(self, host, port=25565, protocol_mode_next="login",
                 protocol_version=0):
 
         if protocol_mode_next == "status" or protocol_version > 0:
             self.protocol.protocol_mode_next = protocol_mode_next
             self.protocol.protocol_version = protocol_version
-            reactor.connectTCP(addr, port, self, self.connection_timeout)
+            reactor.connectTCP(host, port, self, self.connection_timeout)
 
         else:
             factory = ClientFactory()
@@ -169,10 +169,10 @@ class ClientFactory(Factory, protocol.ClientFactory):
                     s.close()
                     detected_version = int(data["version"]["protocol"])
                     if detected_version in self.protocol_versions:
-                        self.connect(addr, port, protocol_mode_next,
+                        self.connect(host, port, protocol_mode_next,
                                      detected_version)
                     else:
                         pass #TODO
 
             factory.protocol = PingProtocol
-            factory.connect(addr, port, "status")
+            factory.connect(host, port, "status")

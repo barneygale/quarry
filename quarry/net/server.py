@@ -98,7 +98,7 @@ class ServerProtocol(Protocol):
     @register("init", 0x00)
     def packet_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
-        p_server_addr = buff.unpack_string()
+        p_server_host = buff.unpack_string()
         p_server_port = buff.unpack("H")
         p_protocol_mode = buff.unpack_varint()
 
@@ -247,5 +247,5 @@ class ServerFactory(Factory):
             favicon_data = base64.encodestring(favicon_data)
             self.favicon = "data:image/png;base64," + favicon_data
 
-    def listen(self, addr, port=25565):
-        reactor.listenTCP(port, self, interface=addr)
+    def listen(self, host, port=25565):
+        reactor.listenTCP(port, self, interface=host)
