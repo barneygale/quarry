@@ -195,7 +195,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             # Try to read a packet
             try:
                 packet_length = self.recv_buff.unpack_varint()
-                packet_body = self.recv_buff.unpack_raw(packet_length)
+                packet_body = self.recv_buff.read(packet_length)
 
             # Incomplete packet read, restore the buffer.
             except BufferUnderrun:
@@ -212,7 +212,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                         uncompressed_length = packet_buff.unpack_varint()
 
                         if uncompressed_length > 0:
-                            data = zlib.decompress(packet_buff.unpack_all())
+                            data = zlib.decompress(packet_buff.read())
                             packet_buff = Buffer()
                             packet_buff.add(data)
                     ident = packet_buff.unpack_varint()

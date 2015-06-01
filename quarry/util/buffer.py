@@ -1,49 +1,51 @@
 import struct
 import json
 
+import qbuf
+
 from quarry.util import types
 
 
-class BufferUnderrun(Exception):
-    pass
+BufferUnderrun = qbuf.BufferUnderflow
 
 
 class Buffer(object):
     def __init__(self):
-        self.buff1 = bytearray()
-        self.buff2 = bytearray()
+        self.buff1 = qbuf.BufferQueue()
+        self.buff2 = qbuf.BufferQueue()
 
     def length(self):
         return len(self.buff1)
 
     def add(self, d):
-        self.buff1 += d
+        self.buff1.push(d)
 
-    def discard(self):
-        del self.buff1[:]
+    def _copy(self, buff_from, buff_to):
+        d = buff_from.pop()
+        buff_from.push(d)
+        buff_to.clear()
+        buff_to.push(d)
 
     def save(self):
-        self.buff2[:] = self.buff1[:]
+        self._copy(self.buff1, self.buff2)
 
     def restore(self):
-        self.buff1[:] = self.buff2[:]
+        self._copy(self.buff2, self.buff1)
 
-    def unpack_all(self):
-        return self.unpack_raw(len(self.buff1))
-
-    def unpack_raw(self, l):
-        if len(self.buff1) < l:
-            raise BufferUnderrun()
-        return "".join((chr(self.buff1.pop(0)) for i in range(l)))
+    def read(self, l=None):
+        if l is None:
+            return self.buff1.pop()
+        else:
+            return self.buff1.pop(l)
 
     def unpack(self, ty):
         ty = ">"+ty
-        s = struct.unpack(ty, self.unpack_raw(struct.calcsize(ty)))
+        s = struct.unpack(ty, self.read(struct.calcsize(ty)))
         return s[0] if len(s) == 1 else s
 
     def unpack_string(self):
         l = self.unpack_varint()
-        return self.unpack_raw(l).decode("utf-8")
+        return self.read(l).decode("utf-8")
 
     def unpack_json(self):
         return json.loads(self.unpack_string())
@@ -80,7 +82,7 @@ class Buffer(object):
         return d
 
     def unpack_uuid(self):
-        return types.UUID.from_bytes(self.unpack_raw(16))
+        return types.UUID.from_bytes(self.read(16))
 
     @classmethod
     def pack_raw(cls, data):

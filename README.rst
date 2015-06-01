@@ -65,5 +65,6 @@ Requirements
 - python 2.7
 - pyca/cryptography >= 0.9
 - twisted
+- qbuf
 
 .. _other packets: http://wiki.vg/Protocol

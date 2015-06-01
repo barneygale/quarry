@@ -34,7 +34,7 @@ class QuietBridge(Bridge):
         else:
             # Pass to upstream
             buff.restore()
-            self.upstream.send_packet(0x01, buff.unpack_all())
+            self.upstream.send_packet(0x01, buff.read())
 
     @register("play", 0x02, "downstream")
     def packet_server_chat(self, buff):
@@ -48,7 +48,7 @@ class QuietBridge(Bridge):
         else:
             # Pass to downstream
             buff.restore()
-            self.downstream.send_packet(0x02, buff.unpack_all())
+            self.downstream.send_packet(0x02, buff.read())
 
     def read_chat(self, buff, direction):
         buff.save()

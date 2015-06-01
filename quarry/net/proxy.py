@@ -131,9 +131,9 @@ class Bridge(PacketDispatcher):
 
     def packet_unhandled(self, buff, protocol_mode, ident, direction):
         if direction == "downstream":
-            self.downstream.send_packet(ident, buff.unpack_all())
+            self.downstream.send_packet(ident, buff.read())
         elif direction == "upstream":
-            self.upstream.send_packet(ident, buff.unpack_all())
+            self.upstream.send_packet(ident, buff.read())
 
 
 class Downstream(ServerProtocol):

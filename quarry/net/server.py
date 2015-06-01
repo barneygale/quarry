@@ -156,13 +156,13 @@ class ServerProtocol(Protocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            p_shared_secret = buff.unpack_raw(buff.unpack('h'))
-            p_verify_token = buff.unpack_raw(buff.unpack('h'))
+            p_shared_secret = buff.read(buff.unpack('h'))
+            p_verify_token = buff.read(buff.unpack('h'))
 
         # 1.8.x
         else:
-            p_shared_secret = buff.unpack_raw(buff.unpack_varint())
-            p_verify_token = buff.unpack_raw(buff.unpack_varint())
+            p_shared_secret = buff.read(buff.unpack_varint())
+            p_verify_token = buff.read(buff.unpack_varint())
 
         shared_secret = crypto.decrypt_secret(
             self.factory.keypair,
