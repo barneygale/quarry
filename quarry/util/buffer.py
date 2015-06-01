@@ -20,6 +20,9 @@ class Buffer(object):
     def add(self, d):
         self.buff1.push(d)
 
+    def discard(self):
+        self.buff1.clear()
+
     def _copy(self, buff_from, buff_to):
         d = buff_from.pop()
         buff_from.push(d)
