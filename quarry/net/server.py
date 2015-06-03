@@ -98,19 +98,24 @@ class ServerProtocol(Protocol):
     @register("init", 0x00)
     def packet_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
-        p_server_host = buff.unpack_string()
-        p_server_port = buff.unpack("H")
+        p_connect_host = buff.unpack_string()
+        p_connect_port = buff.unpack("H")
         p_protocol_mode = buff.unpack_varint()
 
         mode = protocol_modes.get(p_protocol_mode, p_protocol_mode)
         self.switch_protocol_mode(mode)
 
-        if mode == "login" \
-                and p_protocol_version not in self.factory.protocol_versions:
-
-            self.close("Wrong protocol version")
+        if mode == "login":
+            if self.factory.force_protocol_version is not None:
+                if p_protocol_version != self.factory.force_protocol_version:
+                    self.close("Wrong protocol version")
+            else:
+                if p_protocol_version not in self.factory.protocol_versions:
+                    self.close("Unknown protocol version")
 
         self.protocol_version = p_protocol_version
+        self.connect_host = p_connect_host
+        self.connect_port = p_connect_port
 
     @register("login", 0x00)
     def packet_login_start(self, buff):
@@ -229,6 +234,7 @@ class ServerProtocol(Protocol):
 
 class ServerFactory(Factory):
     protocol = ServerProtocol
+    force_protocol_version = None
 
     motd = "A Minecraft Server"
     max_players = 20
