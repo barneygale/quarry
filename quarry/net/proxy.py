@@ -16,7 +16,6 @@ from quarry.util.dispatch import PacketDispatcher, register
 #  +--------+   .   +--------------------------------+       +--------+
 #               .          ^                   ^
 #               .        server              client
-#               .    (online mode)       (offline mode)
 #               .
 #
 # A quarry proxy has three main parts:
@@ -96,19 +95,28 @@ class Bridge(PacketDispatcher):
 
         self.register_handlers()
 
-        # Set up offline profile
-        profile = Profile()
-        profile.login_offline(self.downstream.username)
-
         # Set up client factory
         self.upstream_factory.bridge = self
         self.upstream_factory.buff_type = self.buff_type
-        self.upstream_factory.profile = profile
+
+        # If no upstream profile is set, generate an offline-mode profile
+        if self.upstream_factory.profile is None:
+            self.upstream_factory.profile = Profile()
+            self.upstream_factory.profile.login_offline(
+                self.downstream.username)
+
+        # Connect to the server the client is requesting
+        if self.downstream_factory.connect_host is None:
+            connect_host = self.downstream.connect_host
+            connect_port = self.downstream.connect_port
+        else:
+            connect_host = self.downstream_factory.connect_host
+            connect_port = self.downstream_factory.connect_port
 
         # Connect!
         self.upstream_factory.connect(
-            self.downstream_factory.connect_host,
-            self.downstream_factory.connect_port,
+            connect_host,
+            connect_port,
             "login",
             self.downstream.protocol_version)
 
