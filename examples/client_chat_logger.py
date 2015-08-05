@@ -19,10 +19,10 @@ class ChatLoggerProtocol(ClientProtocol):
     def update_player(self):
         self.yaw = (self.yaw + 5) % 360
 
-        self.send_packet(0x05, self.buff_type.pack('ff?', self.yaw, self.pitch,
-                                                   True))
+        self.send_packet("player_look",
+            self.buff_type.pack('ff?', self.yaw, self.pitch, True))
 
-    @register("play", 0x02)
+    @register("play", "chat_message")
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat()
 
@@ -35,7 +35,7 @@ class ChatLoggerProtocol(ClientProtocol):
 
         self.logger.info(":: %s" % p_text)
 
-    @register("play", 0x08)
+    @register("play", "player_position_and_look")
     def packet_player_position_and_look(self, buff):
         p_coords = buff.unpack('ddd')
         p_yaw = buff.unpack('f')
@@ -72,7 +72,7 @@ class ChatLoggerProtocol(ClientProtocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            self.send_packet(0x06, self.buff_type.pack(
+            self.send_packet("player_position_and_look", self.buff_type.pack(
                 'ddddff?',
                 self.coords[0],
                 self.coords[1] - 1.62,
@@ -84,7 +84,7 @@ class ChatLoggerProtocol(ClientProtocol):
 
         # 1.8.x
         else:
-            self.send_packet(0x06, self.buff_type.pack(
+            self.send_packet("player_position_and_look", self.buff_type.pack(
                 'dddff?',
                 self.coords[0],
                 self.coords[1],

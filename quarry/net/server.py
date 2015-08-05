@@ -11,6 +11,9 @@ from quarry.util import crypto, types
 class ServerProtocol(Protocol):
     """This class represents a connection with a client"""
 
+    recv_direction = "upstream"
+    send_direction = "downstream"
+
     uuid = None
     username = None
     username_confirmed = False
@@ -37,7 +40,7 @@ class ServerProtocol(Protocol):
 
         if mode == "play":
             # Send login success
-            self.send_packet(2,
+            self.send_packet("login_success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.username))
 
@@ -59,7 +62,8 @@ class ServerProtocol(Protocol):
             # Kick the player if possible.
             if self.protocol_mode == "play":
                 def real_kick(*a):
-                    self.send_packet(0x40, self.buff_type.pack_chat(reason))
+                    self.send_packet("disconnect",
+                        self.buff_type.pack_chat(reason))
                     Protocol.close(self, reason)
 
                 if self.safe_kick:
@@ -68,7 +72,8 @@ class ServerProtocol(Protocol):
                     real_kick()
             else:
                 if self.protocol_mode == "login":
-                    self.send_packet(0x00, self.buff_type.pack_chat(reason))
+                    self.send_packet("disconnect",
+                        self.buff_type.pack_chat(reason))
                 Protocol.close(self, reason)
         else:
             Protocol.close(self, reason)
@@ -95,7 +100,7 @@ class ServerProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    @register("init", 0x00)
+    @register("init", "handshake")
     def packet_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
         p_connect_host = buff.unpack_string()
@@ -110,14 +115,14 @@ class ServerProtocol(Protocol):
                 if p_protocol_version != self.factory.force_protocol_version:
                     self.close("Wrong protocol version")
             else:
-                if p_protocol_version not in self.factory.protocol_versions:
+                if p_protocol_version not in self.factory.minecraft_versions:
                     self.close("Unknown protocol version")
 
         self.protocol_version = p_protocol_version
         self.connect_host = p_connect_host
         self.connect_port = p_connect_port
 
-    @register("login", 0x00)
+    @register("login", "login_start")
     def packet_login_start(self, buff):
         if self.login_expecting != 0:
             raise ProtocolError("Out-of-order login")
@@ -131,7 +136,7 @@ class ServerProtocol(Protocol):
 
             # 1.7.x
             if self.protocol_version <= 5:
-                self.send_packet(1,
+                self.send_packet("encryption_request",
                     self.buff_type.pack_string(self.server_id) +
                     self.buff_type.pack('H', len(self.factory.public_key)) +
                     self.buff_type.pack_raw(self.factory.public_key) +
@@ -140,7 +145,7 @@ class ServerProtocol(Protocol):
 
             # 1.8.x
             else:
-                self.send_packet(1,
+                self.send_packet("encryption_request",
                     self.buff_type.pack_string(self.server_id) +
                     self.buff_type.pack_varint(len(self.factory.public_key)) +
                     self.buff_type.pack_raw(self.factory.public_key) +
@@ -154,7 +159,7 @@ class ServerProtocol(Protocol):
 
             self.player_joined()
 
-    @register("login", 0x01)
+    @register("login", "encryption_response")
     def packet_encryption_response(self, buff):
         if self.login_expecting != 1:
             raise ProtocolError("Out-of-order login")
@@ -200,7 +205,7 @@ class ServerProtocol(Protocol):
             self.username)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
-    @register("status", 0x00)
+    @register("status", "request")
     def packet_status_request(self, buff):
         d = {
             "description": {
@@ -211,7 +216,7 @@ class ServerProtocol(Protocol):
                 "max":      self.factory.max_players
             },
             "version": {
-                "name":     self.factory.protocol_versions.get(
+                "name":     self.factory.minecraft_versions.get(
                                 self.protocol_version,
                                 "???"),
                 "protocol": self.protocol_version
@@ -221,14 +226,14 @@ class ServerProtocol(Protocol):
             d["favicon"] = self.factory.favicon
 
         # send status response
-        self.send_packet(0, self.buff_type.pack_json(d))
+        self.send_packet("response", self.buff_type.pack_json(d))
 
-    @register("status", 0x01)
+    @register("status", "ping")
     def packet_status_ping(self, buff):
         time = buff.unpack("Q")
 
         # send ping
-        self.send_packet(1, self.buff_type.pack("Q", time))
+        self.send_packet("pong", self.buff_type.pack("Q", time))
         self.close()
 
 

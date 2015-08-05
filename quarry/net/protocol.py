@@ -3,6 +3,7 @@ import zlib
 
 from twisted.internet import protocol, reactor
 
+from quarry.net import packets
 from quarry.util.crypto import Cipher
 from quarry.util.buffer import Buffer, BufferUnderrun
 from quarry.util.tasks import Tasks
@@ -27,7 +28,9 @@ class ProtocolError(Exception):
 class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
-    protocol_version = None
+    recv_direction = None
+    send_direction = None
+    protocol_version = packets.default_protocol_version
     protocol_mode = "init"
     compression_threshold = None
     compression_enabled = False
@@ -110,13 +113,13 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.transport.loseConnection()
             self.closed = True
 
-    def log_packet(self, prefix, ident):
+    def log_packet(self, prefix, name):
         """Logs a packet at debug level"""
 
-        self.logger.debug("Packet %s %s/%02x" % (
+        self.logger.debug("Packet %s %s/%s" % (
             prefix,
             self.protocol_mode,
-            ident))
+            name))
 
     ### General callbacks -----------------------------------------------------
 
@@ -216,7 +219,17 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                             packet_buff = Buffer()
                             packet_buff.add(data)
                     ident = packet_buff.unpack_varint()
-                    self.packet_received(packet_buff, ident)
+                    key = (
+                        self.protocol_version,
+                        self.protocol_mode,
+                        self.recv_direction,
+                        ident)
+                    try:
+                        name = packets.packet_names[key]
+                    except ValueError:
+                        raise ProtocolError("No name known for packet: %s"
+                                            % (key,))
+                    self.packet_received(packet_buff, name)
 
                 except BufferUnderrun:
                     raise ProtocolError("Packet is too short!")
@@ -231,30 +244,39 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             # We've read a complete packet, so reset the inactivity timeout
             self.connection_timer.restart()
 
-    def packet_received(self, buff, ident):
+    def packet_received(self, buff, name):
         """ Dispatches packet to registered handler """
 
-        self.log_packet(". recv", ident)
+        self.log_packet(". recv", name)
 
-        dispatched = self.dispatch((self.protocol_mode, ident), buff)
+        dispatched = self.dispatch((self.protocol_mode, name), buff)
 
         if not dispatched:
-            self.packet_unhandled(buff, ident)
+            self.packet_unhandled(buff, name)
 
-    def packet_unhandled(self, buff, ident):
+    def packet_unhandled(self, buff, name):
         """Called when a packet has no registered handler"""
 
         buff.discard()
 
-    def send_packet(self, ident, data=""):
+    def send_packet(self, name, data=""):
         """ Sends a packet """
 
         if self.closed:
             return
 
-        self.log_packet("# send", ident)
+        self.log_packet("# send", name)
 
         # Prepend ident
+        key = (
+            self.protocol_version,
+            self.protocol_mode,
+            self.send_direction,
+            name)
+        try:
+            ident = packets.packet_idents[key]
+        except KeyError:
+            raise ProtocolError("No ID known for packet: %s" % (key,))
         data = Buffer.pack_varint(ident) + data
 
         if self.compression_enabled:
@@ -280,11 +302,7 @@ class Factory(protocol.Factory, object):
     connection_timeout = 30
     auth_timeout = 30
 
-    protocol_versions = {
-        4:  "1.7.4",
-        5:  "1.7.10",
-        47: "1.8"
-    }
+    minecraft_versions = packets.minecraft_versions
 
     def buildProtocol(self, addr):
         return self.protocol(self, addr)

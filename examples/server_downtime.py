@@ -8,7 +8,7 @@ from quarry.net.server import ServerFactory, ServerProtocol, register
 
 
 class DowntimeProtocol(ServerProtocol):
-    @register("login", 0)
+    @register("login", "login_start")
     def packet_login_start(self, buff):
         buff.discard()
         self.close(self.factory.motd)

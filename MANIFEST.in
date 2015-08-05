@@ -1,2 +1,4 @@
 include *.txt
 include *.rst
+include *.csv
+

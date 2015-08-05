@@ -43,12 +43,12 @@ from quarry.util.dispatch import PacketDispatcher, register
 #
 
 class Upstream(ClientProtocol):
-    def packet_received_passthrough(self, buff, ident):
-        self.log_packet(". recv", ident)
+    def packet_received_passthrough(self, buff, name):
+        self.log_packet(". recv", name)
         self.factory.bridge.packet_received(
             buff,
             self.protocol_mode,
-            ident,
+            name,
             "downstream")
 
     def enable_passthrough(self):
@@ -131,27 +131,27 @@ class Bridge(PacketDispatcher):
         if self.upstream:
             self.upstream.close()
 
-    def packet_received(self, buff, protocol_mode, ident, direction):
-        dispatched = self.dispatch((protocol_mode, ident, direction), buff)
+    def packet_received(self, buff, protocol_mode, name, direction):
+        dispatched = self.dispatch((protocol_mode, name, direction), buff)
 
         if not dispatched:
-            self.packet_unhandled(buff, protocol_mode, ident, direction)
+            self.packet_unhandled(buff, protocol_mode, name, direction)
 
-    def packet_unhandled(self, buff, protocol_mode, ident, direction):
+    def packet_unhandled(self, buff, protocol_mode, name, direction):
         if direction == "downstream":
-            self.downstream.send_packet(ident, buff.read())
+            self.downstream.send_packet(name, buff.read())
         elif direction == "upstream":
-            self.upstream.send_packet(ident, buff.read())
+            self.upstream.send_packet(name, buff.read())
 
 
 class Downstream(ServerProtocol):
     bridge = None
 
-    def packet_received_passthrough(self, buff, ident):
+    def packet_received_passthrough(self, buff, name):
         self.bridge.packet_received(
             buff,
             self.protocol_mode,
-            ident,
+            name,
             "upstream")
 
     def enable_passthrough(self):

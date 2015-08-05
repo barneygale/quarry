@@ -9,6 +9,8 @@ from quarry.util import crypto
 class ClientProtocol(Protocol):
     """This class represents a connection to a server"""
 
+    recv_direction = "downstream"
+    send_direction = "upstream"
     protocol_mode_next = None
 
     def __init__(self, factory, addr):
@@ -22,7 +24,7 @@ class ClientProtocol(Protocol):
         if mode in ("status", "login"):
             # Send handshake
             addr = self.transport.connector.getDestination()
-            self.send_packet(0,
+            self.send_packet("handshake",
                 self.buff_type.pack_varint(self.protocol_version) +
                 self.buff_type.pack_string(addr.host) +
                 self.buff_type.pack('H', addr.port) +
@@ -33,11 +35,11 @@ class ClientProtocol(Protocol):
 
         if mode == "status":
             # Send status request
-            self.send_packet(0)
+            self.send_packet("request")
 
         elif mode == "login":
             # Send login start
-            self.send_packet(0, self.buff_type.pack_string(
+            self.send_packet("login_start", self.buff_type.pack_string(
                 self.factory.profile.username))
 
 
@@ -58,14 +60,14 @@ class ClientProtocol(Protocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            self.send_packet(1,
+            self.send_packet("encryption_response",
                 self.buff_type.pack('h', len(p_shared_secret)) +
                 self.buff_type.pack_raw(p_shared_secret) +
                 self.buff_type.pack('h', len(p_verify_token)) +
                 self.buff_type.pack_raw(p_verify_token))
         # 1.8.x
         else:
-            self.send_packet(1,
+            self.send_packet("encryption_response",
             self.buff_type.pack_varint(len(p_shared_secret)) +
             self.buff_type.pack_raw(p_shared_secret) +
             self.buff_type.pack_varint(len(p_verify_token)) +
@@ -88,18 +90,18 @@ class ClientProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    @register("status", 0x00)
+    @register("status", "response")
     def packet_status_response(self, buff):
         p_data = buff.unpack_json()
         self.status_response(p_data)
 
-    @register("login", 0x00)
-    def packet_kick(self, buff):
+    @register("login", "disconnect")
+    def packet_disconnect(self, buff):
         p_data = buff.unpack_chat()
         self.logger.warn("Kicked: %s" % p_data)
         self.close()
 
-    @register("login", 0x01)
+    @register("login", "encryption_request")
     def packet_encryption_request(self, buff):
         p_server_id    = buff.unpack_string()
 
@@ -134,7 +136,7 @@ class ClientProtocol(Protocol):
             self.factory.profile.uuid)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
-    @register("login", 0x02)
+    @register("login", "login_success")
     def packet_login_success(self, buff):
         p_uuid = buff.unpack_string()
         p_username = buff.unpack_string()
@@ -142,11 +144,11 @@ class ClientProtocol(Protocol):
         self.switch_protocol_mode("play")
         self.player_joined()
 
-    @register("login", 0x03)
+    @register("login", "set_compression")
     def packet_login_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
-    @register("play", 0x46)
+    @register("play", "set_compression")
     def packet_play_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
@@ -159,7 +161,8 @@ class ClientFactory(Factory, protocol.ClientFactory):
 
         if protocol_mode_next == "status" or protocol_version > 0:
             self.protocol.protocol_mode_next = protocol_mode_next
-            self.protocol.protocol_version = protocol_version
+            if protocol_version > 0:
+                self.protocol.protocol_version = protocol_version
             reactor.connectTCP(host, port, self, self.connection_timeout)
 
         else:
@@ -168,7 +171,7 @@ class ClientFactory(Factory, protocol.ClientFactory):
                 def status_response(s, data):
                     s.close()
                     detected_version = int(data["version"]["protocol"])
-                    if detected_version in self.protocol_versions:
+                    if detected_version in self.minecraft_versions:
                         self.connect(host, port, protocol_mode_next,
                                      detected_version)
                     else:

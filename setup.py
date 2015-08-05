@@ -19,4 +19,6 @@ setup(
         "quarry.mojang",
         "quarry.net",
         "quarry.util"
-    ])
+    ],
+    package_data={'quarry': ['data/*.csv']},
+)

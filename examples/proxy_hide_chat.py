@@ -10,7 +10,7 @@ from quarry.net.proxy import DownstreamFactory, Bridge, register
 class QuietBridge(Bridge):
     quiet_mode = False
 
-    @register("play", 0x01, "upstream")
+    @register("play", "chat_message", "upstream")
     def packet_client_chat(self, buff):
         buff.save()
         chat_message = self.read_chat(buff, "upstream")
@@ -22,21 +22,21 @@ class QuietBridge(Bridge):
 
             action = self.quiet_mode and "enabled" or "disabled"
             msg = "Quiet mode %s" % action
-            self.downstream.send_packet(0x02,
+            self.downstream.send_packet("chat_message",
                                         self.write_chat(msg, "downstream"))
 
         elif self.quiet_mode and not chat_message.startswith("/"):
             # Don't let the player send chat messages in quiet mode
             msg = "Can't send messages while in quiet mode"
-            self.downstream.send_packet(0x02,
+            self.downstream.send_packet("chat_message",
                                         self.write_chat(msg, "downstream"))
 
         else:
             # Pass to upstream
             buff.restore()
-            self.upstream.send_packet(0x01, buff.read())
+            self.upstream.send_packet("chat_message", buff.read())
 
-    @register("play", 0x02, "downstream")
+    @register("play", "chat_message", "downstream")
     def packet_server_chat(self, buff):
         chat_message = self.read_chat(buff, "downstream")
         self.logger.info(" :: %s" % chat_message)
@@ -48,7 +48,7 @@ class QuietBridge(Bridge):
         else:
             # Pass to downstream
             buff.restore()
-            self.downstream.send_packet(0x02, buff.read())
+            self.downstream.send_packet("chat_message", buff.read())
 
     def read_chat(self, buff, direction):
         buff.save()
