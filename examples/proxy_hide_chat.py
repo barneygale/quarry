@@ -4,14 +4,13 @@
 Allows a client to turn on "quiet mode" which hides chat messages
 """
 
-from quarry.net.proxy import DownstreamFactory, Bridge, register
+from quarry.net.proxy import DownstreamFactory, Bridge
 
 
 class QuietBridge(Bridge):
     quiet_mode = False
 
-    @register("play", "chat_message", "upstream")
-    def packet_client_chat(self, buff):
+    def packet_play_upstream_chat_message(self, buff):
         buff.save()
         chat_message = self.read_chat(buff, "upstream")
         self.logger.info(" >> %s" % chat_message)
@@ -36,8 +35,7 @@ class QuietBridge(Bridge):
             buff.restore()
             self.upstream.send_packet("chat_message", buff.read())
 
-    @register("play", "chat_message", "downstream")
-    def packet_server_chat(self, buff):
+    def packet_play_downstream_chat_message(self, buff):
         chat_message = self.read_chat(buff, "downstream")
         self.logger.info(" :: %s" % chat_message)
 

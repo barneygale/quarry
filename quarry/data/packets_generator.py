@@ -89,6 +89,10 @@ def get_packets(oldid):
             if packet_name == "legacy_server_list_ping":
                 continue
 
+            # Clean up login packet names
+            if packet_name.startswith("login_"):
+                packet_name = packet_name[6:]
+
             yield protocol_mode, direction, ident, packet_name
 
 if __name__ == '__main__':

@@ -106,9 +106,9 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_ident,p
 1.8.8,47,status,upstream,1,ping
 1.8.8,47,login,downstream,0,disconnect
 1.8.8,47,login,downstream,1,encryption_request
-1.8.8,47,login,downstream,2,login_success
+1.8.8,47,login,downstream,2,success
 1.8.8,47,login,downstream,3,set_compression
-1.8.8,47,login,upstream,0,login_start
+1.8.8,47,login,upstream,0,start
 1.8.8,47,login,upstream,1,encryption_response
 1.7.5,4,init,upstream,0,handshake
 1.7.5,4,play,downstream,0,keep_alive
@@ -206,6 +206,6 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_ident,p
 1.7.5,4,status,upstream,1,ping
 1.7.5,4,login,downstream,0,disconnect
 1.7.5,4,login,downstream,1,encryption_request
-1.7.5,4,login,downstream,2,login_success
-1.7.5,4,login,upstream,0,login_start
+1.7.5,4,login,downstream,2,success
+1.7.5,4,login,upstream,0,start
 1.7.5,4,login,upstream,1,encryption_response

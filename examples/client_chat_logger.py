@@ -4,7 +4,7 @@ Chat logger example client
 Stays in game and prints player chat to console.
 """
 
-from quarry.net.client import ClientFactory, ClientProtocol, register
+from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
 
 
@@ -22,8 +22,7 @@ class ChatLoggerProtocol(ClientProtocol):
         self.send_packet("player_look",
             self.buff_type.pack('ff?', self.yaw, self.pitch, True))
 
-    @register("play", "chat_message")
-    def packet_chat_message(self, buff):
+    def packet_play_chat_message(self, buff):
         p_text = buff.unpack_chat()
 
         # 1.7.x
@@ -35,8 +34,7 @@ class ChatLoggerProtocol(ClientProtocol):
 
         self.logger.info(":: %s" % p_text)
 
-    @register("play", "player_position_and_look")
-    def packet_player_position_and_look(self, buff):
+    def packet_play_player_position_and_look(self, buff):
         p_coords = buff.unpack('ddd')
         p_yaw = buff.unpack('f')
         p_pitch = buff.unpack('f')

@@ -7,7 +7,7 @@ from quarry.net import packets
 from quarry.util.crypto import Cipher
 from quarry.util.buffer import Buffer, BufferUnderrun
 from quarry.util.tasks import Tasks
-from quarry.util.dispatch import PacketDispatcher, register
+from quarry.util.dispatch import PacketDispatcher
 
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
@@ -51,8 +51,6 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.__class__.__name__,
             self.recv_addr.host))
         self.logger.setLevel(self.factory.log_level)
-
-        self.register_handlers()
 
         self.connection_timer = self.tasks.add_delay(
             self.factory.connection_timeout,

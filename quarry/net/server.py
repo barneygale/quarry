@@ -3,7 +3,7 @@ import base64
 from twisted.internet import reactor, defer
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
-    protocol_modes, register
+    protocol_modes
 from quarry.mojang import auth
 from quarry.util import crypto, types
 
@@ -40,7 +40,7 @@ class ServerProtocol(Protocol):
 
         if mode == "play":
             # Send login success
-            self.send_packet("login_success",
+            self.send_packet("success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.username))
 
@@ -100,8 +100,7 @@ class ServerProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    @register("init", "handshake")
-    def packet_handshake(self, buff):
+    def packet_init_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
         p_connect_host = buff.unpack_string()
         p_connect_port = buff.unpack("H")
@@ -122,7 +121,6 @@ class ServerProtocol(Protocol):
         self.connect_host = p_connect_host
         self.connect_port = p_connect_port
 
-    @register("login", "login_start")
     def packet_login_start(self, buff):
         if self.login_expecting != 0:
             raise ProtocolError("Out-of-order login")
@@ -159,8 +157,7 @@ class ServerProtocol(Protocol):
 
             self.player_joined()
 
-    @register("login", "encryption_response")
-    def packet_encryption_response(self, buff):
+    def packet_login_encryption_response(self, buff):
         if self.login_expecting != 1:
             raise ProtocolError("Out-of-order login")
 
@@ -205,7 +202,6 @@ class ServerProtocol(Protocol):
             self.username)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
-    @register("status", "request")
     def packet_status_request(self, buff):
         d = {
             "description": {
@@ -228,7 +224,6 @@ class ServerProtocol(Protocol):
         # send status response
         self.send_packet("response", self.buff_type.pack_json(d))
 
-    @register("status", "ping")
     def packet_status_ping(self, buff):
         time = buff.unpack("Q")
 

@@ -4,7 +4,7 @@ Player lister example client
 Logs in and prints the player list
 """
 
-from quarry.net.client import ClientFactory, ClientProtocol, register
+from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
 
 
@@ -12,8 +12,7 @@ class PlayerListProtocol(ClientProtocol):
     def setup(self):
         self.players = {}
 
-    @register("play", "player_list_item")
-    def packet_player_list_item(self, buff):
+    def packet_play_player_list_item(self, buff):
         # 1.7.x
         if self.protocol_version <= 5:
             p_player_name = buff.unpack_string()
@@ -84,8 +83,7 @@ class PlayerListProtocol(ClientProtocol):
                     if p_uuid in self.players:
                         del self.players[p_uuid]
 
-    @register("play", "player_position_and_look")
-    def player_position_and_look(self, buff):
+    def packet_play_player_position_and_look(self, buff):
         buff.discard()
 
         # convert self.players into a more readable format

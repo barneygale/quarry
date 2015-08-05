@@ -4,11 +4,10 @@ Example "downtime" server
 When a user tries to connect, the server will kick them with the MOTD
 """
 
-from quarry.net.server import ServerFactory, ServerProtocol, register
+from quarry.net.server import ServerFactory, ServerProtocol
 
 
 class DowntimeProtocol(ServerProtocol):
-    @register("login", "login_start")
     def packet_login_start(self, buff):
         buff.discard()
         self.close(self.factory.motd)

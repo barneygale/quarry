@@ -1,7 +1,7 @@
 from twisted.internet import reactor, protocol, defer
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
-    protocol_modes_inv, register
+    protocol_modes_inv
 from quarry.mojang import auth
 from quarry.util import crypto
 
@@ -39,7 +39,7 @@ class ClientProtocol(Protocol):
 
         elif mode == "login":
             # Send login start
-            self.send_packet("login_start", self.buff_type.pack_string(
+            self.send_packet("start", self.buff_type.pack_string(
                 self.factory.profile.username))
 
 
@@ -90,19 +90,16 @@ class ClientProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    @register("status", "response")
     def packet_status_response(self, buff):
         p_data = buff.unpack_json()
         self.status_response(p_data)
 
-    @register("login", "disconnect")
-    def packet_disconnect(self, buff):
+    def packet_login_disconnect(self, buff):
         p_data = buff.unpack_chat()
         self.logger.warn("Kicked: %s" % p_data)
         self.close()
 
-    @register("login", "encryption_request")
-    def packet_encryption_request(self, buff):
+    def packet_login_encryption_request(self, buff):
         p_server_id    = buff.unpack_string()
 
         # 1.7.x
@@ -136,7 +133,6 @@ class ClientProtocol(Protocol):
             self.factory.profile.uuid)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
-    @register("login", "login_success")
     def packet_login_success(self, buff):
         p_uuid = buff.unpack_string()
         p_username = buff.unpack_string()
@@ -144,11 +140,9 @@ class ClientProtocol(Protocol):
         self.switch_protocol_mode("play")
         self.player_joined()
 
-    @register("login", "set_compression")
     def packet_login_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
-    @register("play", "set_compression")
     def packet_play_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 

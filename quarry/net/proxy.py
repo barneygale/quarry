@@ -3,7 +3,7 @@ import logging
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
-from quarry.util.dispatch import PacketDispatcher, register
+from quarry.util.dispatch import PacketDispatcher
 
 #
 # Rough diagram of the universe a quarry proxy usually operates in:
@@ -48,8 +48,8 @@ class Upstream(ClientProtocol):
         self.factory.bridge.packet_received(
             buff,
             self.protocol_mode,
-            name,
-            "downstream")
+            "downstream",
+            name)
 
     def enable_passthrough(self):
         self.packet_received = self.packet_received_passthrough
@@ -93,8 +93,6 @@ class Bridge(PacketDispatcher):
             self.downstream.username))
         self.logger.setLevel(self.log_level)
 
-        self.register_handlers()
-
         # Set up client factory
         self.upstream_factory.bridge = self
         self.upstream_factory.buff_type = self.buff_type
@@ -131,13 +129,13 @@ class Bridge(PacketDispatcher):
         if self.upstream:
             self.upstream.close()
 
-    def packet_received(self, buff, protocol_mode, name, direction):
-        dispatched = self.dispatch((protocol_mode, name, direction), buff)
+    def packet_received(self, buff, protocol_mode, direction, name):
+        dispatched = self.dispatch((protocol_mode, direction, name), buff)
 
         if not dispatched:
-            self.packet_unhandled(buff, protocol_mode, name, direction)
+            self.packet_unhandled(buff, protocol_mode, direction, name)
 
-    def packet_unhandled(self, buff, protocol_mode, name, direction):
+    def packet_unhandled(self, buff, protocol_mode, direction, name):
         if direction == "downstream":
             self.downstream.send_packet(name, buff.read())
         elif direction == "upstream":
@@ -151,8 +149,8 @@ class Downstream(ServerProtocol):
         self.bridge.packet_received(
             buff,
             self.protocol_mode,
-            name,
-            "upstream")
+            "upstream",
+            name)
 
     def enable_passthrough(self):
         self.packet_received = self.packet_received_passthrough
