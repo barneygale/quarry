@@ -12,7 +12,6 @@ setup(
     install_requires=[
         'twisted >= 13.0.0',
         'cryptography >= 0.9',
-        'qbuf >= 0.9.4'
     ],
     packages=[
         "quarry",

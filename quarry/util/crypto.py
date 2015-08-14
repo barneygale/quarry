@@ -1,4 +1,5 @@
 import os
+import sys
 import hashlib
 
 from cryptography.hazmat.primitives import ciphers, serialization
@@ -8,6 +9,7 @@ from cryptography.hazmat.backends import default_backend
 
 backend = default_backend()
 
+PY3 = sys.version_info > (3,)
 
 class Cipher:
     def __init__(self):
@@ -42,7 +44,13 @@ def make_keypair():
         backend=default_backend())
 
 def make_server_id():
-    return "".join("%02x" % ord(c) for c in os.urandom(10))
+    data = os.urandom(10)
+    if PY3:
+        parts = ["%02x" % c for c in data]
+    else:
+        parts = ["%02x" % ord(c) for c in data]
+
+    return "".join(parts)
 
 def make_verify_token():
     return os.urandom(4)
@@ -54,7 +62,7 @@ def make_digest(*data):
     sha1 = hashlib.sha1()
     for d in data: sha1.update(d)
 
-    digest = long(sha1.hexdigest(), 16)
+    digest = int(sha1.hexdigest(), 16)
     if digest >> 39*4 & 0x8:
         return"-%x" % ((-digest) & (2**(40*4)-1))
     else:

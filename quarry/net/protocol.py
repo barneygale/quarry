@@ -18,7 +18,7 @@ protocol_modes = {
     2: 'login',
     3: 'play'
 }
-protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.iteritems()))
+protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.items()))
 
 
 class ProtocolError(Exception):
@@ -257,7 +257,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         buff.discard()
 
-    def send_packet(self, name, data=""):
+    def send_packet(self, name, data=b""):
         """ Sends a packet """
 
         if self.closed:

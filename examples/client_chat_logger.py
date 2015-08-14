@@ -4,6 +4,7 @@ Chat logger example client
 Stays in game and prints player chat to console.
 """
 
+from __future__ import print_function
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
 
@@ -124,7 +125,7 @@ def main(args):
         factory.connect(host, int(port))
 
     def login_failed(err):
-        print "login failed:", err.value
+        print("login failed:", err.value)
         factory.stop()
 
     deferred = profile.login(username, password)

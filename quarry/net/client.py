@@ -121,7 +121,7 @@ class ClientProtocol(Protocol):
 
         # make digest
         digest = crypto.make_digest(
-            p_server_id,
+            p_server_id.encode('ascii'),
             self.shared_secret,
             p_public_key)
 

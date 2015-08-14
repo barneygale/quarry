@@ -191,7 +191,7 @@ class ServerProtocol(Protocol):
 
         # make digest
         digest = crypto.make_digest(
-            self.server_id,
+            self.server_id.encode('ascii'),
             shared_secret,
             self.factory.public_key)
 

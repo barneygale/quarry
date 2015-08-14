@@ -1,45 +1,52 @@
 import struct
 import json
 
-import qbuf
-
 from quarry.util import types
 
+# Python 3 compat
+try:
+  basestring
+except NameError:
+  basestring = str
 
-BufferUnderrun = qbuf.BufferUnderflow
+class BufferUnderrun(Exception):
+    pass
 
 
 class Buffer(object):
     def __init__(self):
-        self.buff1 = qbuf.BufferQueue()
-        self.buff2 = qbuf.BufferQueue()
+        self.buff = b""
+        self.pos = 0
 
     def length(self):
-        return len(self.buff1)
+        return len(self.buff) - self.pos
 
     def add(self, d):
-        self.buff1.push(d)
+        self.buff += d
 
     def discard(self):
-        self.buff1.clear()
-
-    def _copy(self, buff_from, buff_to):
-        d = buff_from.pop()
-        buff_from.push(d)
-        buff_to.clear()
-        buff_to.push(d)
+        self.buff = b""
+        self.pos = 0
 
     def save(self):
-        self._copy(self.buff1, self.buff2)
+        self.buff = self.buff[self.pos:]
+        self.pos = 0
 
     def restore(self):
-        self._copy(self.buff2, self.buff1)
+        self.pos = 0
 
     def read(self, l=None):
         if l is None:
-            return self.buff1.pop()
+            data = self.buff[self.pos:]
+            self.pos = len(self.buff)
         else:
-            return self.buff1.pop(l)
+            if self.pos + l > len(self.buff):
+                raise BufferUnderrun()
+
+            data = self.buff[self.pos:self.pos+l]
+            self.pos += l
+
+        return data
 
     def unpack(self, ty):
         ty = ">"+ty
@@ -110,7 +117,7 @@ class Buffer(object):
 
     @classmethod
     def pack_varint(cls, d):
-        o = ""
+        o = b""
         while True:
             b = d & 0x7F
             d >>= 7
