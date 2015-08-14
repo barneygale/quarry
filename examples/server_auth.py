@@ -21,7 +21,7 @@ class AuthProtocol(ServerProtocol):
         # Define your own logic here. It could be an HTTP request to an API,
         #   or perhaps an update to a database table.
         username = self.username
-        ip_addr = self.recv_addr.host
+        ip_addr = self.remote_addr.host
         self.logger.info("[%s authed with IP %s]" % (username, ip_addr))
 
         # Kick the player.

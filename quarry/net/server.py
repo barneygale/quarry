@@ -27,8 +27,8 @@ class ServerProtocol(Protocol):
     # the fix is to set a deferred up which will fire when it's safe again
     safe_kick = None
 
-    def __init__(self, factory, addr):
-        Protocol.__init__(self, factory, addr)
+    def __init__(self, factory, remote_addr):
+        Protocol.__init__(self, factory, remote_addr)
         self.server_id    = crypto.make_server_id()
         self.verify_token = crypto.make_verify_token()
 

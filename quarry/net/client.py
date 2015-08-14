@@ -13,8 +13,8 @@ class ClientProtocol(Protocol):
     send_direction = "upstream"
     protocol_mode_next = None
 
-    def __init__(self, factory, addr):
-        Protocol.__init__(self, factory, addr)
+    def __init__(self, factory, remote_addr):
+        Protocol.__init__(self, factory, remote_addr)
 
     ### Convenience functions -------------------------------------------------
 

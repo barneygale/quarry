@@ -38,9 +38,9 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     in_game = False
     closed = False
 
-    def __init__(self, factory, addr):
+    def __init__(self, factory, remote_addr):
         self.factory = factory
-        self.recv_addr = addr
+        self.remote_addr = remote_addr
 
         self.buff_type = self.factory.buff_type
         self.recv_buff = self.buff_type()
@@ -49,7 +49,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
-            self.recv_addr.host))
+            self.remote_addr.host))
         self.logger.setLevel(self.factory.log_level)
 
         self.connection_timer = self.tasks.add_delay(
