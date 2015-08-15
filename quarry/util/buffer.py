@@ -14,19 +14,14 @@ class BufferUnderrun(Exception):
 
 
 class Buffer(object):
-    def __init__(self):
-        self.buff = b""
-        self.pos = 0
+    buff = b""
+    pos = 0
 
-    def length(self):
+    def __len__(self):
         return len(self.buff) - self.pos
 
-    def add(self, d):
-        self.buff += d
-
-    def discard(self):
-        self.buff = b""
-        self.pos = 0
+    def add(self, data):
+        self.buff += data
 
     def save(self):
         self.buff = self.buff[self.pos:]
@@ -35,30 +30,38 @@ class Buffer(object):
     def restore(self):
         self.pos = 0
 
-    def read(self, l=None):
-        if l is None:
+    def discard(self):
+        self.pos = len(self.buff)
+
+    def read(self, length=None):
+        if length is None:
             data = self.buff[self.pos:]
             self.pos = len(self.buff)
         else:
-            if self.pos + l > len(self.buff):
+            if self.pos + length > len(self.buff):
                 raise BufferUnderrun()
 
-            data = self.buff[self.pos:self.pos+l]
-            self.pos += l
+            data = self.buff[self.pos:self.pos+length]
+            self.pos += length
 
         return data
 
-    def unpack(self, ty):
-        ty = ">"+ty
-        s = struct.unpack(ty, self.read(struct.calcsize(ty)))
-        return s[0] if len(s) == 1 else s
+    def unpack(self, fmt):
+        fmt = ">"+fmt
+        length = struct.calcsize(fmt)
+        fields = struct.unpack(fmt, self.read(length))
+        if len(fields) == 1:
+            fields = fields[0]
+        return fields
 
     def unpack_string(self):
-        l = self.unpack_varint()
-        return self.read(l).decode("utf-8")
+        length = self.unpack_varint()
+        text = self.read(length).decode("utf-8")
+        return text
 
     def unpack_json(self):
-        return json.loads(self.unpack_string())
+        obj = json.loads(self.unpack_string())
+        return obj
 
     def unpack_chat(self):
         def parse(obj):
@@ -67,65 +70,62 @@ class Buffer(object):
             if isinstance(obj, list):
                 return "".join((parse(e) for e in obj))
             if isinstance(obj, dict):
-                out = ""
+                text = ""
                 if "translate" in obj:
                     if "with" in obj:
                         args = ", ".join((parse(e) for e in obj["with"]))
                     else:
                         args = ""
-                    out += "%s{%s}" % (obj["translate"], args)
+                    text += "%s{%s}" % (obj["translate"], args)
                 if "text" in obj:
-                    out += obj["text"]
+                    text += obj["text"]
                 if "extra" in obj:
-                    out += parse(obj["extra"])
-                return out
+                    text += parse(obj["extra"])
+                return text
 
-        return parse(self.unpack_json())
+        text = parse(self.unpack_json())
+        return text
 
     def unpack_varint(self):
-        d = 0
+        number = 0
         for i in range(5):
             b = self.unpack("B")
-            d |= (b & 0x7F) << 7*i
+            number |= (b & 0x7F) << 7*i
             if not b & 0x80:
                 break
-        return d
+        return number
 
     def unpack_uuid(self):
         return types.UUID.from_bytes(self.read(16))
 
     @classmethod
-    def pack_raw(cls, data):
-        return data
+    def pack(cls, fmt, *fields):
+        return struct.pack(">"+fmt, *fields)
 
     @classmethod
-    def pack(cls, ty, *data):
-        return struct.pack(">"+ty, *data)
+    def pack_string(cls, text):
+        text = text.encode("utf-8")
+        return cls.pack_varint(len(text)) + text
 
     @classmethod
-    def pack_string(cls, data):
-        data = data.encode("utf-8")
-        return cls.pack_varint(len(data)) + data
+    def pack_json(cls, obj):
+        return cls.pack_string(json.dumps(obj))
 
     @classmethod
-    def pack_json(cls, data):
-        return cls.pack_string(json.dumps(data))
+    def pack_chat(cls, text):
+        return cls.pack_json({"text": text})
 
     @classmethod
-    def pack_chat(cls, data):
-        return cls.pack_json({"text": data})
-
-    @classmethod
-    def pack_varint(cls, d):
-        o = b""
+    def pack_varint(cls, number):
+        out = b""
         while True:
-            b = d & 0x7F
-            d >>= 7
-            o += cls.pack("B", b | (0x80 if d > 0 else 0))
-            if d == 0:
+            b = number & 0x7F
+            number >>= 7
+            out += cls.pack("B", b | (0x80 if number > 0 else 0))
+            if number == 0:
                 break
-        return o
+        return out
 
     @classmethod
-    def pack_uuid(cls, d):
-        return d.to_bytes()
+    def pack_uuid(cls, uuid):
+        return uuid.to_bytes()

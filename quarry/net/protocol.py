@@ -266,7 +266,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                 except BufferUnderrun:
                     raise ProtocolError("Packet is too short!")
 
-                if packet_buff.length() > 0:
+                if len(packet_buff) > 0:
                     raise ProtocolError("Packet is too long!")
 
             except ProtocolError as e:
