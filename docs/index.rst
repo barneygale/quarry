@@ -1,4 +1,4 @@
-.. literalinclude:: ../README.rst
+.. include:: ../README.rst
 
 Documentation
 -------------
