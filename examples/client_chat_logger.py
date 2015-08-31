@@ -13,15 +13,21 @@ class ChatLoggerProtocol(ClientProtocol):
     spawned = False
 
     def setup(self):
-        self.coords = [0, 0, 0]
-        self.yaw = 0
-        self.pitch = 0
+        # x, y, z, yaw, pitch
+        self.pos_look = [0, 0, 0, 0, 0]
 
-    def update_player(self):
-        self.yaw = (self.yaw + 5) % 360
+    # Send a 'player' packet every tick
+    def update_player_inc(self):
+        self.pos_look[3] = (self.pos_look[3] + 5) % 360
+        self.send_packet("player", self.buff_type.pack('?', True))
 
-        self.send_packet("player_look",
-            self.buff_type.pack('ff?', self.yaw, self.pitch, True))
+    # Sent a 'player position' packet every 20 ticks
+    def update_player_full(self):
+        self.send_packet("player_position", self.buff_type.pack('ddd?',
+            self.pos_look[0],
+            self.pos_look[1],
+            self.pos_look[2],
+            True))
 
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat()
@@ -36,36 +42,22 @@ class ChatLoggerProtocol(ClientProtocol):
         self.logger.info(":: %s" % p_text)
 
     def packet_player_position_and_look(self, buff):
-        p_coords = buff.unpack('ddd')
-        p_yaw = buff.unpack('f')
-        p_pitch = buff.unpack('f')
+        p_pos_look = buff.unpack('dddff')
 
         # 1.7.x
         if self.protocol_version <= 5:
             p_on_ground = buff.unpack('?')
-
-            self.coords = p_coords
-            self.yaw = p_yaw
-            self.pitch = p_pitch
+            self.pos_look = p_pos_look
 
         # 1.8.x
         else:
-            p_position_flags = buff.unpack('B')
+            p_flags = buff.unpack('B')
 
-            if p_position_flags & 1 >> 0:
-                self.coords[0] = 0
-            if p_position_flags & 1 >> 1:
-                self.coords[1] = 0
-            if p_position_flags & 1 >> 2:
-                self.coords[2] = 0
-            if p_position_flags & 1 >> 3:
-                self.pitch = 0
-            if p_position_flags & 1 >> 4:
-                self.yaw = 0
-
-        self.coords = [old+new for old, new in zip(p_coords, self.coords)]
-        self.yaw += p_yaw
-        self.pitch += p_pitch
+            for i in range(5):
+                if p_flags & (1 << i):
+                    self.pos_look[i] += p_pos_look[i]
+                else:
+                    self.pos_look[i] = p_pos_look[i]
 
         # Send Player Position And Look
 
@@ -73,27 +65,28 @@ class ChatLoggerProtocol(ClientProtocol):
         if self.protocol_version <= 5:
             self.send_packet("player_position_and_look", self.buff_type.pack(
                 'ddddff?',
-                self.coords[0],
-                self.coords[1] - 1.62,
-                self.coords[1],
-                self.coords[2],
-                self.yaw,
-                self.pitch,
+                self.pos_look[0],
+                self.pos_look[1] - 1.62,
+                self.pos_look[1],
+                self.pos_look[2],
+                self.pos_look[3],
+                self.pos_look[4],
                 True))
 
         # 1.8.x
         else:
             self.send_packet("player_position_and_look", self.buff_type.pack(
                 'dddff?',
-                self.coords[0],
-                self.coords[1],
-                self.coords[2],
-                self.yaw,
-                self.pitch,
+                self.pos_look[0],
+                self.pos_look[1],
+                self.pos_look[2],
+                self.pos_look[3],
+                self.pos_look[4],
                 True))
 
         if not self.spawned:
-            self.tasks.add_loop(1.0/20, self.update_player)
+            self.tasks.add_loop(1.0/20, self.update_player_inc)
+            self.tasks.add_loop(1.0,    self.update_player_full)
             self.spawned = True
 
 
