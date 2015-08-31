@@ -35,11 +35,11 @@ class ClientProtocol(Protocol):
 
         if mode == "status":
             # Send status request
-            self.send_packet("request")
+            self.send_packet("status_request")
 
         elif mode == "login":
             # Send login start
-            self.send_packet("start", self.buff_type.pack_string(
+            self.send_packet("login_start", self.buff_type.pack_string(
                 self.factory.profile.username))
 
 
@@ -60,18 +60,15 @@ class ClientProtocol(Protocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            self.send_packet("encryption_response",
-                self.buff_type.pack('h', len(p_shared_secret)) +
-                self.buff_type.pack_raw(p_shared_secret) +
-                self.buff_type.pack('h', len(p_verify_token)) +
-                self.buff_type.pack_raw(p_verify_token))
+            pack_array = lambda d: self.buff_type.pack('h', len(d)) + d
+
         # 1.8.x
         else:
-            self.send_packet("encryption_response",
-            self.buff_type.pack_varint(len(p_shared_secret)) +
-            self.buff_type.pack_raw(p_shared_secret) +
-            self.buff_type.pack_varint(len(p_verify_token)) +
-            self.buff_type.pack_raw(p_verify_token))
+            pack_array = lambda d: self.buff_type.pack_varint(len(d)) + d
+
+        self.send_packet("login_encryption_response",
+            pack_array(p_shared_secret) +
+            pack_array(p_verify_token))
 
         # Enable encryption
         self.cipher.enable(self.shared_secret)
@@ -104,12 +101,13 @@ class ClientProtocol(Protocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            p_public_key   = buff.read(buff.unpack('h'))
-            p_verify_token = buff.read(buff.unpack('h'))
+            unpack_array = lambda b: b.read(b.unpack('h'))
         # 1.8.x
         else:
-            p_public_key   = buff.read(buff.unpack_varint())
-            p_verify_token = buff.read(buff.unpack_varint())
+            unpack_array = lambda b: b.read(b.unpack_varint())
+
+        p_public_key   = unpack_array(buff)
+        p_verify_token = unpack_array(buff)
 
         if not self.factory.profile.logged_in:
             raise ProtocolError("Can't log into online-mode server while using"
@@ -143,7 +141,7 @@ class ClientProtocol(Protocol):
     def packet_login_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
-    def packet_play_set_compression(self, buff):
+    def packet_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
 class ClientFactory(Factory, protocol.ClientFactory):

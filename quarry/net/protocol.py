@@ -281,7 +281,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         self.log_packet(". recv", name)
 
-        dispatched = self.dispatch((self.protocol_mode, name), buff)
+        dispatched = self.dispatch((name,), buff)
 
         if not dispatched:
             self.packet_unhandled(buff, name)

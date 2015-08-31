@@ -13,7 +13,7 @@ class PlayerListProtocol(ClientProtocol):
     def setup(self):
         self.players = {}
 
-    def packet_play_player_list_item(self, buff):
+    def packet_player_list_item(self, buff):
         # 1.7.x
         if self.protocol_version <= 5:
             p_player_name = buff.unpack_string()
@@ -84,7 +84,7 @@ class PlayerListProtocol(ClientProtocol):
                     if p_uuid in self.players:
                         del self.players[p_uuid]
 
-    def packet_play_player_position_and_look(self, buff):
+    def packet_player_position_and_look(self, buff):
         buff.discard()
 
         # convert self.players into a more readable format

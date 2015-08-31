@@ -10,7 +10,7 @@ from quarry.net.proxy import DownstreamFactory, Bridge
 class QuietBridge(Bridge):
     quiet_mode = False
 
-    def packet_play_upstream_chat_message(self, buff):
+    def packet_upstream_chat_message(self, buff):
         buff.save()
         chat_message = self.read_chat(buff, "upstream")
         self.logger.info(" >> %s" % chat_message)
@@ -35,7 +35,7 @@ class QuietBridge(Bridge):
             buff.restore()
             self.upstream.send_packet("chat_message", buff.read())
 
-    def packet_play_downstream_chat_message(self, buff):
+    def packet_downstream_chat_message(self, buff):
         chat_message = self.read_chat(buff, "downstream")
         self.logger.info(" :: %s" % chat_message)
 

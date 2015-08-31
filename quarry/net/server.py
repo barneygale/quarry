@@ -40,7 +40,7 @@ class ServerProtocol(Protocol):
 
         if mode == "play":
             # Send login success
-            self.send_packet("success",
+            self.send_packet("login_success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.username))
 
@@ -72,7 +72,7 @@ class ServerProtocol(Protocol):
                     real_kick()
             else:
                 if self.protocol_mode == "login":
-                    self.send_packet("disconnect",
+                    self.send_packet("login_disconnect",
                         self.buff_type.pack_chat(reason))
                 Protocol.close(self, reason)
         else:
@@ -100,7 +100,7 @@ class ServerProtocol(Protocol):
 
     ### Packet handlers -------------------------------------------------------
 
-    def packet_init_handshake(self, buff):
+    def packet_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
         p_connect_host = buff.unpack_string()
         p_connect_port = buff.unpack("H")
@@ -134,21 +134,16 @@ class ServerProtocol(Protocol):
 
             # 1.7.x
             if self.protocol_version <= 5:
-                self.send_packet("encryption_request",
-                    self.buff_type.pack_string(self.server_id) +
-                    self.buff_type.pack('H', len(self.factory.public_key)) +
-                    self.buff_type.pack_raw(self.factory.public_key) +
-                    self.buff_type.pack('H', len(self.verify_token)) +
-                    self.buff_type.pack_raw(self.verify_token))
+                pack_array = lambda a: self.buff_type.pack('h', len(a)) + a
 
             # 1.8.x
             else:
-                self.send_packet("encryption_request",
-                    self.buff_type.pack_string(self.server_id) +
-                    self.buff_type.pack_varint(len(self.factory.public_key)) +
-                    self.buff_type.pack_raw(self.factory.public_key) +
-                    self.buff_type.pack_varint(len(self.verify_token)) +
-                    self.buff_type.pack_raw(self.verify_token))
+                pack_array = lambda a: self.buff_type.pack_varint(len(a)) + a
+
+            self.send_packet("login_encryption_request",
+                self.buff_type.pack_string(self.server_id) +
+                pack_array(self.factory.public_key) +
+                pack_array(self.verify_token))
 
         else:
             self.login_expecting = None
@@ -163,13 +158,13 @@ class ServerProtocol(Protocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            p_shared_secret = buff.read(buff.unpack('h'))
-            p_verify_token = buff.read(buff.unpack('h'))
-
+            unpack_array = lambda b: b.read(b.unpack('h'))
         # 1.8.x
         else:
-            p_shared_secret = buff.read(buff.unpack_varint())
-            p_verify_token = buff.read(buff.unpack_varint())
+            unpack_array = lambda b: b.read(b.unpack_varint())
+
+        p_shared_secret = unpack_array(buff)
+        p_verify_token = unpack_array(buff)
 
         shared_secret = crypto.decrypt_secret(
             self.factory.keypair,
@@ -177,8 +172,7 @@ class ServerProtocol(Protocol):
 
         verify_token = crypto.decrypt_secret(
             self.factory.keypair,
-            p_verify_token
-        )
+            p_verify_token)
 
         self.login_expecting = None
 
@@ -222,13 +216,13 @@ class ServerProtocol(Protocol):
             d["favicon"] = self.factory.favicon
 
         # send status response
-        self.send_packet("response", self.buff_type.pack_json(d))
+        self.send_packet("status_response", self.buff_type.pack_json(d))
 
     def packet_status_ping(self, buff):
         time = buff.unpack("Q")
 
         # send ping
-        self.send_packet("pong", self.buff_type.pack("Q", time))
+        self.send_packet("status_pong", self.buff_type.pack("Q", time))
         self.close()
 
 

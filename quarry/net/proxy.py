@@ -130,7 +130,7 @@ class Bridge(PacketDispatcher):
             self.upstream.close()
 
     def packet_received(self, buff, protocol_mode, direction, name):
-        dispatched = self.dispatch((protocol_mode, direction, name), buff)
+        dispatched = self.dispatch((direction, name), buff)
 
         if not dispatched:
             self.packet_unhandled(buff, protocol_mode, direction, name)
