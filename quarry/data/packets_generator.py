@@ -1,6 +1,15 @@
+import sys
 import csv
 import re
-import urllib2
+import collections
+
+PY3 = sys.version_info > (3,)
+if PY3:
+    import urllib.request
+    urlread = lambda url: urllib.request.urlopen(url).read().decode('utf8')
+else:
+    import urllib2
+    urlread = lambda url: urllib2.urlopen(url).read()
 
 # Used to filter out pre-netty protocols
 MINIMUM_OLDID = 5486
@@ -14,20 +23,27 @@ REGEX_VERSIONS = "'''{{Minecraft Wiki\|([0-9\.]+)}}'''\n" \
                  'oldid=(\d+) page\]'
 REGEX_SECTIONS = '\n(?P<level>=+)\s*(.+?)\s*(?P=level)'
 
+def markdown_title(text, underline):
+    return "%s\n%s\n\n" % (text, underline*len(text))
 
 def download(page, oldid=None):
     url = "http://wiki.vg/index.php?title=%s&action=edit" % page
     if oldid is not None:
         url += "&oldid=%d" % oldid
-    data = urllib2.urlopen(url).read()
+    data = urlread(url)
     match = re.search(REGEX_WIKISOURCE, data, flags=re.DOTALL)
     return match.group(1)
 
 
 def main():
-    output = csv.writer(open("packets.csv", "w"))
-    output.writerow(("minecraft_version", "protocol_version", "protocol_mode",
-                     "packet_direction", "packet_ident", "packet_name"))
+    output_csv = csv.writer(open("packets.csv", "w"))
+    output_csv.writerow(("minecraft_version", "protocol_version",
+                         "protocol_mode", "packet_direction", "packet_ident",
+                         "packet_name"))
+    output_rst = open("../../docs/packet_names.rst", "w")
+    output_rst_packets = collections.defaultdict(list)
+    output_rst_version = None
+
 
     # Download the "Protocol version numbers" page
     p_versions = download("Protocol_version_numbers")
@@ -42,11 +58,27 @@ def main():
 
             # Grab packets from the "Protocol" page
             for packet in get_packets(oldid):
-                row = [minecraft_version, protocol_version]
-                row.extend(packet)
-                output.writerow(row)
-                pass
+                protocol_mode, direction, ident, packet_name = packet
+                # Write .csv
+                output_csv.writerow([minecraft_version, protocol_version,
+                                     protocol_mode, direction, ident,
+                                     packet_name])
 
+                # Collate for .rst
+                if output_rst_version == None:
+                    output_rst_version = minecraft_version
+                if output_rst_version == minecraft_version:
+                    output_rst_packets[packet_name].append(direction)
+
+    # Write .rst
+    output_rst.write(markdown_title("Packet Names", "="))
+    output_rst.write("See the `Minecraft Coalition Wiki`_ for a details on "
+                     "every packet.\n\n")
+    output_rst.write(markdown_title("Minecraft %s" % output_rst_version, "-"))
+    for full_name, modes in sorted(output_rst_packets.items()):
+        output_rst.write("- ``%s`` (%s)\n" % (full_name, ", ".join(modes)))
+    output_rst.write("\n")
+    output_rst.write(".. _Minecraft Coalition Wiki: http://wiki.vg/Protocol")
 
 def get_packets(oldid):
     # Nested wiki headings
@@ -92,6 +124,10 @@ def get_packets(oldid):
             # Clean up login packet names
             if packet_name.startswith("login_"):
                 packet_name = packet_name[6:]
+
+            # Prepend mode to name
+            if protocol_mode in ("login", "status"):
+                packet_name  = '%s_%s' % (protocol_mode, packet_name)
 
             yield protocol_mode, direction, ident, packet_name
 
