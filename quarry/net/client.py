@@ -171,3 +171,7 @@ class ClientFactory(Factory, protocol.ClientFactory):
 
             factory.protocol = PingProtocol
             factory.connect(host, port, "status")
+
+    def stopFactory(self):
+        if self.profile is not None and self.profile.logged_in:
+            self.profile.invalidate()

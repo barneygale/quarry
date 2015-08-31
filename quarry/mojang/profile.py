@@ -110,6 +110,22 @@ class Profile:
 
         return d0
 
+    def invalidate(self):
+        d0 = defer.Deferred()
+
+        def _callback(data):
+            d0.callback(data)
+
+        def _errback(err):
+            d0.errback(err)
+
+        d1 = self._req(b"invalidate",
+            clientToken = self.client_token,
+            accessToken = self.access_token,
+        )
+        d1.addCallbacks(_callback, _errback)
+
+        return d0
+
     #TODO: validate
-    #TODO: invalidate
     #TODO: sign out
