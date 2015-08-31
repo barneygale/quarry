@@ -122,15 +122,11 @@ def main(args):
     factory = PlayerListFactory()
     factory.profile = profile
 
-    def login_ok(data):
-        factory.connect(host, int(port))
-
-    def login_failed(err):
-        print("login failed:", err.value)
-        factory.stop()
-
+    # Log in and connect
     deferred = profile.login(username, password)
-    deferred.addCallbacks(login_ok, login_failed)
+    deferred.addCallbacks(
+        lambda data: factory.connect(host, int(port)),
+        lambda err: print("login failed:", err.value))
     factory.run()
 
 
