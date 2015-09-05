@@ -5,9 +5,9 @@ import zlib
 from twisted.internet import protocol, reactor
 
 from quarry.net import packets
-from quarry.util.crypto import Cipher
-from quarry.util.buffer import Buffer, BufferUnderrun
-from quarry.util.tasks import Tasks
+from quarry.utils.crypto import Cipher
+from quarry.utils.buffer import Buffer, BufferUnderrun
+from quarry.utils.tasks import Tasks
 
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")

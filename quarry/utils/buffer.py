@@ -1,7 +1,7 @@
 import struct
 import json
 
-from quarry.util import types
+from quarry.utils import types
 
 # Python 3 compat
 try:

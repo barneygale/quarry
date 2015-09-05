@@ -1,6 +1,11 @@
 Changelog
 =========
 
+master
+------
+
+- Rename ``quarry.util`` to `quarry.utils``
+
 v0.2.3
 ------
 

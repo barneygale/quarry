@@ -4,7 +4,7 @@ from twisted.internet import defer
 from twisted.web import client, error
 from twisted.python import failure
 
-from quarry.util import types
+from quarry.utils import types
 
 client.HTTPClientFactory.noisy = False
 
