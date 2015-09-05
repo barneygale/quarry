@@ -1,7 +1,7 @@
 Changelog
 =========
 
-master
+v0.2.3
 ------
 
 - (documentation) Fixed changelog for v0.2.2
