@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- (documentation) Fixed changelog for v0.2.2
+
+v0.2.2
+------
+
 - Fixed proxies
 - (documentation) Added changelog
 
