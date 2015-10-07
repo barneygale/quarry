@@ -1,10 +1,7 @@
 import unittest
 from quarry.utils.buffer import Buffer, BufferUnderrun
-import struct
-
 
 class TestPackUnpack(unittest.TestCase):
-
 
     def testVarInt(self):
         value = 5533
@@ -17,8 +14,6 @@ class TestPackUnpack(unittest.TestCase):
         buff = Buffer()
         buff.buff = buff.pack_blockposition(blockpos)
         print buff.unpack_blockposition()
-
-
 
 if __name__ == '__main__':
     unittest.main()
