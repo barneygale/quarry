@@ -1,4 +1,5 @@
 import unittest
+from quarry.utils import types
 from quarry.utils.buffer import Buffer, BufferUnderrun
 
 class TestPackUnpack(unittest.TestCase):
@@ -13,7 +14,28 @@ class TestPackUnpack(unittest.TestCase):
         blockpos = (345,-100,-2005)
         buff = Buffer()
         buff.buff = buff.pack_blockposition(blockpos)
-        print buff.unpack_blockposition()
+        self.assertTrue(blockpos == buff.unpack_blockposition())
+
+    def testChat(self):
+        text = "Hi there !"
+        buff = Buffer()
+        buff.buff = buff.pack_chat(text)
+        self.assertTrue(text == buff.unpack_chat())
+
+    def testString(self):
+        text = "more tests, and stuff"
+
+        buff = Buffer()
+        buff.buff = buff.pack_string(text)
+        self.assertTrue(text == buff.unpack_string())
+
+    def testUuid(self):
+        uuid = types.UUID.from_offline_player("KLonter")
+        buff = Buffer()
+        buff.buff = buff.pack_uuid(uuid) 
+        self.assertTrue(uuid == buff.unpack_uuid())
+
+
 
 if __name__ == '__main__':
     unittest.main()
