@@ -62,13 +62,23 @@ class ProtocolError(Exception):
 class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
+    #: Usually a reference to the :class:`Buffer` class. This is useful when
+    #: constructing a packet payload for use in :meth:`send_packet`
+    buff_type = None
+
+    #: A reference to the logger
+    logger = None
+
+    #: A reference to a :class:`Tasks` instance. This object has methods for
+    #: setting up repeating or delayed callbacks
+    tasks = None
+
     recv_direction = None
     send_direction = None
     protocol_version = packets.default_protocol_version
     protocol_mode = "init"
     compression_threshold = None
     compression_enabled = False
-
     in_game = False
     closed = False
 
@@ -156,7 +166,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     ### General callbacks -----------------------------------------------------
 
     def setup(self):
-        """Called when the object's initialiser is finished"""
+        """Called when the Protocol's initialiser is finished"""
 
         pass
 
@@ -204,12 +214,12 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     ### Player callbacks ------------------------------------------------------
 
     def player_joined(self):
-        """Called when the protocol mode has switched to "play" """
+        """Called when the player joins the game"""
 
         self.in_game = True
 
     def player_left(self):
-        """Called when the player leaves"""
+        """Called when the player leaves the game"""
 
         pass
 
@@ -277,7 +287,12 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.connection_timer.restart()
 
     def packet_received(self, buff, name):
-        """ Dispatches packet to registered handler """
+        """
+        Called when a packet is received from the remote. Usually this method
+        dispatches the packet to a method named ``packet_<packet name>``, or
+        calls :meth:`packet_unhandled` if no such methods exists. You might
+        want to override this to implement your own dispatch logic or logging.
+        """
 
         self.log_packet(". recv", name)
 
@@ -287,12 +302,15 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.packet_unhandled(buff, name)
 
     def packet_unhandled(self, buff, name):
-        """Called when a packet has no registered handler"""
+        """
+        Called when a packet is received that is not hooked. The default
+        implementation silently discards the packet.
+        """
 
         buff.discard()
 
     def send_packet(self, name, data=b""):
-        """ Sends a packet """
+        """Sends a packet to the remote."""
 
         if self.closed:
             return

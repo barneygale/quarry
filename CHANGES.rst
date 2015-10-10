@@ -6,6 +6,7 @@ master
 
 - Renamed ``quarry.util`` to `quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
+- Added many new docstrings; made documentation use Sphinx's ``autodoc``
 
 v0.2.3
 ------

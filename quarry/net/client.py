@@ -46,10 +46,17 @@ class ClientProtocol(Protocol):
     ### Callbacks -------------------------------------------------------------
 
     def connection_made(self):
+        """Called when the connection is established"""
         Protocol.connection_made(self)
         self.switch_protocol_mode(self.protocol_mode_next)
 
     def auth_ok(self, data):
+        """
+        Called if the Mojang session server responds to our query. Note that
+        this method does not indicate that the server accepted our session; in
+        this case :meth:`player_joined` is called.
+        """
+
         # Send encryption response
         p_shared_secret = crypto.encrypt_secret(
             self.public_key,
@@ -75,14 +82,23 @@ class ClientProtocol(Protocol):
         self.logger.debug("Encryption enabled")
 
     def player_joined(self):
+        """
+        Called when we join the game. If the server is in online mode, this
+        means the server accepted our session.
+        """
         Protocol.player_joined(self)
         self.logger.info("Joined the game.")
 
     def player_left(self):
+        """Called when we leave the game."""
         Protocol.player_left(self)
         self.logger.info("Left the game.")
 
     def status_response(self, data):
+        """
+        If we're connecting in "status" mode, this is called when the server
+        sends us information about itself.
+        """
         self.close()
 
     ### Packet handlers -------------------------------------------------------

@@ -58,6 +58,7 @@ class ServerProtocol(Protocol):
         self.protocol_mode = mode
 
     def close(self, reason=None):
+        """Closes the connection"""
         if not self.closed and reason is not None:
             # Kick the player if possible.
             if self.protocol_mode == "play":
@@ -81,12 +82,14 @@ class ServerProtocol(Protocol):
     ### Callbacks -------------------------------------------------------------
 
     def auth_ok(self, data):
+        """Called when auth with mojang succeeded (online mode only)"""
         self.username_confirmed = True
         self.uuid = types.UUID.from_hex(data['id'])
 
         self.player_joined()
 
     def player_joined(self):
+        """Called when the player joins the game"""
         Protocol.player_joined(self)
 
         self.logger.info("%s has joined." % self.username)
@@ -94,6 +97,7 @@ class ServerProtocol(Protocol):
         self.switch_protocol_mode("play")
 
     def player_left(self):
+        """Called when the player leaves the game"""
         Protocol.player_left(self)
 
         self.logger.info("%s has left." % self.username)
