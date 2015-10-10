@@ -140,6 +140,9 @@ class Bridge(PacketDispatcher):
         elif direction == "upstream":
             self.upstream.send_packet(name, buff.read())
 
+    def packet_downstream_set_compression(self, buff):
+        self.upstream.set_compression(buff.unpack_varint())
+
 
 class Downstream(ServerProtocol):
     bridge = None

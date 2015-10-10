@@ -11,6 +11,9 @@ master
   for the fix.
 - Fixed issue where an exception was raised when generating an offline-mode
   UUID in Python 3. Thanks to PangeaCake for the report.
+- Fixed issue with compression in proxies when the upstream server set the
+  compression threshold after passthrough had been enabled. Thanks to
+  PangeaCake for the report.
 
 v0.2.3
 ------
