@@ -4,8 +4,8 @@ Changelog
 master
 ------
 
-- Rename ``quarry.util`` to `quarry.utils``
-- Remove ``protocol_mode`` parameter from some proxy callbacks
+- Renamed ``quarry.util`` to `quarry.utils``
+- Removed ``protocol_mode`` parameter from some proxy callbacks
 
 v0.2.3
 ------
