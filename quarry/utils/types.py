@@ -12,7 +12,7 @@ class UUID(uuid.UUID):
     @classmethod
     def from_offline_player(cls, username):
         class FakeNamespace():
-            bytes = 'OfflinePlayer:'
+            bytes = b'OfflinePlayer:'
         base_uuid = uuid.uuid3(FakeNamespace(), username)
         return UUID(bytes=base_uuid.bytes)
 

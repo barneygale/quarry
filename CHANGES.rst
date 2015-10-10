@@ -9,6 +9,8 @@ master
 - Added many new docstrings; made documentation use Sphinx's ``autodoc``
 - Fixed exception handling when looking up a packet name. Thanks to PangeaCake
   for the fix.
+- Fixed issue where an exception was raised when generating an offline-mode
+  UUID in Python 3. Thanks to PangeaCake for the report.
 
 v0.2.3
 ------
