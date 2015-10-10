@@ -268,7 +268,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                         ident)
                     try:
                         name = packets.packet_names[key]
-                    except ValueError:
+                    except KeyError:
                         raise ProtocolError("No name known for packet: %s"
                                             % (key,))
                     self.packet_received(packet_buff, name)

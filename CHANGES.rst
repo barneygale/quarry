@@ -7,6 +7,8 @@ master
 - Renamed ``quarry.util`` to `quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
 - Added many new docstrings; made documentation use Sphinx's ``autodoc``
+- Fixed exception handling when looking up a packet name. Thanks to PangeaCake
+  for the fix.
 
 v0.2.3
 ------
