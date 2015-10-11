@@ -1,7 +1,7 @@
 import struct
 import json
 
-from quarry.util import types
+from quarry.utils import types
 
 # Python 3 compat
 try:
@@ -97,6 +97,33 @@ class Buffer(object):
 
     def unpack_uuid(self):
         return types.UUID.from_bytes(self.read(16))
+
+
+    def unpack_blockposition(self):
+        """
+        unpacks the location of singel block position actions:
+        block_change
+        block_action
+        block_break_animation
+        player_block_placement
+        update_block_entity
+        """
+        
+        xyz = self.unpack('q')
+        
+        x = int(xyz >> 38)
+        y = int((xyz >> 26) & 0xFFF) - 2048
+        z = int(xyz & 0xFFFFFFF) - 33554432
+
+        return (x,y,z)
+
+
+    @classmethod
+    def pack_blockposition(cls, tupel):
+        tupel = (tupel[0], tupel[1]+2048, tupel[2]+33554432)
+        value = (tupel[0]  << 38) | ((tupel[1] & 0xFFF) << 26) | (tupel[2] & 0xFFFFFFF)
+        
+        return cls.pack('q', value)
 
     @classmethod
     def pack(cls, fmt, *fields):

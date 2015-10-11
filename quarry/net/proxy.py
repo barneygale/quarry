@@ -1,9 +1,9 @@
 import logging
 
+from quarry.net.protocol import PacketDispatcher
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.mojang.profile import Profile
-from quarry.util.dispatch import PacketDispatcher
 
 #
 # Rough diagram of the universe a quarry proxy usually operates in:
@@ -47,7 +47,6 @@ class Upstream(ClientProtocol):
         self.log_packet(". recv", name)
         self.factory.bridge.packet_received(
             buff,
-            self.protocol_mode,
             "downstream",
             name)
 
@@ -129,13 +128,13 @@ class Bridge(PacketDispatcher):
         if self.upstream:
             self.upstream.close()
 
-    def packet_received(self, buff, protocol_mode, direction, name):
+    def packet_received(self, buff, direction, name):
         dispatched = self.dispatch((direction, name), buff)
 
         if not dispatched:
-            self.packet_unhandled(buff, protocol_mode, direction, name)
+            self.packet_unhandled(buff, direction, name)
 
-    def packet_unhandled(self, buff, protocol_mode, direction, name):
+    def packet_unhandled(self, buff, direction, name):
         if direction == "downstream":
             self.downstream.send_packet(name, buff.read())
         elif direction == "upstream":
@@ -148,7 +147,6 @@ class Downstream(ServerProtocol):
     def packet_received_passthrough(self, buff, name):
         self.bridge.packet_received(
             buff,
-            self.protocol_mode,
             "upstream",
             name)
 

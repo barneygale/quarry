@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='quarry',
-    version='0.1.0',
+    version='0.2.3',
     author='Barney Gale',
     author_email='barney@barneygale.co.uk',
     url='https://github.com/barneygale/quarry',
@@ -17,7 +17,7 @@ setup(
         "quarry",
         "quarry.mojang",
         "quarry.net",
-        "quarry.util"
+        "quarry.utils"
     ],
     package_data={'quarry': ['data/*.csv']},
 )

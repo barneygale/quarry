@@ -1,4 +1,4 @@
-.. literalinclude:: ../README.rst
+.. include:: ../README.rst
 
 Documentation
 -------------
@@ -11,6 +11,7 @@ Documentation
     writing_a_server
     sending_and_receiving_packets
     packet_names
+    changes
 
 Indices and tables
 ------------------

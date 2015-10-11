@@ -3,7 +3,7 @@ from twisted.internet import reactor, protocol, defer
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes_inv
 from quarry.mojang import auth
-from quarry.util import crypto
+from quarry.utils import crypto
 
 
 class ClientProtocol(Protocol):
