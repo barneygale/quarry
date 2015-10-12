@@ -1,0 +1,10 @@
+*.pyc
+xunit-*.xml
+docs/_build
+MANIFEST
+dist
+build
+notes
+.cache
+.coverage
+.idea
