@@ -14,6 +14,7 @@ master
 - Fixed issue with compression in proxies when the upstream server set the
   compression threshold after passthrough had been enabled. Thanks to
   PangeaCake for the report.
+- (tests) ``quarry.utils.buffer`` and ``quarry.utils.types`` are now covered.
 
 v0.2.3
 ------

@@ -1,0 +1,112 @@
+import pytest
+
+from quarry.utils.buffer import Buffer, BufferUnderrun
+from quarry.utils.types import UUID
+
+pack_unpack_vectors = [
+    ("??",   b"\x00\x01", (False, True)),
+    ("bbbb", b"\x00\x7F\x80\xFF", (0, 127, -128, -1)),
+    ("BBBB", b"\x00\x7F\x80\xFF", (0, 127, 128, 255)),
+    ("hhhh", b"\x00\x00\x7F\xFF\x80\x00\xFF\xFF", (0, 32767, -32768, -1)),
+    ("HHHH", b"\x00\x00\x7F\xFF\x80\x00\xFF\xFF", (0, 32767, 32768, 65535)),
+    ("iiii", b"\x00\x00\x00\x00\x7F\xFF\xFF\xFF"
+             b"\x80\x00\x00\x00\xFF\xFF\xFF\xFF", (0, 2147483647,
+                                                   -2147483648, -1)),
+    ("qqqq", b"\x00\x00\x00\x00\x00\x00\x00\x00"
+             b"\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+             b"\x80\x00\x00\x00\x00\x00\x00\x00"
+             b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", (0, 9223372036854775807,
+                                                   -9223372036854775808, -1)),
+    ("f",    b"\x40\x00\x00\x00", 2),
+    ("d",    b"\x40\x00\x00\x00\x00\x00\x00\x00", 2)
+]
+
+uuid_vector = b"\xcb\x3f\x5c\x3d\x0c\x13\x47\x68"\
+              b"\x9b\x3c\x43\x3e\x37\x28\x75\x97"
+
+def test_add():
+    buffer = Buffer()
+    buffer.add(b"spam")
+    assert len(buffer) == 4
+    assert buffer.read() == b"spam"
+
+def test_save_discard_restore():
+    buffer = Buffer()
+    buffer.add(b"spam")
+    buffer.save()
+    assert len(buffer) == 4
+    buffer.discard()
+    assert len(buffer) == 0
+    buffer.restore()
+    assert len(buffer) == 4
+
+def test_read():
+    buffer = Buffer()
+    buffer.add(b"spam")
+    assert buffer.read(2) == b"sp"
+    assert buffer.read(2) == b"am"
+    buffer.add(b"eggs")
+    assert buffer.read() == b"eggs"
+    with pytest.raises(BufferUnderrun):
+        buffer.read(1)
+
+def test_unpack():
+    buffer = Buffer()
+    for fmt, data, values in pack_unpack_vectors:
+        buffer.add(data)
+        assert buffer.unpack(fmt) == values
+
+def test_unpack_string():
+    buffer = Buffer()
+    buffer.add(b"\x04spam")
+    assert buffer.unpack_string() == "spam"
+
+def test_unpack_json():
+    buffer = Buffer()
+    buffer.add(b'\x10{"spam": "eggs"}')
+    assert buffer.unpack_json() == {"spam": "eggs"}
+
+def test_unpack_chat():
+    buffer = Buffer()
+    buffer.add(b'\x11["spam", " eggs"]')
+    assert buffer.unpack_chat() == "spam eggs"
+    buffer.add(b'\x22{"text": "spam", "extra": " eggs"}')
+    assert buffer.unpack_chat() == "spam eggs"
+    buffer.add(b'\x14{"translate": "foo"}')
+    assert buffer.unpack_chat() == "foo{}"
+    buffer.add(b'\x2E{"translate": "foo", "with": ["spam", "eggs"]}')
+    assert buffer.unpack_chat() == "foo{spam, eggs}"
+
+def test_unpack_varint():
+    buffer = Buffer()
+    buffer.add(b"\x14")
+    assert buffer.unpack_varint() == 20
+    buffer.add(b"\x80\x94\xeb\xdc\x03")
+    assert buffer.unpack_varint() == 1000000000
+
+def test_unpack_uuid():
+    buffer = Buffer()
+    buffer.add(uuid_vector)
+    assert buffer.unpack_uuid().to_bytes() == uuid_vector
+
+def test_pack():
+    for fmt, data, values in pack_unpack_vectors:
+        if not isinstance(values, tuple):
+            values = (values,)
+        assert Buffer.pack(fmt, *values) == data
+
+def test_pack_string():
+    assert Buffer.pack_string("spam") == b"\x04spam"
+
+def test_pack_json():
+    assert Buffer.pack_json({"spam": "eggs"}) == b'\x10{"spam": "eggs"}'
+
+def test_pack_chat():
+    assert Buffer.pack_chat("spam") == b'\x10{"text": "spam"}'
+
+def test_pack_varint():
+    assert Buffer.pack_varint(20) == b"\x14"
+    assert Buffer.pack_varint(1000000000) == b"\x80\x94\xeb\xdc\x03"
+
+def test_pack_uuid():
+    assert Buffer.pack_uuid(UUID.from_bytes(uuid_vector)) == uuid_vector

@@ -6,7 +6,7 @@ from quarry.utils import types
 # Python 3 compat
 try:
   basestring
-except NameError:
+except NameError: # pragma: no cover
   basestring = str
 
 class BufferUnderrun(Exception):
