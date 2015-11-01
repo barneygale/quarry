@@ -6,6 +6,8 @@ def _load():
     minecraft_versions = {}
     packet_names = {}
     packet_idents = {}
+    packet_ident = 0
+    last_section = None
     csvpath = os.path.abspath(os.path.join(
         os.path.dirname(__file__),
         "..",
@@ -22,8 +24,13 @@ def _load():
             protocol_version = int(record[1])
             protocol_mode = record[2]
             packet_direction = record[3]
-            packet_ident = int(record[4])
-            packet_name = record[5]
+            packet_name = record[4]
+
+            # Check if ident should be reset
+            section = (protocol_version, protocol_mode, packet_direction)
+            if section != last_section:
+                packet_ident = 0
+            last_section = section
 
             # Update default protocol version
             default_protocol_version = max(default_protocol_version,
@@ -36,6 +43,8 @@ def _load():
             key = [protocol_version, protocol_mode, packet_direction]
             packet_names [tuple(key + [packet_ident])] = packet_name
             packet_idents[tuple(key + [packet_name ])] = packet_ident
+
+            packet_ident += 1
 
     return default_protocol_version, minecraft_versions, \
            packet_names, packet_idents
