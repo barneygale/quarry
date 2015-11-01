@@ -163,9 +163,9 @@ class Buffer(object):
         slot = {}
         slot['id'] = self.unpack('h')
         if slot['id'] != -1:
-            slot['amount'] = self.unpack('b')
-            slot['data'] = self.unpack('h')
-            slot['data_tag'] = self.unpack_nbt()
+            slot['count'] = self.unpack('b')
+            slot['damage'] = self.unpack('h')
+            slot['tag'] = self.unpack_nbt()
 
         return slot
 
