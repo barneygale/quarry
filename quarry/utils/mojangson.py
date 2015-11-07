@@ -29,7 +29,7 @@ def dump_slots(slots):
                 'Count': slot['count'],
                 'Slot': i}
             if slot['tag'] is not None:
-                part['tag'] = slot['tag'][1]
+                part['tag'] = slot['tag'].to_obj()[1]
 
             parts.append(part)
 

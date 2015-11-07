@@ -170,53 +170,11 @@ class Buffer(object):
         return slot
 
     def unpack_nbt(self):
-        def unpack_string():
-            string_length = self.unpack('H')
-            return self.read(string_length).decode('utf8')
-
-        def unpack_array(fmt):
-            array_length = self.unpack('i')
-            return [self.unpack(fmt) for _ in range(array_length)]
-
-        def unpack_value(type_id):
-            if type_id == 1:
-                return self.unpack('b')
-            elif type_id == 2:
-                return self.unpack('h')
-            elif type_id == 3:
-                return self.unpack('i')
-            elif type_id == 4:
-                return self.unpack('q')
-            elif type_id == 5:
-                return self.unpack('f')
-            elif type_id == 6:
-                return self.unpack('d')
-            elif type_id == 7:
-                return unpack_array('b')
-            elif type_id == 8:
-                return unpack_string()
-            elif type_id == 9:
-                inner_type_id = self.unpack('b')
-                list_length = self.unpack('i')
-                return [unpack_value(inner_type_id) for _ in range(list_length)]
-            elif type_id == 10:
-                compound = {}
-                while True:
-                    tag = self.unpack_nbt()
-                    if tag is None:
-                        return compound
-                    compound[tag[0]] = tag[1]
-            elif type_id == 11:
-                return unpack_array('i')
-            else:
-                raise ValueError("Unknown nbt tag id: %d" % type_id)
-
-        type_id = self.unpack('b')
-        if type_id == 0:
-            return
-        name = unpack_string()
-        value = unpack_value(type_id)
-        return name, value
+        from quarry.utils import nbt
+        try:
+            return nbt.NamedTag.from_buff(self)
+        except nbt.EndOfCompoundTag:
+            return None
 
     @classmethod
     def pack(cls, fmt, *fields):
