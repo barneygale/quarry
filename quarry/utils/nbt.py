@@ -75,7 +75,7 @@ class NamedTag(_Tag):
     def from_buff(cls, buff):
         kind_id = buff.unpack('b')
         if kind_id == 0:
-            raise EndOfCompoundTag()
+            return None
         kind = _kinds[kind_id]
         name = TagString.from_buff(buff).value
         value = kind.from_buff(buff)
@@ -92,10 +92,6 @@ class NamedTag(_Tag):
 
     def __repr__(self):
         return "%s(%r, %r)" % (type(self).__name__, self.name, self.value)
-
-
-class EndOfCompoundTag(Exception):
-    pass
 
 
 # NBT tags ----------------------------------------------------------------------------------------
@@ -149,12 +145,8 @@ class TagList(_ArrayTag):
     @classmethod
     def from_buff(cls, buff):
         inner_kind_id = buff.unpack('b')
-        if inner_kind_id == 0:
-            assert buff.unpack('i') == 0
-            return cls([], type(None))
-        else:
-            inner_kind = _kinds[inner_kind_id]
-            return super(TagList, cls).from_buff(buff, inner_kind)
+        inner_kind = _kinds[inner_kind_id]
+        return super(TagList, cls).from_buff(buff, inner_kind)
 
     def to_bytes(self):
         return Buffer.pack('b', _ids[self.inner_kind]) + super(TagList, self).to_bytes()
@@ -166,12 +158,10 @@ class TagCompound(_Tag):
     def from_buff(cls, buff):
         value = []
         while True:
-            try:
-                tag = NamedTag.from_buff(buff)
-            except EndOfCompoundTag:
+            tag = NamedTag.from_buff(buff)
+            if tag is None:
                 return cls(value)
-            else:
-                value.append(tag)
+            value.append(tag)
 
     def to_bytes(self):
         return b"".join(tag.to_bytes() for tag in self.value) + Buffer.pack('b', 0)
@@ -182,6 +172,7 @@ class TagCompound(_Tag):
 
 # Register tags -----------------------------------------------------------------------------------
 
+_kinds[0] = type(None)
 _kinds[1] = TagByte
 _kinds[2] = TagShort
 _kinds[3] = TagInt

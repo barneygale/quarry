@@ -171,10 +171,7 @@ class Buffer(object):
 
     def unpack_nbt(self):
         from quarry.utils import nbt
-        try:
-            return nbt.NamedTag.from_buff(self)
-        except nbt.EndOfCompoundTag:
-            return None
+        return nbt.NamedTag.from_buff(self)
 
     @classmethod
     def pack(cls, fmt, *fields):
