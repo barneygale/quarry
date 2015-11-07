@@ -1,3 +1,5 @@
+import gzip
+
 from .buffer import Buffer
 
 _kinds = {}
@@ -147,8 +149,12 @@ class TagList(_ArrayTag):
     @classmethod
     def from_buff(cls, buff):
         inner_kind_id = buff.unpack('b')
-        inner_kind = _kinds[inner_kind_id]
-        return super(TagList, cls).from_buff(buff, inner_kind)
+        if inner_kind_id == 0:
+            assert buff.unpack('i') == 0
+            return cls([], type(None))
+        else:
+            inner_kind = _kinds[inner_kind_id]
+            return super(TagList, cls).from_buff(buff, inner_kind)
 
     def to_bytes(self):
         return Buffer.pack('b', _ids[self.inner_kind]) + super(TagList, self).to_bytes()
@@ -188,3 +194,20 @@ _kinds[9] = TagList
 _kinds[10] = TagCompound
 _kinds[11] = TagIntArray
 _ids.update({v: k for k, v in _kinds.items()})
+
+# Files -------------------------------------------------------------------------------------------
+
+class NBTFile(object):
+    def __init__(self, root_tag):
+        self.root_tag = root_tag
+
+    @classmethod
+    def load(cls, path):
+        with gzip.open(path, 'rb') as fd:
+            buff = Buffer()
+            buff.add(fd.read())
+            return cls(NamedTag.from_buff(buff))
+
+    def save(self, path):
+        with gzip.open(path, 'wb') as fd:
+            fd.write(self.root_tag.to_bytes())
