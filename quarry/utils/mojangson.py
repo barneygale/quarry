@@ -1,6 +1,6 @@
 import sys
 
-from quarry.net.items import items
+from quarry.net.items import item_names
 
 PY3 = sys.version_info > (3,)
 if PY3:
@@ -24,7 +24,7 @@ def dump_slots(slots):
     for i, slot in enumerate(slots):
         if slot['id'] != -1:
             part = {
-                'id': items[slot['id']],
+                'id': item_names[slot['id']],
                 'Damage': slot['damage'],
                 'Count': slot['count'],
                 'Slot': i}

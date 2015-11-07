@@ -2,7 +2,8 @@ import os.path
 import csv
 
 def _load():
-    items = {}
+    item_names = {}
+    item_ids = {}
     csvpath = os.path.abspath(os.path.join(
         os.path.dirname(__file__),
         "..",
@@ -19,8 +20,9 @@ def _load():
             item_name = record[1]
 
             # Save
-            items[item_id] = item_name
+            item_names[item_id] = item_name
+            item_ids[item_name] = item_id
 
-    return items
+    return item_names, item_ids
 
-items = _load()
+item_names, item_ids = _load()
