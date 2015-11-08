@@ -104,16 +104,21 @@ class Bridge(PacketDispatcher):
 
         # Connect to the server the client is requesting
         if self.downstream_factory.connect_host is None:
-            connect_host = self.downstream.connect_host
-            connect_port = self.downstream.connect_port
+            self.connect_host = self.downstream.connect_host
+            self.connect_port = self.downstream.connect_port
         else:
-            connect_host = self.downstream_factory.connect_host
-            connect_port = self.downstream_factory.connect_port
+            self.connect_host = self.downstream_factory.connect_host
+            self.connect_port = self.downstream_factory.connect_port
 
-        # Connect!
+        self.setup()
+
+    def setup(self):
+        self.connect()
+
+    def connect(self):
         self.upstream_factory.connect(
-            connect_host,
-            connect_port,
+            self.connect_host,
+            self.connect_port,
             "login",
             self.downstream.protocol_version)
 
