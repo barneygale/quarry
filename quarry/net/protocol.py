@@ -1,10 +1,9 @@
 import string
 import logging
 import zlib
-
 from twisted.internet import protocol, reactor
 
-from quarry.net import packets
+from quarry.data import packets
 from quarry.utils.crypto import Cipher
 from quarry.utils.buffer import Buffer, BufferUnderrun
 from quarry.utils.tasks import Tasks
