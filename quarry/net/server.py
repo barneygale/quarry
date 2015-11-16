@@ -238,8 +238,9 @@ class ServerProtocol(Protocol):
                 "protocol": protocol_version
             }
         }
-        if self.factory.favicon:
-            d["favicon"] = self.factory.favicon
+        if self.factory.favicon is not None:
+            with open(self.factory.favicon) as fd:
+                d["favicon"] = "data:image/png;base64," + base64.encodestring(fd.read())
 
         # send status response
         self.send_packet("status_response", self.buff_type.pack_json(d))
@@ -259,7 +260,6 @@ class ServerFactory(Factory):
     motd = "A Minecraft Server"
     max_players = 20
     favicon = None
-    favicon_path = None
     online_mode = True
     compression_threshold = 256
 
@@ -268,11 +268,6 @@ class ServerFactory(Factory):
 
         self.keypair = crypto.make_keypair()
         self.public_key = crypto.export_public_key(self.keypair)
-
-        if self.favicon_path is not None:
-            favicon_data = open(self.favicon_path).read()
-            favicon_data = base64.encodestring(favicon_data)
-            self.favicon = "data:image/png;base64," + favicon_data
 
     def listen(self, host, port=25565):
         reactor.listenTCP(port, self, interface=host)
