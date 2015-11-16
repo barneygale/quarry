@@ -88,6 +88,12 @@ class ServerProtocol(Protocol):
 
     ### Callbacks -------------------------------------------------------------
 
+    def connection_lost(self, reason=None):
+        """Called when the connection is lost"""
+        if self.protocol_mode in ("login", "play"):
+            self.factory.players.discard(self)
+        Protocol.connection_lost(self, reason)
+
     def auth_ok(self, data):
         """Called when auth with mojang succeeded (online mode only)"""
         self.username_confirmed = True
@@ -127,6 +133,11 @@ class ServerProtocol(Protocol):
             else:
                 if p_protocol_version not in self.factory.minecraft_versions:
                     self.close("Unknown protocol version")
+
+            if len(self.factory.players) >= self.factory.max_players:
+                self.close("Server is full")
+            else:
+                self.factory.players.add(self)
 
         self.protocol_version = p_protocol_version
         self.connect_host = p_connect_host
@@ -249,7 +260,7 @@ class ServerFactory(Factory):
     compression_threshold = 256
 
     def __init__(self):
-        self.players = []
+        self.players = set()
 
         self.keypair = crypto.make_keypair()
         self.public_key = crypto.export_public_key(self.keypair)

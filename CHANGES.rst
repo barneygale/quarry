@@ -5,6 +5,7 @@ master
 ------
 
 - Compression support in servers
+- Servers will now reject new connections when full
 - Renamed ``quarry.util`` to ``quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
 - Added many new docstrings; made documentation use Sphinx's ``autodoc``
