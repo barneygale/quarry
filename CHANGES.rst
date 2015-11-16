@@ -4,8 +4,10 @@ Changelog
 master
 ------
 
-- Compression support in servers
+- Compression is now supported in servers
 - Servers will now reject new connections when full
+- The point at which a proxy will connect to the upstream server is now
+  customisable.
 - Renamed ``quarry.util`` to ``quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
 - Added many new docstrings; made documentation use Sphinx's ``autodoc``
