@@ -219,6 +219,10 @@ class ServerProtocol(Protocol):
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_status_request(self, buff):
+        protocol_version = self.factory.force_protocol_version
+        if protocol_version is None:
+            protocol_version = self.protocol_version
+
         d = {
             "description": {
                 "text":     self.factory.motd
@@ -229,9 +233,9 @@ class ServerProtocol(Protocol):
             },
             "version": {
                 "name":     self.factory.minecraft_versions.get(
-                                self.protocol_version,
+                                protocol_version,
                                 "???"),
-                "protocol": self.protocol_version
+                "protocol": protocol_version
             }
         }
         if self.factory.favicon:

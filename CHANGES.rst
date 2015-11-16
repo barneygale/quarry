@@ -6,6 +6,8 @@ master
 
 - Compression is now supported in servers
 - Servers will now reject new connections when full
+- Servers will now report a forced protocol version in status responses, rather
+  than repeating the client's version.
 - The point at which a proxy will connect to the upstream server is now
   customisable.
 - Renamed ``quarry.util`` to ``quarry.utils``
