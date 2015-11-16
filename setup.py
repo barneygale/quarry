@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'twisted >= 13.0.0',
         'cryptography >= 0.9',
+        'pyOpenSSL >= 0.15.1'
     ],
     packages=[
         "quarry",
