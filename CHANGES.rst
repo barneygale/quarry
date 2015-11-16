@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Compression support in servers
 - Renamed ``quarry.util`` to ``quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
 - Added many new docstrings; made documentation use Sphinx's ``autodoc``

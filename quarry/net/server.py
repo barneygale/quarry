@@ -39,6 +39,12 @@ class ServerProtocol(Protocol):
         self.check_protocol_mode_switch(mode)
 
         if mode == "play":
+            if self.factory.compression_threshold:
+                # Send set compression
+                self.send_packet("login_set_compression",
+                                 self.buff_type.pack_varint(self.factory.compression_threshold))
+                self.set_compression(self.factory.compression_threshold)
+
             # Send login success
             self.send_packet("login_success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
@@ -78,6 +84,7 @@ class ServerProtocol(Protocol):
                 Protocol.close(self, reason)
         else:
             Protocol.close(self, reason)
+
 
     ### Callbacks -------------------------------------------------------------
 
@@ -239,6 +246,7 @@ class ServerFactory(Factory):
     favicon = None
     favicon_path = None
     online_mode = True
+    compression_threshold = 256
 
     def __init__(self):
         self.players = []
