@@ -1,3 +1,5 @@
+from builtins import bytes, chr
+
 import string
 import logging
 import zlib
@@ -7,7 +9,6 @@ from quarry.data import packets
 from quarry.utils.crypto import Cipher
 from quarry.utils.buffer import Buffer, BufferUnderrun
 from quarry.utils.tasks import Tasks
-
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
 
@@ -37,12 +38,11 @@ class PacketDispatcher(object):
             l_hex = []
             l_str = []
             for c in data_line:
-                l_hex.append("%02x" % ord(c))
-                l_str.append(c if c in string.printable else ".")
+                l_hex.append("%02x" % ord(chr(c)))
+                l_str.append(chr(c) if chr(c) in string.printable else ".")
 
-            l_hex.extend(['  ']*(16-len(l_hex)))
-            l_hex.insert(8,'')
-
+            l_hex.extend(['  '] * (16 - len(l_hex)))
+            l_hex.insert(8, '')
 
             lines.append("%08x  %s  |%s|" % (
                 bytes_read,
@@ -250,8 +250,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             packet_buff = self.buff_type()
             packet_buff.add(packet_body)
 
-            try: # Catch protocol errors
-                try: # Catch buffer overrun/underrun
+            try:  # Catch protocol errors
+                try:  # Catch buffer overrun/underrun
                     if self.compression_enabled:
                         uncompressed_length = packet_buff.unpack_varint()
 
@@ -343,6 +343,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         # Send
         self.transport.write(data)
+
 
 class Factory(protocol.Factory, object):
     protocol = Protocol
