@@ -54,7 +54,7 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_name
 1.8.8,47,play,downstream,update_sign
 1.8.8,47,play,downstream,map
 1.8.8,47,play,downstream,update_block_entity
-1.8.8,47,play,downstream,sign_editor_open
+1.8.8,47,play,downstream,open_sign_editor
 1.8.8,47,play,downstream,statistics
 1.8.8,47,play,downstream,player_list_item
 1.8.8,47,play,downstream,player_abilities
@@ -165,7 +165,7 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_name
 1.7.5,4,play,downstream,update_sign
 1.7.5,4,play,downstream,map
 1.7.5,4,play,downstream,update_block_entity
-1.7.5,4,play,downstream,sign_editor_open
+1.7.5,4,play,downstream,open_sign_editor
 1.7.5,4,play,downstream,statistics
 1.7.5,4,play,downstream,player_list_item
 1.7.5,4,play,downstream,player_abilities

@@ -11,6 +11,7 @@ master
 - The point at which a proxy will connect to the upstream server is now
   customisable.
 - Renamed "maps" packet to "map"
+- Renamed "sign editor open" packet to "open sign editor"
 - Renamed ``ServerFactory.favicon_path`` to ``ServerFactory.favicon``
 - Renamed ``quarry.util`` to ``quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
