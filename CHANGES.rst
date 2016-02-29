@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.9
 - Compression is now supported in servers
 - Servers will now reject new connections when full
 - Servers will now report a forced protocol version in status responses, rather
