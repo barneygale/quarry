@@ -10,6 +10,7 @@ master
   than repeating the client's version.
 - The point at which a proxy will connect to the upstream server is now
   customisable.
+- Renamed "maps" packet to "map"
 - Renamed ``ServerFactory.favicon_path`` to ``ServerFactory.favicon``
 - Renamed ``quarry.util`` to ``quarry.utils``
 - Removed ``protocol_mode`` parameter from some proxy callbacks
