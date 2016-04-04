@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-Nothing yet.
+- Fixed protocol error in example chat logger when connecting to 1.9 servers
 
 v0.3
 ----

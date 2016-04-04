@@ -59,6 +59,10 @@ class ChatLoggerProtocol(ClientProtocol):
                 else:
                     self.pos_look[i] = p_pos_look[i]
 
+            # 1.9.x
+            if self.protocol_version > 47:
+                teleport_id = buff.unpack_varint()
+
         # Send Player Position And Look
 
         # 1.7.x
@@ -74,7 +78,7 @@ class ChatLoggerProtocol(ClientProtocol):
                 True))
 
         # 1.8.x
-        else:
+        elif self.protocol_version <= 47:
             self.send_packet("player_position_and_look", self.buff_type.pack(
                 'dddff?',
                 self.pos_look[0],
@@ -83,6 +87,11 @@ class ChatLoggerProtocol(ClientProtocol):
                 self.pos_look[3],
                 self.pos_look[4],
                 True))
+
+        # 1.9.x
+        else:
+            self.send_packet("teleport_confirm", self.buff_type.pack_varint(
+                teleport_id))
 
         if not self.spawned:
             self.tasks.add_loop(1.0/20, self.update_player_inc)
