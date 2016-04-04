@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.9.1 and 1.9.2
 - Fixed protocol error in example chat logger when connecting to 1.9 servers
 
 v0.3
