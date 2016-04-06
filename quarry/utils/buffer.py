@@ -113,11 +113,10 @@ class Buffer(object):
             if isinstance(obj, dict):
                 text = ""
                 if "translate" in obj:
+                    text += obj["translate"]
                     if "with" in obj:
                         args = ", ".join((parse(e) for e in obj["with"]))
-                    else:
-                        args = ""
-                    text += "%s{%s}" % (obj["translate"], args)
+                        text += "{%s}" % args
                 if "text" in obj:
                     text += obj["text"]
                 if "extra" in obj:

@@ -4,7 +4,8 @@ Changelog
 master
 ------
 
-- Nothing yet
+- Made ``Buffer.unpack_chat()`` not add curly braces to "translate" objects
+  without accompanying "with" objects.
 
 v0.3.1
 ------
