@@ -6,6 +6,7 @@ master
 
 - Made ``Buffer.unpack_chat()`` not add curly braces to "translate" objects
   without accompanying "with" objects.
+- Made ``Buffer.unpack_chat()`` strip old-style (\u00A7) chat escapes.
 
 v0.3.1
 ------

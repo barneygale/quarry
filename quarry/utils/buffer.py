@@ -1,5 +1,6 @@
 import struct
 import json
+import re
 
 from quarry.utils import types
 
@@ -124,6 +125,7 @@ class Buffer(object):
                 return text
 
         text = parse(self.unpack_json())
+        text = re.sub(u"\u00A7.", "", text)
         return text
 
     def unpack_varint(self):
