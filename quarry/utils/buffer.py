@@ -6,9 +6,10 @@ from quarry.utils import types
 
 # Python 3 compat
 try:
-  basestring
-except NameError: # pragma: no cover
-  basestring = str
+    basestring
+except NameError:  # pragma: no cover
+    basestring = str
+
 
 class BufferUnderrun(Exception):
     pass
@@ -149,6 +150,10 @@ class Buffer(object):
         return types.UUID.from_bytes(self.read(16))
 
     def unpack_position(self):
+        """
+        Unpacks a Position from the buffer.
+        """
+
         def unpack_twos_comp(bits, number):
             if (number & (1 << (bits - 1))) != 0:
                 number = number - (1 << bits)
@@ -161,6 +166,10 @@ class Buffer(object):
         return x, y, z
 
     def unpack_slot(self):
+        """
+        Unpacks a Slot from the buffer.
+        """
+
         slot = {}
         slot['id'] = self.unpack('h')
         if slot['id'] != -1:
@@ -171,6 +180,10 @@ class Buffer(object):
         return slot
 
     def unpack_nbt(self):
+        """
+        Unpacks NBT tag(s) from the buffer.
+        """
+
         from quarry.utils import nbt
         return nbt.NamedTag.from_buff(self)
 
