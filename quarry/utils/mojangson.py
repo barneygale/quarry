@@ -1,6 +1,6 @@
 import sys
 
-from quarry.net.items import item_names
+from quarry.data.items import item_names
 
 PY3 = sys.version_info > (3,)
 if PY3:
