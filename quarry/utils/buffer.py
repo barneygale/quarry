@@ -148,6 +148,32 @@ class Buffer(object):
 
         return types.UUID.from_bytes(self.read(16))
 
+    def unpack_position(self):
+        def unpack_twos_comp(bits, number):
+            if (number & (1 << (bits - 1))) != 0:
+                number = number - (1 << bits)
+            return number
+
+        number = self.unpack('Q')
+        x = unpack_twos_comp(26, (number >> 38))
+        y = unpack_twos_comp(12, (number >> 26 & 0xFFF))
+        z = unpack_twos_comp(26, (number & 0x3FFFFFF))
+        return x, y, z
+
+    def unpack_slot(self):
+        slot = {}
+        slot['id'] = self.unpack('h')
+        if slot['id'] != -1:
+            slot['count'] = self.unpack('b')
+            slot['damage'] = self.unpack('h')
+            slot['tag'] = self.unpack_nbt()
+
+        return slot
+
+    def unpack_nbt(self):
+        from quarry.utils import nbt
+        return nbt.NamedTag.from_buff(self)
+
     @classmethod
     def pack(cls, fmt, *fields):
         """
