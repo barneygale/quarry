@@ -2,10 +2,10 @@ import base64
 
 from twisted.internet import reactor, defer
 
-from quarry.net.protocol import Factory, Protocol, ProtocolError, \
-    protocol_modes
+from quarry.net.protocol import Factory, Protocol, protocol_modes
 from quarry.mojang import auth
 from quarry.utils import crypto, types
+from quarry.utils.errors import ProtocolError
 
 
 class ServerProtocol(Protocol):
@@ -160,7 +160,8 @@ class ServerProtocol(Protocol):
 
             # 1.8.x
             else:
-                pack_array = lambda a: self.buff_type.pack_varint(len(a)) + a
+                pack_array = lambda a: self.buff_type.pack_varint(
+                    len(a), max_bits=16) + a
 
             self.send_packet("login_encryption_request",
                 self.buff_type.pack_string(self.server_id) +
@@ -183,7 +184,7 @@ class ServerProtocol(Protocol):
             unpack_array = lambda b: b.read(b.unpack('h'))
         # 1.8.x
         else:
-            unpack_array = lambda b: b.read(b.unpack_varint())
+            unpack_array = lambda b: b.read(b.unpack_varint(max_bits=16))
 
         p_shared_secret = unpack_array(buff)
         p_verify_token = unpack_array(buff)

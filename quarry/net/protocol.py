@@ -6,6 +6,7 @@ from twisted.internet import protocol, reactor
 from quarry.data import packets
 from quarry.utils.crypto import Cipher
 from quarry.utils.buffer import Buffer, BufferUnderrun
+from quarry.utils.errors import ProtocolError
 from quarry.utils.tasks import Tasks
 
 
@@ -52,10 +53,6 @@ class PacketDispatcher(object):
             bytes_read += len(data_line)
 
         return "\n    ".join(lines + ["%08x" % bytes_read])
-
-
-class ProtocolError(Exception):
-    pass
 
 
 class Protocol(protocol.Protocol, PacketDispatcher, object):
@@ -238,7 +235,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
             # Try to read a packet
             try:
-                packet_length = self.recv_buff.unpack_varint()
+                max_bits = 32 if self.protocol_mode == "play" else 21
+                packet_length = self.recv_buff.unpack_varint(max_bits=max_bits)
                 packet_body = self.recv_buff.read(packet_length)
 
             # Incomplete packet read, restore the buffer.
@@ -336,7 +334,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                 data = Buffer.pack_varint(0) + data
 
         # Prepend packet length
-        data = self.buff_type.pack_varint(len(data)) + data
+        max_bits = 32 if self.protocol_mode == "play" else 21
+        data = self.buff_type.pack_varint(len(data), max_bits=max_bits) + data
 
         # Encrypt
         data = self.cipher.encrypt(data)
