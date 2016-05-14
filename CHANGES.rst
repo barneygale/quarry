@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.9.3 and 1.9.4
 - Improved the varint implementation - it now supports signed and
   magnitude-limited numbers. Also added some sensible defaults to various bits
   of quarry that use varints.
