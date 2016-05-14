@@ -142,9 +142,8 @@ class Buffer(object):
                 break
 
         if number & (1<<31):
-            if signed:
-                number -= 1<<32
-            else:
+            number -= 1<<32
+            if not signed:
                 raise ProtocolError("varint cannot be negative: %d" % number)
 
         number_min = -1 << (max_bits - 1)
