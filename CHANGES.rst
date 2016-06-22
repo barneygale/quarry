@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- Nothing yet
+
+v0.4
+----
+
 - Added support for Minecraft 1.10
 - Added support for Minecraft 1.9.3 and 1.9.4
 - Improved the varint implementation - it now supports signed and
