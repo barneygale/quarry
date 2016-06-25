@@ -24,6 +24,17 @@ pack_unpack_vectors = [
 uuid_vector = b"\xcb\x3f\x5c\x3d\x0c\x13\x47\x68"\
               b"\x9b\x3c\x43\x3e\x37\x28\x75\x97"
 
+varint_vectors = [
+    (1, b"\x01"),
+    (127, b"\x7f"),
+    (300, b"\xAC\x02"),
+    (100000, b"\xA0\x8D\x06"),
+    (16909060, b"\x84\x86\x88\x08"),
+    (-1, b"\xFF\xFF\xFF\xFF\x0F"),
+    (2147483647, b"\xFF\xFF\xFF\xFF\x07"),
+    (-2147483648, b"\x80\x80\x80\x80\x08"),
+]
+
 def test_add():
     buffer = Buffer()
     buffer.add(b"spam")
@@ -79,10 +90,10 @@ def test_unpack_chat():
 
 def test_unpack_varint():
     buffer = Buffer()
-    buffer.add(b"\x14")
-    assert buffer.unpack_varint() == 20
-    buffer.add(b"\x80\x94\xeb\xdc\x03")
-    assert buffer.unpack_varint() == 1000000000
+    for value, data in varint_vectors:
+        buffer.add(data)
+        assert buffer.unpack_varint(signed=True) == value
+        assert len(buffer) == 0
 
 def test_unpack_uuid():
     buffer = Buffer()
@@ -105,8 +116,8 @@ def test_pack_chat():
     assert Buffer.pack_chat("spam") == b'\x10{"text": "spam"}'
 
 def test_pack_varint():
-    assert Buffer.pack_varint(20) == b"\x14"
-    assert Buffer.pack_varint(1000000000) == b"\x80\x94\xeb\xdc\x03"
+    for value, data in varint_vectors:
+        assert Buffer.pack_varint(value, signed=True) == data
 
 def test_pack_uuid():
     assert Buffer.pack_uuid(UUID.from_bytes(uuid_vector)) == uuid_vector

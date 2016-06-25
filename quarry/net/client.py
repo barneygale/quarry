@@ -1,9 +1,9 @@
 from twisted.internet import reactor, protocol, defer
 
-from quarry.net.protocol import Factory, Protocol, ProtocolError, \
-    protocol_modes_inv
+from quarry.net.protocol import Factory, Protocol, protocol_modes_inv
 from quarry.mojang import auth
 from quarry.utils import crypto
+from quarry.utils.errors import ProtocolError
 
 
 class ClientProtocol(Protocol):
@@ -71,7 +71,8 @@ class ClientProtocol(Protocol):
 
         # 1.8.x
         else:
-            pack_array = lambda d: self.buff_type.pack_varint(len(d)) + d
+            pack_array = lambda d: self.buff_type.pack_varint(
+                len(d), max_bits=16) + d
 
         self.send_packet("login_encryption_response",
             pack_array(p_shared_secret) +
@@ -120,7 +121,7 @@ class ClientProtocol(Protocol):
             unpack_array = lambda b: b.read(b.unpack('h'))
         # 1.8.x
         else:
-            unpack_array = lambda b: b.read(b.unpack_varint())
+            unpack_array = lambda b: b.read(b.unpack_varint(max_bits=16))
 
         p_public_key   = unpack_array(buff)
         p_verify_token = unpack_array(buff)

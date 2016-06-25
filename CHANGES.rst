@@ -4,6 +4,16 @@ Changelog
 master
 ------
 
+- Nothing yet
+
+v0.4
+----
+
+- Added support for Minecraft 1.10
+- Added support for Minecraft 1.9.3 and 1.9.4
+- Improved the varint implementation - it now supports signed and
+  magnitude-limited numbers. Also added some sensible defaults to various bits
+  of quarry that use varints.
 - Made ``Buffer.unpack_chat()`` not add curly braces to "translate" objects
   without accompanying "with" objects.
 - Made ``Buffer.unpack_chat()`` strip old-style (\u00A7) chat escapes.

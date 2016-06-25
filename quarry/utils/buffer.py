@@ -3,6 +3,7 @@ import json
 import re
 
 from quarry.utils import types
+from quarry.utils.errors import ProtocolError
 
 # Python 3 compat
 try:
@@ -88,7 +89,7 @@ class Buffer(object):
         Unpack a Minecraft string (varint-prefixed utf8) from the buffer.
         """
 
-        length = self.unpack_varint()
+        length = self.unpack_varint(max_bits=16)
         text = self.read(length).decode("utf-8")
         return text
 
@@ -129,7 +130,7 @@ class Buffer(object):
         text = re.sub(u"\u00A7.", "", text)
         return text
 
-    def unpack_varint(self):
+    def unpack_varint(self, max_bits=32, signed=False):
         """
         Unpacks a varint from the buffer.
         """
@@ -140,6 +141,18 @@ class Buffer(object):
             number |= (b & 0x7F) << 7*i
             if not b & 0x80:
                 break
+
+        if number & (1<<31):
+            number -= 1<<32
+            if not signed:
+                raise ProtocolError("varint cannot be negative: %d" % number)
+
+        number_min = -1 << (max_bits - 1)
+        number_max = +1 << (max_bits - 1)
+        if not (number_min <= number < number_max):
+            raise ProtocolError("varint does not fit in range: %d <= %d < %d"
+                                % (number_min, number, number_max))
+
         return number
 
     def unpack_uuid(self):
@@ -203,7 +216,7 @@ class Buffer(object):
         """
 
         text = text.encode("utf-8")
-        return cls.pack_varint(len(text)) + text
+        return cls.pack_varint(len(text), max_bits=16) + text
 
     @classmethod
     def pack_json(cls, obj):
@@ -223,13 +236,25 @@ class Buffer(object):
         return cls.pack_json({"text": text})
 
     @classmethod
-    def pack_varint(cls, number):
+    def pack_varint(cls, number, max_bits=32, signed=False):
         """
         Packs a varint.
         """
 
+        number_min = -1 << (max_bits - 1)
+        number_max = +1 << (max_bits - 1)
+        if not (number_min <= number < number_max):
+            raise ProtocolError("varint does not fit in range: %d <= %d < %d"
+                                % (number_min, number, number_max))
+
+        if number < 0:
+            if signed:
+                number += 1<<32
+            else:
+                raise ProtocolError("varint cannot be negative: %d" % number)
+
         out = b""
-        while True:
+        for i in range(5):
             b = number & 0x7F
             number >>= 7
             out += cls.pack("B", b | (0x80 if number > 0 else 0))
