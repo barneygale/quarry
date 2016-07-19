@@ -25,7 +25,6 @@ class BufferTypes:
 class BufferUnderrun(Exception):
     pass
 
-
 class Buffer(object):
     buff = b""
     pos = 0
@@ -69,7 +68,7 @@ class Buffer(object):
         bytes if *length* is ``None``
         """
 
-        if length is None:
+        if (length is None):
             data = self.buff[self.pos:]
             self.pos = len(self.buff)
         else:
@@ -87,11 +86,13 @@ class Buffer(object):
         for ``struct.unpack()``.
         """
 
-        fmt = ">"+fmt
+        fmt = ">%s" % (fmt)
         length = struct.calcsize(fmt)
         fields = struct.unpack(fmt, self.read(length))
+        
         if len(fields) == 1:
             fields = fields[0]
+        
         return fields
 
     def unpack_string(self):
@@ -119,21 +120,27 @@ class Buffer(object):
         """
 
         def parse(obj):
+            
             if isinstance(obj, basestring):
                 return obj
+            
             if isinstance(obj, list):
                 return "".join((parse(e) for e in obj))
+            
             if isinstance(obj, dict):
                 text = ""
                 if "translate" in obj:
                     text += obj["translate"]
                     if "with" in obj:
                         args = ", ".join((parse(e) for e in obj["with"]))
-                        text += "{%s}" % args
+                        text += "{%s}" % (args)
+                
                 if "text" in obj:
                     text += obj["text"]
+                
                 if "extra" in obj:
                     text += parse(obj["extra"])
+                
                 return text
 
         text = parse(self.unpack_json())
@@ -148,17 +155,20 @@ class Buffer(object):
         number = 0
         for i in range(5):
             b = self.unpack("B")
-            number |= (b & 0x7F) << 7*i
+            number |= (b & 0x7F) << 7 * i
+            
             if not b & 0x80:
                 break
 
-        if number & (1<<31):
-            number -= 1<<32
+        if number & (1 << 31):
+            number -= 1 << 32
+            
             if not signed:
                 raise ProtocolError("varint cannot be negative: %d" % number)
 
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
+        
         if not (number_min <= number < number_max):
             raise ProtocolError("varint does not fit in range: %d <= %d < %d"
                                 % (number_min, number, number_max))
@@ -179,7 +189,7 @@ class Buffer(object):
         ``struct.pack()``.
         """
 
-        return struct.pack(">"+fmt, *fields)
+        return struct.pack(">%s" % (fmt), *fields)
 
     @classmethod
     def pack_string(cls, text):
@@ -215,13 +225,14 @@ class Buffer(object):
 
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
+        
         if not (number_min <= number < number_max):
             raise ProtocolError("varint does not fit in range: %d <= %d < %d"
                                 % (number_min, number, number_max))
 
         if number < 0:
             if signed:
-                number += 1<<32
+                number += 1 << 32
             else:
                 raise ProtocolError("varint cannot be negative: %d" % number)
 
@@ -230,8 +241,10 @@ class Buffer(object):
             b = number & 0x7F
             number >>= 7
             out += cls.pack("B", b | (0x80 if number > 0 else 0))
+            
             if number == 0:
                 break
+        
         return out
 
     @classmethod
