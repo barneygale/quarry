@@ -11,12 +11,32 @@ try:
 except NameError: # pragma: no cover
   basestring = str
 
+class BufferEnum(Enum):
+    
+    @classmethod
+    def add(cls, id, value):
+        if not hasattr(cls, id):
+            setattr(cls, id, value)
+            return
+        
+        raise Exception("Tried to assign a value which already exists!")
+
+    @classmethod
+    def pack_enum(cls, fmt, buffer):
+        total = b""
+        items = list(map(int, cls))
+
+        for item in items:
+            items += buffer.pack(fmt, item)
+
+        return total
+
 class BufferTypes:
     Boolean = "?"
     Byte = "b"
-    UnsignedByte = "B"
+    Unsigned_byte = "B"
     Short = "h"
-    UnsignedShort = "H"
+    Unsigned_short = "H"
     Int = "i"
     Long = "q"
     Float = "f"
