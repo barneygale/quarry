@@ -62,13 +62,13 @@ class Buffer(object):
 
         self.pos = len(self.buff)
 
-    def read(self, length=None):
+    def read(self, length=0):
         """
         Read *length* bytes from the beginning of the buffer buffer, or all
-        bytes if *length* is ``None``
+        bytes if *length* is ``0``
         """
 
-        if (length is None):
+        if (length == 0):
             data = self.buff[self.pos:]
             self.pos = len(self.buff)
         else:
