@@ -27,7 +27,7 @@ class BufferEnum(Enum):
         items = list(map(int, cls))
 
         for item in items:
-            items += buffer.pack(fmt, item)
+            total += buffer.pack(fmt, item)
 
         return total
 
