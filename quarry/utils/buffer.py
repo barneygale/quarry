@@ -11,6 +11,17 @@ try:
 except NameError: # pragma: no cover
   basestring = str
 
+class BufferTypes:
+    Boolean = "?"
+    Byte = "b"
+    UnsignedByte = "B"
+    Short = "h"
+    UnsignedShort = "H"
+    Int = "i"
+    Long = "q"
+    Float = "f"
+    Double = "d"
+
 class BufferUnderrun(Exception):
     pass
 
