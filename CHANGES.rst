@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-- Nothing yet
+- Added Python 3 compatibility to ``PacketDispatcher.dump_packet()``
 
 v0.4
 ----
