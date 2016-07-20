@@ -84,7 +84,7 @@ def test_unpack_chat():
     buffer.add(b'\x22{"text": "spam", "extra": " eggs"}')
     assert buffer.unpack_chat() == "spam eggs"
     buffer.add(b'\x14{"translate": "foo"}')
-    assert buffer.unpack_chat() == "foo{}"
+    assert buffer.unpack_chat() == "foo"
     buffer.add(b'\x2E{"translate": "foo", "with": ["spam", "eggs"]}')
     assert buffer.unpack_chat() == "foo{spam, eggs}"
 
