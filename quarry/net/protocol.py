@@ -211,6 +211,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     def auth_failed(self, err):
         """Called when auth with mojang failed (online mode only)"""
 
+        self.logger.warn("Auth failed: %s" % err.value)
         self.close("Auth failed: %s" % err.value)
 
     ### Player callbacks ------------------------------------------------------
