@@ -4,7 +4,8 @@ Changelog
 master
 ------
 
-- Nothing yet
+- Fix tests for ``Buffer.unpack_chat()``
+- Added Python 3 compatibility to ``PacketDispatcher.dump_packet()``
 
 v0.4
 ----
