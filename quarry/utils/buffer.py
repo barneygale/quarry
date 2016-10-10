@@ -8,9 +8,10 @@ from quarry.utils.errors import ProtocolError
 
 # Python 3 compat
 try:
-  basestring
-except NameError: # pragma: no cover
-  basestring = str
+    basestring
+except NameError:  # pragma: no cover
+    basestring = str
+
 
 class BufferUnderrun(Exception):
     pass
