@@ -4,8 +4,16 @@ Changelog
 master
 ------
 
-- Fix tests for ``Buffer.unpack_chat()``
+- Added ``Buffer.unpack_nbt()`` and ``Buffer.pack_nbt()`` methods for working
+  with the NBT (Named Binary Tag) format.
+- Added ``Buffer.unpack_position()`` method. This unpacks a 26/12/26-packed
+  position.
+- Added ``strip_styles`` parameter to ``Buffer.unpack_chat()``. If set to
+  *false*, text is returned including old-style style escapes (U+00A7 plus a
+  character)
+- A stopping client factory no longer invalidates its profile.
 - Added Python 3 compatibility to ``PacketDispatcher.dump_packet()``
+- Fix tests for ``Buffer.unpack_chat()``
 
 v0.4
 ----
