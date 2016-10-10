@@ -171,6 +171,22 @@ class Buffer(object):
 
         return types.UUID.from_bytes(self.read(16))
 
+    def unpack_position(self):
+        """
+        Unpacks a Position from the buffer.
+        """
+
+        def unpack_twos_comp(bits, number):
+            if (number & (1 << (bits - 1))) != 0:
+                number = number - (1 << bits)
+            return number
+
+        number = self.unpack('Q')
+        x = unpack_twos_comp(26, (number >> 38))
+        y = unpack_twos_comp(12, (number >> 26 & 0xFFF))
+        z = unpack_twos_comp(26, (number & 0x3FFFFFF))
+        return x, y, z
+
     @classmethod
     def pack(cls, fmt, *fields):
         """
