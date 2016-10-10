@@ -187,6 +187,28 @@ class Buffer(object):
         z = unpack_twos_comp(26, (number & 0x3FFFFFF))
         return x, y, z
 
+    def unpack_slot(self):
+        """
+        Unpacks a Slot from the buffer.
+        """
+
+        slot = {}
+        slot['id'] = self.unpack('h')
+        if slot['id'] != -1:
+            slot['count'] = self.unpack('b')
+            slot['damage'] = self.unpack('h')
+            slot['tag'] = self.unpack_nbt()
+
+        return slot
+
+    def unpack_nbt(self):
+        """
+        Unpacks NBT tag(s) from the buffer.
+        """
+
+        from quarry.utils import nbt
+        return nbt.NamedTag.from_buff(self)
+
     @classmethod
     def pack(cls, fmt, *fields):
         """
@@ -256,6 +278,10 @@ class Buffer(object):
         """
 
         return uuid.to_bytes()
+
+    @classmethod
+    def pack_nbt(cls, tag):
+        return tag.to_bytes()
 
     @classmethod
     def strip_chat_styles(cls, text):
