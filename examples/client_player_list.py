@@ -4,9 +4,9 @@ Player lister example client
 Logs in and prints the player list
 """
 
-from __future__ import print_function
+from twisted.internet import reactor, defer
 from quarry.net.client import ClientFactory, ClientProtocol
-from quarry.mojang.profile import Profile
+from quarry.auth import ProfileCLI
 
 
 class PlayerListProtocol(ClientProtocol):
@@ -92,42 +92,36 @@ class PlayerListProtocol(ClientProtocol):
         for data in self.players.values():
             printable_players.append((data['name'], data['ping']))
 
-        for username, ping in sorted(printable_players):
-            self.logger.info("%4sms %s" % (ping, username))
+        for display_name, ping in sorted(printable_players):
+            self.logger.info("%4sms %s" % (ping, display_name))
 
-        self.factory.stop()
+        reactor.stop()
 
 
 class PlayerListFactory(ClientFactory):
     protocol = PlayerListProtocol
 
 
-def main(args):
-    # Parse options
-    import optparse
-    parser = optparse.OptionParser(
-        usage="usage: %prog <connect-host> <connect-port> "
-              "<username> <password>")
-    (options, args) = parser.parse_args(args)
-
-    if len(args) != 4:
-        return parser.print_usage()
-
-    host, port, username, password = args
-
-    # Create profile
-    profile = Profile()
+@defer.inlineCallbacks
+def run(args):
+    # Log in
+    profile = yield ProfileCLI.make_profile(args)
 
     # Create factory
-    factory = PlayerListFactory()
-    factory.profile = profile
+    factory = PlayerListFactory(profile)
 
-    # Log in and connect
-    deferred = profile.login(username, password)
-    deferred.addCallbacks(
-        lambda data: factory.connect(host, int(port)),
-        lambda err: print("login failed:", err.value))
-    factory.run()
+    # Connect!
+    yield factory.connect(args.host, args.port)
+
+
+def main(argv):
+    parser = ProfileCLI.make_parser()
+    parser.add_argument("host")
+    parser.add_argument("-p", "--port", default=25565, type=int)
+    args = parser.parse_args(argv)
+
+    run(args)
+    reactor.run()
 
 
 if __name__ == "__main__":

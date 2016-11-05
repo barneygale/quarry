@@ -4,6 +4,7 @@
 Allows a client to turn on "quiet mode" which hides chat messages
 """
 
+from twisted.internet import reactor
 from quarry.net.proxy import DownstreamFactory, Bridge
 
 
@@ -89,31 +90,25 @@ class QuietDownstreamFactory(DownstreamFactory):
     motd = "Proxy Server"
 
 
-def main(args):
+def main(argv):
     # Parse options
-    import optparse
-    parser = optparse.OptionParser(
-        usage="usage: %prog [options] <connect-host> <connect-port>")
-    parser.add_option("-a", "--listen-host",
-                      dest="listen_host", default="",
-                      help="address to listen on")
-    parser.add_option("-p", "--listen-port",
-                      dest="listen_port", default="25565", type="int",
-                      help="port to listen on")
-    (options, args) = parser.parse_args(args)
-
-    if len(args) != 2:
-        return parser.print_usage()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--listen-host", default="", help="address to listen on")
+    parser.add_argument("-p", "--listen-port", default=25565, type=int, help="port to listen on")
+    parser.add_argument("-b", "--connect-host", default="127.0.0.1", help="address to connect to")
+    parser.add_argument("-q", "--connect-port", default=25565, type=int, help="port to connect to")
+    args = parser.parse_args(argv)
 
     # Create factory
     factory = QuietDownstreamFactory()
     factory.motd = "Proxy Server"
-    factory.connect_host = args[0]
-    factory.connect_port = int(args[1])
+    factory.connect_host = args.connect_host
+    factory.connect_port = args.connect_port
 
     # Listen
-    factory.listen(options.listen_host, options.listen_port)
-    factory.run()
+    factory.listen(args.listen_host, args.listen_port)
+    reactor.run()
 
 
 if __name__ == "__main__":

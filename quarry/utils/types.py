@@ -10,10 +10,10 @@ class UUID(uuid.UUID):
         return UUID(bytes=bytes)
 
     @classmethod
-    def from_offline_player(cls, username):
+    def from_offline_player(cls, display_name):
         class FakeNamespace():
             bytes = b'OfflinePlayer:'
-        base_uuid = uuid.uuid3(FakeNamespace(), username)
+        base_uuid = uuid.uuid3(FakeNamespace(), display_name)
         return UUID(bytes=base_uuid.bytes)
 
     def to_hex(self, with_dashes=True):

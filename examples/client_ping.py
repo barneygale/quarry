@@ -5,8 +5,8 @@ Asks the server for the information normally displayed in the minecraft
 multiplayer menu.
 """
 
+from twisted.internet import reactor
 from quarry.net.client import ClientFactory, ClientProtocol
-from quarry.mojang.profile import Profile
 
 
 class PingProtocol(ClientProtocol):
@@ -15,36 +15,23 @@ class PingProtocol(ClientProtocol):
             if k != "favicon":
                 self.logger.info("%s --> %s" % (k, v))
 
-        self.factory.stop()
+        reactor.stop()
 
 
 class PingFactory(ClientFactory):
     protocol = PingProtocol
 
 
-def main(args):
-    # Parse options
-    import optparse
-    parser = optparse.OptionParser(
-        usage="usage: %prog <connect-host> <connect-port>")
-    (options, args) = parser.parse_args(args)
+def main(argv):
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("host")
+    parser.add_argument("-p", "--port", default=25565, type=int)
+    args = parser.parse_args(argv)
 
-    if len(args) != 2:
-        return parser.print_usage()
-
-    host, port = args
-
-    # Create profile
-    profile = Profile()
-    profile.login_offline("quarry")
-
-    # Create factory
     factory = PingFactory()
-    factory.profile = profile
-
-    factory.connect(host, int(port), "status")
-    factory.run()
-
+    factory.connect(args.host, args.port, "status")
+    reactor.run()
 
 if __name__ == "__main__":
     import sys

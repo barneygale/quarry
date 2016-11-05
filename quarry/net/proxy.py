@@ -3,7 +3,7 @@ import logging
 from quarry.net.protocol import PacketDispatcher
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
-from quarry.mojang.profile import Profile
+from quarry.auth import OfflineProfile
 
 #
 # Rough diagram of the universe a quarry proxy usually operates in:
@@ -81,7 +81,8 @@ class Bridge(PacketDispatcher):
 
     def __init__(self, downstream_factory, downstream):
         self.downstream_factory  = downstream_factory
-        self.upstream_factory    = downstream_factory.upstream_factory_class()
+        self.upstream_factory    = downstream_factory.upstream_factory_class(
+            OfflineProfile(downstream.display_name))
         self.downstream = downstream
         self.upstream   = None
 
@@ -89,18 +90,12 @@ class Bridge(PacketDispatcher):
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
-            self.downstream.username))
+            self.downstream.display_name))
         self.logger.setLevel(self.log_level)
 
         # Set up client factory
         self.upstream_factory.bridge = self
         self.upstream_factory.buff_type = self.buff_type
-
-        # If no upstream profile is set, generate an offline-mode profile
-        if self.upstream_factory.profile is None:
-            self.upstream_factory.profile = Profile()
-            self.upstream_factory.profile.login_offline(
-                self.downstream.username)
 
         # Connect to the server the client is requesting
         if self.downstream_factory.connect_host is None:

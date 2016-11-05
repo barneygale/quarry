@@ -1,7 +1,8 @@
 from twisted.internet import reactor, protocol, defer
+from twisted.python import failure
 
 from quarry.net.protocol import Factory, Protocol, protocol_modes_inv
-from quarry.mojang import auth
+from quarry import auth
 from quarry.utils import crypto
 from quarry.utils.errors import ProtocolError
 
@@ -40,7 +41,7 @@ class ClientProtocol(Protocol):
         elif mode == "login":
             # Send login start
             self.send_packet("login_start", self.buff_type.pack_string(
-                self.factory.profile.username))
+                self.factory.profile.display_name))
 
 
     ### Callbacks -------------------------------------------------------------
@@ -126,7 +127,7 @@ class ClientProtocol(Protocol):
         p_public_key   = unpack_array(buff)
         p_verify_token = unpack_array(buff)
 
-        if not self.factory.profile.logged_in:
+        if not self.factory.profile.online:
             raise ProtocolError("Can't log into online-mode server while using"
                                 " offline profile")
 
@@ -141,16 +142,12 @@ class ClientProtocol(Protocol):
             p_public_key)
 
         # do auth
-        deferred = auth.join(
-            self.factory.auth_timeout,
-            digest,
-            self.factory.profile.access_token,
-            self.factory.profile.uuid)
+        deferred = self.factory.profile.join(digest)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_login_success(self, buff):
         p_uuid = buff.unpack_string()
-        p_username = buff.unpack_string()
+        p_display_name = buff.unpack_string()
 
         self.switch_protocol_mode("play")
         self.player_joined()
@@ -161,9 +158,14 @@ class ClientProtocol(Protocol):
     def packet_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
+
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
-    profile = None
+
+    def __init__(self, profile=None):
+        if profile is None:
+            profile = auth.OfflineProfile()
+        self.profile = profile
 
     def connect(self, host, port=25565, protocol_mode_next="login",
                 protocol_version=0):
@@ -173,18 +175,23 @@ class ClientFactory(Factory, protocol.ClientFactory):
             if protocol_version > 0:
                 self.protocol.protocol_version = protocol_version
             reactor.connectTCP(host, port, self, self.connection_timeout)
-
+            return defer.succeed(self)
         else:
+            d0 = defer.Deferred()
             factory = ClientFactory()
             class PingProtocol(factory.protocol):
                 def status_response(s, data):
                     s.close()
                     detected_version = int(data["version"]["protocol"])
                     if detected_version in self.minecraft_versions:
-                        self.connect(host, port, protocol_mode_next,
+                        d1 = self.connect(host, port, protocol_mode_next,
                                      detected_version)
+                        d1.chainDeferred(d0)
                     else:
-                        pass #TODO
+                        d0.errback(failure.Failure(ProtocolError(
+                            "Unsupported protocol version: %d"
+                            % detected_version)))
 
             factory.protocol = PingProtocol
             factory.connect(host, port, "status")
+            return d0

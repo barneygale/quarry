@@ -356,15 +356,8 @@ class Factory(protocol.Factory, object):
     buff_type = Buffer
     log_level = logging.INFO
     connection_timeout = 30
-    auth_timeout = 30
 
     minecraft_versions = packets.minecraft_versions
 
     def buildProtocol(self, addr):
         return self.protocol(self, addr)
-
-    def run(self):
-        reactor.run()
-
-    def stop(self):
-        reactor.stop()

@@ -23,37 +23,31 @@ Logging in
 If you only need to log into offline-mode servers, you can create an offline
 profile::
 
-    from quarry.mojang.profile import Profile
+    from twisted.internet import reactor
+    from quarry.auth import OfflineProfile
 
-    profile = Profile()
-    profile.login_offline("Notch")
-
-    factory = ExampleClientFactory()
-    factory.profile = profile
+    factory = ExampleClientFactory(OfflineProfile("Notch"))
     factory.connect("localhost", 25565)
-    factory.run()
+    reactor.run()
 
 To log into online-mode servers, we need to talk to the Mojang session servers.
 Quarry uses twisted_ under the hood, where instead of waiting for I/O to
 complete, we register a callback that will be fired when login is complete::
 
+    from twisted.internet import defer, reactor
     from quarry.mojang.profile import Profile
 
-    profile = Profile()
+    @defer.inlineCallbacks
+    def main():
+        print("logging in...")
+        profile = yield Profile.from_credentials("someone@somewhere.com", "p4ssw0rd")
+        factory = ExampleClientFactory(profile)
+        print("connecting...")
+        factory = yield factory.connect("localhost", 25565)
+        print("connected!")
 
-    factory = ExampleClientFactory()
-    factory.profile = profile
-
-    def login_ok(data):
-        factory.connect("localhost", 25565)
-
-    def login_failed(err):
-        print("login failed:", err.value)
-        factory.stop()
-
-    deferred = profile.login("someone@somewhere.com", "p4ssw0rd")
-    deferred.addCallbacks(login_ok, login_failed)
-    factory.run()
+    main()
+    reactor.run()
 
 API Reference
 -------------

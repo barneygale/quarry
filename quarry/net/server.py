@@ -1,9 +1,8 @@
 import base64
-
 from twisted.internet import reactor, defer
 
 from quarry.net.protocol import Factory, Protocol, protocol_modes
-from quarry.mojang import auth
+from quarry import auth
 from quarry.utils import crypto, types
 from quarry.utils.errors import ProtocolError
 
@@ -15,8 +14,8 @@ class ServerProtocol(Protocol):
     send_direction = "downstream"
 
     uuid = None
-    username = None
-    username_confirmed = False
+    display_name = None
+    display_name_confirmed = False
 
     # used to stop people breaking the login process
     # by sending packets out-of-order or duplicated
@@ -48,7 +47,7 @@ class ServerProtocol(Protocol):
             # Send login success
             self.send_packet("login_success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
-                self.buff_type.pack_string(self.username))
+                self.buff_type.pack_string(self.display_name))
 
             if self.protocol_version <= 5:
                 def make_safe():
@@ -96,7 +95,7 @@ class ServerProtocol(Protocol):
 
     def auth_ok(self, data):
         """Called when auth with mojang succeeded (online mode only)"""
-        self.username_confirmed = True
+        self.display_name_confirmed = True
         self.uuid = types.UUID.from_hex(data['id'])
 
         self.player_joined()
@@ -105,7 +104,7 @@ class ServerProtocol(Protocol):
         """Called when the player joins the game"""
         Protocol.player_joined(self)
 
-        self.logger.info("%s has joined." % self.username)
+        self.logger.info("%s has joined." % self.display_name)
 
         self.switch_protocol_mode("play")
 
@@ -113,7 +112,7 @@ class ServerProtocol(Protocol):
         """Called when the player leaves the game"""
         Protocol.player_left(self)
 
-        self.logger.info("%s has left." % self.username)
+        self.logger.info("%s has left." % self.display_name)
 
     ### Packet handlers -------------------------------------------------------
 
@@ -147,7 +146,7 @@ class ServerProtocol(Protocol):
         if self.login_expecting != 0:
             raise ProtocolError("Out-of-order login")
 
-        self.username = buff.unpack_string()
+        self.display_name = buff.unpack_string()
 
         if self.factory.online_mode:
             self.login_expecting = 1
@@ -170,8 +169,8 @@ class ServerProtocol(Protocol):
 
         else:
             self.login_expecting = None
-            self.username_confirmed = True
-            self.uuid = types.UUID.from_offline_player(self.username)
+            self.display_name_confirmed = True
+            self.uuid = types.UUID.from_offline_player(self.display_name)
 
             self.player_joined()
 
@@ -216,7 +215,7 @@ class ServerProtocol(Protocol):
         deferred = auth.has_joined(
             self.factory.auth_timeout,
             digest,
-            self.username)
+            self.display_name)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_status_request(self, buff):
@@ -263,6 +262,7 @@ class ServerFactory(Factory):
     favicon = None
     online_mode = True
     compression_threshold = 256
+    auth_timeout = 30
 
     def __init__(self):
         self.players = set()

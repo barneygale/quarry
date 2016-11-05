@@ -4,7 +4,33 @@ Changelog
 master
 ------
 
-- Nothing yet.
+- BREAKING CHANGES!
+  - Throughout the codebase, references to ``username`` have changed to
+    ``display_name`` for consistency with Mojang's terminology.
+  - ``Factory.run()`` and ``Factory.stop()`` have been removed for being
+    misleading about the role of factories. Use twisted's ``reactor.run()``
+    instead.
+  - ``quarry.mojang`` has been renamed to ``quarry.auth`` and substantially
+    rewritten.
+  - Offline profiles are now represented by ``OfflineProfile`` objects.
+  - Online profiles have a number of new static creator methods:
+    - ``from_credentials()`` accepts an email address and password
+    - ``from_token()`` accepts a client and access token, display name and UUID
+    - ``from_file()`` loads a profile from the Mojang launcher.
+  - A new ``ProfileCLI`` class provides a couple of useful methods for
+    creating profiles from command-line arguments.
+  - Profiles must now be provided to the ``ClientFactory`` initializer, rather
+    than set as a class variable. When a profile is not given, an offline
+    profile is used. In proxies, the initialiser for ``UpstreamFactory`` must
+    be re-implemented if the proxy connects to the backing server in online
+    mode.
+  - ``Factory.auth_timeout`` has moved to ``ServerFactory.auth_timeout``.
+    Clients now use ``Profile.timeout`` when calling ``/join`` endpoint.
+- ``ClientFactory.connect`` returns a deferred that will fire after after
+  ``reactor.connectTCP`` is called for the last time. Usually there is a small
+  time delay before this happens while quarry queries the server's version.
+- Clients will refresh a profile if ``/join`` indicates a token is invalid, then
+  retry the ``/join`` once.
 
 
 v0.5
