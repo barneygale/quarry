@@ -4,6 +4,12 @@ Changelog
 master
 ------
 
+- Nothing yet.
+
+
+v0.5
+----
+
 - Added ``Buffer.unpack_nbt()`` and ``Buffer.pack_nbt()`` methods for working
   with the NBT (Named Binary Tag) format.
 - Added ``Buffer.unpack_position()`` method. This unpacks a 26/12/26-packed
