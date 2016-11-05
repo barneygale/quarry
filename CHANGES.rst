@@ -33,6 +33,8 @@ master
   retry the ``/join`` once.
 - Added a new ``SpawningClientProtocol`` class that implements enough packets
   to keep a player in-game
+- Added a new ``client_messenger`` example. This bridges minecraft chat
+  (in/out) with stdout and stdin.
 
 
 v0.5
