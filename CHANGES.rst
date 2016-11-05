@@ -31,6 +31,8 @@ master
   time delay before this happens while quarry queries the server's version.
 - Clients will refresh a profile if ``/join`` indicates a token is invalid, then
   retry the ``/join`` once.
+- Added a new ``SpawningClientProtocol`` class that implements enough packets
+  to keep a player in-game
 
 
 v0.5

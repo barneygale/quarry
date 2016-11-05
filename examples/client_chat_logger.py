@@ -5,30 +5,11 @@ Stays in game and prints player chat to console.
 """
 
 from twisted.internet import reactor, defer
-from quarry.net.client import ClientFactory, ClientProtocol
+from quarry.net.client import ClientFactory, SpawningClientProtocol
 from quarry.auth import ProfileCLI
 
 
-class ChatLoggerProtocol(ClientProtocol):
-    spawned = False
-
-    def setup(self):
-        # x, y, z, yaw, pitch
-        self.pos_look = [0, 0, 0, 0, 0]
-
-    # Send a 'player' packet every tick
-    def update_player_inc(self):
-        self.pos_look[3] = (self.pos_look[3] + 5) % 360
-        self.send_packet("player", self.buff_type.pack('?', True))
-
-    # Sent a 'player position' packet every 20 ticks
-    def update_player_full(self):
-        self.send_packet("player_position", self.buff_type.pack('ddd?',
-            self.pos_look[0],
-            self.pos_look[1],
-            self.pos_look[2],
-            True))
-
+class ChatLoggerProtocol(SpawningClientProtocol):
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat()
 
@@ -40,63 +21,6 @@ class ChatLoggerProtocol(ClientProtocol):
             p_position = buff.unpack('B')
 
         self.logger.info(":: %s" % p_text)
-
-    def packet_player_position_and_look(self, buff):
-        p_pos_look = buff.unpack('dddff')
-
-        # 1.7.x
-        if self.protocol_version <= 5:
-            p_on_ground = buff.unpack('?')
-            self.pos_look = p_pos_look
-
-        # 1.8.x
-        else:
-            p_flags = buff.unpack('B')
-
-            for i in range(5):
-                if p_flags & (1 << i):
-                    self.pos_look[i] += p_pos_look[i]
-                else:
-                    self.pos_look[i] = p_pos_look[i]
-
-            # 1.9.x
-            if self.protocol_version > 47:
-                teleport_id = buff.unpack_varint()
-
-        # Send Player Position And Look
-
-        # 1.7.x
-        if self.protocol_version <= 5:
-            self.send_packet("player_position_and_look", self.buff_type.pack(
-                'ddddff?',
-                self.pos_look[0],
-                self.pos_look[1] - 1.62,
-                self.pos_look[1],
-                self.pos_look[2],
-                self.pos_look[3],
-                self.pos_look[4],
-                True))
-
-        # 1.8.x
-        elif self.protocol_version <= 47:
-            self.send_packet("player_position_and_look", self.buff_type.pack(
-                'dddff?',
-                self.pos_look[0],
-                self.pos_look[1],
-                self.pos_look[2],
-                self.pos_look[3],
-                self.pos_look[4],
-                True))
-
-        # 1.9.x
-        else:
-            self.send_packet("teleport_confirm", self.buff_type.pack_varint(
-                teleport_id))
-
-        if not self.spawned:
-            self.tasks.add_loop(1.0/20, self.update_player_inc)
-            self.tasks.add_loop(1.0,    self.update_player_full)
-            self.spawned = True
 
 
 class ChatLoggerFactory(ClientFactory):
