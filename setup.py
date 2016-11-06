@@ -18,7 +18,6 @@ setup(
     packages=[
         "quarry",
         "quarry.data",
-        "quarry.mojang",
         "quarry.net",
         "quarry.utils"
     ],
