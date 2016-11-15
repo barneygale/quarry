@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.11
 - BREAKING CHANGES!
   - Throughout the codebase, references to ``username`` have changed to
     ``display_name`` for consistency with Mojang's terminology.
