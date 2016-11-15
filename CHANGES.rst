@@ -6,6 +6,7 @@ master
 
 - Added support for Minecraft 1.11
 - BREAKING CHANGES!
+
   - Throughout the codebase, references to ``username`` have changed to
     ``display_name`` for consistency with Mojang's terminology.
   - ``Factory.run()`` and ``Factory.stop()`` have been removed for being
@@ -27,6 +28,7 @@ master
     mode.
   - ``Factory.auth_timeout`` has moved to ``ServerFactory.auth_timeout``.
     Clients now use ``Profile.timeout`` when calling ``/join`` endpoint.
+
 - ``ClientFactory.connect`` returns a deferred that will fire after after
   ``reactor.connectTCP`` is called for the last time. Usually there is a small
   time delay before this happens while quarry queries the server's version.
