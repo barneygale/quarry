@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- Nothing yet
+
+v0.6
+----
+
 - Added support for Minecraft 1.11
 - BREAKING CHANGES!
 
