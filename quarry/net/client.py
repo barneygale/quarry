@@ -158,6 +158,8 @@ class ClientProtocol(Protocol):
     def packet_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
 
+    packet_disconnect = packet_login_disconnect
+
 
 class SpawningClientProtocol(ClientProtocol):
     spawned = False
