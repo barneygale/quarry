@@ -6,6 +6,14 @@ master
 
 - Nothing yet
 
+v0.6.2
+------
+
+- Added support for Minecraft 1.11.2
+- Added a default implementation for the "disconnect" packet, which now does
+  the same thing as "login_disconnect", i.e. logs a warning and closes the
+  connection.
+
 v0.6.1
 ------
 
