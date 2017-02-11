@@ -6,6 +6,11 @@ master
 
 - Nothing yet
 
+v0.6.3
+------
+
+- Fix bundle
+
 v0.6.2
 ------
 
