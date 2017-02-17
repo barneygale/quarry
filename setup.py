@@ -15,6 +15,9 @@ setup(
         'pyOpenSSL >= 0.15.1',
         'service_identity >= 14.0.0',
     ],
+    test_requires=[
+        'pytest'
+    ],
     packages=[
         "quarry",
         "quarry.data",
