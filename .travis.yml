@@ -1,8 +1,8 @@
 language: python
 python:
     - "2.7"
-    - "3.2"
+    - "3.3"
 install: source ./ci/travis_install.sh
-script: bash ./ci/travis_test.sh
+script: py.test
 cache: apt
 sudo: false
