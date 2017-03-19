@@ -313,13 +313,15 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         buff.discard()
 
-    def send_packet(self, name, data=b""):
+    def send_packet(self, name, *data):
         """Sends a packet to the remote."""
 
         if self.closed:
             return
 
         self.log_packet("# send", name)
+
+        data = b"".join(data)
 
         # Prepend ident
         key = (

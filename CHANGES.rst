@@ -4,6 +4,8 @@ Changelog
 master
 ------
 
+- Make ``Protocol.send_packet()`` accept any number of ``data`` arguments, which
+  are concatenated together.
 - Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long`` and
   complements ``Buffer.unpack_position()``.
 - Added a ``Bridge.make_profile()`` method, which is called to provide a profile
