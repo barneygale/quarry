@@ -67,3 +67,10 @@ them. Useful for server websites that ask users for a valid Minecraft account.
 
 .. literalinclude:: ../examples/server_auth.py
     :lines: 6-
+
+Chat Room Server
+''''''''''''''''
+
+This server authenticates players, then spawns them in an empty world and does
+the bare minimum to keep them in-game. Players can speak to eachother using
+chat.

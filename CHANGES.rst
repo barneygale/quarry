@@ -4,6 +4,8 @@ Changelog
 master
 ------
 
+- Added a new ``server_chat_room`` example. This server spawns a player in an
+  empty world and allows player to chat to eachother.
 - Make ``Protocol.send_packet()`` accept any number of ``data`` arguments, which
   are concatenated together.
 - Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long`` and
