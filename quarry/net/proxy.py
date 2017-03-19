@@ -80,11 +80,11 @@ class Bridge(PacketDispatcher):
     log_level = logging.INFO
 
     def __init__(self, downstream_factory, downstream):
-        self.downstream_factory  = downstream_factory
-        self.upstream_factory    = downstream_factory.upstream_factory_class(
-            OfflineProfile(downstream.display_name))
         self.downstream = downstream
         self.upstream   = None
+        self.downstream_factory  = downstream_factory
+        self.upstream_factory    = downstream_factory.upstream_factory_class(
+            self.make_profile())
 
         self.buff_type = self.downstream_factory.buff_type
 
@@ -106,6 +106,9 @@ class Bridge(PacketDispatcher):
             self.connect_port = self.downstream_factory.connect_port
 
         self.setup()
+
+    def make_profile(self):
+        return OfflineProfile(self.downstream.display_name)
 
     def setup(self):
         self.connect()

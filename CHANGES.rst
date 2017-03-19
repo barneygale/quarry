@@ -4,7 +4,9 @@ Changelog
 master
 ------
 
-- Nothing yet
+- Added a `Bridge.make_profile()` method, which is called to provide a profile
+  to the `UpstreamFactory`. The default implementation generates an offline 
+  profile with the same display name as the `Downstream`.
 
 v0.6.3
 ------
