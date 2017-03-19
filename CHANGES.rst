@@ -4,6 +4,8 @@ Changelog
 master
 ------
 
+- Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long`` and
+  complements ``Buffer.unpack_position()``.
 - Added a ``Bridge.make_profile()`` method, which is called to provide a profile
   to the ``UpstreamFactory``. The default implementation generates an offline
   profile with the same display name as the ``Downstream``.

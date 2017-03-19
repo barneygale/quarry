@@ -280,6 +280,22 @@ class Buffer(object):
         return uuid.to_bytes()
 
     @classmethod
+    def pack_position(cls, x, y, z):
+        """
+        Packs a Position.
+        """
+
+        def pack_twos_comp(bits, number):
+            if number < 0:
+                number = number + (1 << bits)
+            return number
+
+        return cls.pack('Q', sum((
+            pack_twos_comp(26, x) << 38,
+            pack_twos_comp(12, y) << 26,
+            pack_twos_comp(26, z))))
+
+    @classmethod
     def pack_nbt(cls, tag):
         return tag.to_bytes()
 
