@@ -1,7 +1,9 @@
 """
 Example "downtime" server
 
-When a user tries to connect, the server will kick them with the MOTD
+This server kicks players with the MOTD when they try to connect. It can be
+useful for when you want players to know that your usual server is down for
+maintenance.
 """
 
 from twisted.internet import reactor

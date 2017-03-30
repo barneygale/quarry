@@ -1,7 +1,8 @@
 """
 Chat logger example client
 
-Stays in game and prints player chat to console.
+This client stays in-game after joining. It prints chat messages received from
+the server and slowly rotates (thanks c45y for the idea).
 """
 
 from twisted.internet import reactor, defer

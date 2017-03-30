@@ -4,12 +4,13 @@ Changelog
 master
 ------
 
+- Substantially expanded documentation.
 - Added a new ``server_chat_room`` example. This server spawns a player in an
   empty world and allows player to chat to eachother.
-- Make ``Protocol.send_packet()`` accept any number of ``data`` arguments, which
-  are concatenated together.
-- Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long`` and
-  complements ``Buffer.unpack_position()``.
+- Made ``Protocol.send_packet()`` accept any number of ``data`` arguments,
+  which are concatenated together.
+- Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long``
+  and complements ``Buffer.unpack_position()``.
 - Added a ``Bridge.make_profile()`` method, which is called to provide a profile
   to the ``UpstreamFactory``. The default implementation generates an offline
   profile with the same display name as the ``Downstream``.

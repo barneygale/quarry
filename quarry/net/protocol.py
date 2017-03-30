@@ -68,12 +68,18 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     #: constructing a packet payload for use in :meth:`send_packet`
     buff_type = None
 
-    #: A reference to the logger
+    #: The logger for this protocol.
     logger = None
 
     #: A reference to a :class:`Tasks` instance. This object has methods for
     #: setting up repeating or delayed callbacks
     tasks = None
+
+    #: A reference to the factory
+    factory = None
+
+    #: The IP address of the remote.
+    remote_addr = None
 
     recv_direction = None
     send_direction = None

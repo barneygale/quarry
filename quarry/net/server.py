@@ -17,6 +17,11 @@ class ServerProtocol(Protocol):
     display_name = None
     display_name_confirmed = False
 
+    # the hostname/port that the client claims it connected to. Useful for
+    # implementing virtual hosting.
+    connect_host = None
+    connect_port = None
+
     # used to stop people breaking the login process
     # by sending packets out-of-order or duplicated
     login_expecting = 0
@@ -263,6 +268,7 @@ class ServerFactory(Factory):
     online_mode = True
     compression_threshold = 256
     auth_timeout = 30
+    players = None
 
     def __init__(self):
         self.players = set()

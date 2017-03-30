@@ -1,8 +1,9 @@
 """
 Example "chat room" server
 
-Does the absolute minimum to keep a player in-game, and also relays chat
-messages between connected players.
+This server authenticates players, then spawns them in an empty world and does
+the bare minimum to keep them in-game. Players can speak to eachother using
+chat.
 
 Supports Minecraft 1.11. Earlier versions may not work.
 """

@@ -264,3 +264,45 @@ if os.environ.get('READTHEDOCS', 'False') != 'True':
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# Generate 'packet_names.rst'
+
+import textwrap
+from collections import defaultdict
+from quarry.data import packets
+
+def write_packet_names():
+    latest_protocol = packets.default_protocol_version
+    latest_minecraft = packets.minecraft_versions[latest_protocol]
+
+    text = textwrap.dedent("""
+        Packet Names
+        ============
+
+        See the `Minecraft Coalition Wiki`_ for a details on every packet.
+
+        .. _Minecraft Coalition Wiki: http://wiki.vg/Protocol
+        """)
+
+    title = "Minecraft %s" % latest_minecraft
+    text += "\n%s\n%s\n\n" % (title, "-"*len(title))
+
+    names = defaultdict(set)
+    for key, name in packets.packet_names.items():
+        protocol, _, direction, _ = key
+        if protocol == latest_protocol:
+            names[name].add(direction)
+
+    for name, directions in sorted(names.items()):
+        text += "- ``%s`` (%s)\n" % (name, ", ".join(directions))
+
+    path = os.path.join(
+        os.path.dirname(__file__),
+        "networking",
+        "packet_names.rst")
+
+    with open(path, "w") as fd:
+        fd.write(text)
+
+
+write_packet_names()

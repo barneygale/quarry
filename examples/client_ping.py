@@ -1,8 +1,9 @@
 """
 Pinger example client
 
-Asks the server for the information normally displayed in the minecraft
-multiplayer menu.
+This example client connects to a server in "status" mode to retrieve some
+information about the server. The information returned is what you'd normally
+see in the "Multiplayer" menu of the official client.
 """
 
 from twisted.internet import reactor

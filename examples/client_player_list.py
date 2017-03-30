@@ -1,7 +1,8 @@
 """
 Player lister example client
 
-Logs in and prints the player list
+This client requires a Mojang account for online-mode servers. It logs in to
+the server and prints the players listed in the tab menu.
 """
 
 from twisted.internet import reactor, defer

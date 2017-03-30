@@ -1,16 +1,20 @@
+
 Packet Names
 ============
 
 See the `Minecraft Coalition Wiki`_ for a details on every packet.
 
-Minecraft 1.8.8
----------------
+.. _Minecraft Coalition Wiki: http://wiki.vg/Protocol
+
+Minecraft 1.11.2
+----------------
 
 - ``animation`` (downstream, upstream)
 - ``attach_entity`` (downstream)
 - ``block_action`` (downstream)
 - ``block_break_animation`` (downstream)
 - ``block_change`` (downstream)
+- ``boss_bar`` (downstream)
 - ``camera`` (downstream)
 - ``change_game_state`` (downstream)
 - ``chat_message`` (downstream, upstream)
@@ -52,9 +56,10 @@ Minecraft 1.8.8
 - ``login_set_compression`` (downstream)
 - ``login_start`` (upstream)
 - ``login_success`` (downstream)
-- ``map_chunk_bulk`` (downstream)
-- ``maps`` (downstream)
+- ``map`` (downstream)
 - ``multi_block_change`` (downstream)
+- ``named_sound_effect`` (downstream)
+- ``open_sign_editor`` (downstream)
 - ``open_window`` (downstream)
 - ``particle`` (downstream)
 - ``player`` (upstream)
@@ -73,10 +78,10 @@ Minecraft 1.8.8
 - ``respawn`` (downstream)
 - ``scoreboard_objective`` (downstream)
 - ``server_difficulty`` (downstream)
-- ``set_compression`` (downstream)
+- ``set_cooldown`` (downstream)
 - ``set_experience`` (downstream)
+- ``set_passengers`` (downstream)
 - ``set_slot`` (downstream)
-- ``sign_editor_open`` (downstream)
 - ``sound_effect`` (downstream)
 - ``spawn_experience_orb`` (downstream)
 - ``spawn_global_entity`` (downstream)
@@ -91,20 +96,22 @@ Minecraft 1.8.8
 - ``status_pong`` (downstream)
 - ``status_request`` (upstream)
 - ``status_response`` (downstream)
+- ``steer_boat`` (upstream)
 - ``steer_vehicle`` (upstream)
 - ``tab_complete`` (downstream, upstream)
 - ``teams`` (downstream)
+- ``teleport_confirm`` (upstream)
 - ``time_update`` (downstream)
 - ``title`` (downstream)
+- ``unload_chunk`` (downstream)
 - ``update_block_entity`` (downstream)
-- ``update_entity_nbt`` (downstream)
 - ``update_health`` (downstream)
 - ``update_score`` (downstream)
-- ``update_sign`` (downstream, upstream)
+- ``update_sign`` (upstream)
 - ``use_bed`` (downstream)
 - ``use_entity`` (upstream)
+- ``use_item`` (upstream)
+- ``vehicle_move`` (downstream, upstream)
 - ``window_items`` (downstream)
 - ``window_property`` (downstream)
 - ``world_border`` (downstream)
-
-.. _Minecraft Coalition Wiki: http://wiki.vg/Protocol

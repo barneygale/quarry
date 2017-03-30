@@ -1,7 +1,8 @@
 """
 Example "auth" server
 
-Ask mojang to authenticate the user
+This server authenticates players with the mojang session server, then kicks
+them. Useful for server websites that ask users for a valid Minecraft account.
 """
 
 from twisted.internet import reactor
