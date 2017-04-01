@@ -39,25 +39,18 @@ class _DataTag(_Tag):
 
 
 class _ArrayTag(_Tag):
-    inner_kind = None
+    fmt = None
 
     @classmethod
     def from_buff(cls, buff):
         array_length = buff.unpack('i')
-        return cls([cls.inner_kind.from_buff(buff).value for _ in range(array_length)])
+        return cls([buff.unpack(cls.fmt) for _ in range(array_length)])
 
     def to_bytes(self):
         return (
             Buffer.pack('i', len(self.value)) +
             b"".join(
-                self.inner_kind(elem).to_bytes() for elem in self.value))
-
-    def to_obj(self):
-        return [self.inner_kind(elem).to_obj() for elem in self.value]
-
-    def __repr__(self):
-        return "%s<%s>(%s)" % (type(self).__name__, self.inner_kind.__name__, self.value)
-
+                Buffer.pack(self.fmt, elem) for elem in self.value))
 
 
 # NBT tags ----------------------------------------------------------------------------------------
@@ -99,11 +92,11 @@ class TagString(_Tag):
 
 
 class TagByteArray(_ArrayTag):
-    inner_kind = TagByte
+    fmt = 'b'
 
 
 class TagIntArray(_ArrayTag):
-    inner_kind = TagInt
+    fmt = 'i'
 
 
 class TagList(_Tag):
