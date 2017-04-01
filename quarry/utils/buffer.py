@@ -207,7 +207,7 @@ class Buffer(object):
         """
 
         from quarry.utils import nbt
-        return nbt.NamedTag.from_buff(self)
+        return nbt.TagRoot.from_buff(self)
 
     @classmethod
     def pack(cls, fmt, *fields):

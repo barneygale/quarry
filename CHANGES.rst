@@ -4,6 +4,22 @@ Changelog
 master
 ------
 
+- Revised the NBT implementation
+
+  - ``TagByteArray`` and ``TagIntArray`` have more straightforward signatures
+    for ``__init__`` and ``from_buff``
+  - ``TagList`` now stores its contents as a list of tags, rather than a list
+    of tag *values*. It no longer accepts an ``inner_kind`` initialiser
+    parameter, as this is derived from the type of the first supplied tag.
+  - ``NamedTag`` is removed.
+  - ``TagCompound`` now stores its value as an ``OrderedDict`` of names and
+    tags, rather than a ``list`` of ``NamedTag`` objects.
+  - ``TagRoot`` is introduced as the top-level tag. This is essentially a
+    ``TagCompound`` containing a single record.
+  - Added a new ``alt_repr`` function that prints a tag using the same
+    representation as in the NBT specification.
+  - Added some tests.
+
 - Substantially expanded documentation.
 - Added a new ``server_chat_room`` example. This server spawns a player in an
   empty world and allows player to chat to eachother.

@@ -1,3 +1,4 @@
+import collections
 import gzip
 
 from .buffer import Buffer
@@ -40,16 +41,10 @@ class _DataTag(_Tag):
 class _ArrayTag(_Tag):
     inner_kind = None
 
-    def __init__(self, value, inner_kind):
-        super(_ArrayTag, self).__init__(value)
-        self.inner_kind = inner_kind
-
     @classmethod
-    def from_buff(cls, buff, inner_kind=None):
-        if inner_kind is None:
-            inner_kind = cls.inner_kind
+    def from_buff(cls, buff):
         array_length = buff.unpack('i')
-        return cls([inner_kind.from_buff(buff).value for _ in range(array_length)], inner_kind)
+        return cls([cls.inner_kind.from_buff(buff).value for _ in range(array_length)])
 
     def to_bytes(self):
         return (
@@ -63,35 +58,6 @@ class _ArrayTag(_Tag):
     def __repr__(self):
         return "%s<%s>(%s)" % (type(self).__name__, self.inner_kind.__name__, self.value)
 
-
-# Special types -----------------------------------------------------------------------------------
-
-class NamedTag(_Tag):
-    def __init__(self, value, name):
-        super(NamedTag, self).__init__(value)
-        self.name = name
-
-    @classmethod
-    def from_buff(cls, buff):
-        kind_id = buff.unpack('b')
-        if kind_id == 0:
-            return None
-        kind = _kinds[kind_id]
-        name = TagString.from_buff(buff).value
-        value = kind.from_buff(buff)
-        return cls(value, name)
-
-    def to_bytes(self):
-        return (
-            Buffer.pack('b', _ids[type(self.value)]) +
-            TagString(self.name).to_bytes() +
-            self.value.to_bytes())
-
-    def to_obj(self):
-        return self.name, self.value.to_obj()
-
-    def __repr__(self):
-        return "%s(%r, %r)" % (type(self).__name__, self.name, self.value)
 
 
 # NBT tags ----------------------------------------------------------------------------------------
@@ -140,34 +106,63 @@ class TagIntArray(_ArrayTag):
     inner_kind = TagInt
 
 
-class TagList(_ArrayTag):
-
+class TagList(_Tag):
     @classmethod
     def from_buff(cls, buff):
         inner_kind_id = buff.unpack('b')
         inner_kind = _kinds[inner_kind_id]
-        return super(TagList, cls).from_buff(buff, inner_kind)
+        array_length = buff.unpack('i')
+        return cls([inner_kind.from_buff(buff) for _ in range(array_length)])
 
     def to_bytes(self):
-        return Buffer.pack('b', _ids[self.inner_kind]) + super(TagList, self).to_bytes()
+        if len(self.value) > 0:
+            type_id = _ids[type(self.value[0])]
+        else:
+            type_id = 1
+        return (
+            Buffer.pack('b', type_id) +
+            Buffer.pack('i', len(self.value)) +
+            b"".join(tag.to_bytes() for tag in self.value))
+
+    def to_obj(self):
+        return [tag.to_obj() for tag in self.value]
 
 
 class TagCompound(_Tag):
+    root = False
 
     @classmethod
     def from_buff(cls, buff):
-        value = []
+        value = collections.OrderedDict()
         while True:
-            tag = NamedTag.from_buff(buff)
-            if tag is None:
+            kind_id = buff.unpack('b')
+            if kind_id == 0:
                 return cls(value)
-            value.append(tag)
+            kind = _kinds[kind_id]
+            name = TagString.from_buff(buff).value
+            tag = kind.from_buff(buff)
+            value[name] = tag
+            if cls.root:
+                return cls(value)
 
     def to_bytes(self):
-        return b"".join(tag.to_bytes() for tag in self.value) + Buffer.pack('b', 0)
+        string = b""
+        for name, tag in self.value.items():
+            string += Buffer.pack('b', _ids[type(tag)])
+            string += TagString(name).to_bytes()
+            string += tag.to_bytes
+
+        if len(self.value) == 0 or not self.root:
+            string += Buffer.pack('b', 0)
+
+        return string
 
     def to_obj(self):
-        return dict(tag.to_obj() for tag in self.value)
+        return dict((name, tag.to_obj()) for name, tag in self.value.items())
+
+
+class TagRoot(TagCompound):
+    root = True
 
 
 # Register tags -----------------------------------------------------------------------------------
@@ -197,8 +192,50 @@ class NBTFile(object):
         with gzip.open(path, 'rb') as fd:
             buff = Buffer()
             buff.add(fd.read())
-            return cls(NamedTag.from_buff(buff))
+            return cls(TagRoot.from_buff(buff))
 
     def save(self, path):
         with gzip.open(path, 'wb') as fd:
             fd.write(self.root_tag.to_bytes())
+
+# Debug --------------------------------------------------------------------------------------------
+
+def alt_repr(tag, level=0):
+    name = lambda kind: type(kind).__name__.replace("Tag", "TAG_")
+
+    if isinstance(tag, _ArrayTag):
+        return "%s%s: %d entries" % (
+            "  " * level,
+            name(tag),
+            len(tag.value))
+
+    elif isinstance(tag, TagList):
+        return "%s%s: %d entries\n%s{\n%s\n%s}" % (
+            "  " * level,
+            name(tag),
+            len(tag.value),
+            "  " * level,
+            u"\n".join(alt_repr(tag, level+1) for tag in tag.value),
+            "  " * level)
+
+    elif isinstance(tag, TagRoot):
+        return u"\n".join(
+                alt_repr(tag, level).replace(': ', '("%s"): ' % name, 1)
+                for name, tag in tag.value.items())
+
+    elif isinstance(tag, TagCompound):
+        return "%s%s: %d entries\n%s{\n%s\n%s}" % (
+            "  " * level,
+            name(tag),
+            len(tag.value),
+            "  " * level,
+            u"\n".join(
+                alt_repr(tag, level+1).replace(': ', '("%s"): ' % name, 1)
+                for name, tag in tag.value.items()),
+            "  " * level)
+
+    else:
+        return "%s%s: %r" % (
+            "  " * level,
+            name(tag),
+            tag.value)
