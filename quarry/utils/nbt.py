@@ -143,7 +143,7 @@ class TagCompound(_Tag):
         for name, tag in self.value.items():
             string += Buffer.pack('b', _ids[type(tag)])
             string += TagString(name).to_bytes()
-            string += tag.to_bytes
+            string += tag.to_bytes()
 
         if len(self.value) == 0 or not self.root:
             string += Buffer.pack('b', 0)

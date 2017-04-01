@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import gzip
 import os.path
 from quarry.utils.nbt import *
 
@@ -83,6 +84,14 @@ def test_bigtest_to_obj():
     print bigtest.to_obj()
     assert bigtest.to_obj() == bigtest_to_obj
 
+def test_bigtest_unpack_pack():
+    with gzip.open(bigtest_path) as fd:
+        bigtest_data_before = fd.read()
+
+    bigtest = NBTFile.load(bigtest_path).root_tag
+    bigtest_data_after = bigtest.to_bytes()
+
+    assert bigtest_data_before == bigtest_data_after
 
 def test_manual_bigtest_to_obj():
     bigtest = TagRoot({u"Level": TagCompound({
