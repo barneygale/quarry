@@ -6,24 +6,24 @@ from quarry.utils.nbt import *
 
 bigtest_path = os.path.join(os.path.dirname(__file__), "bigtest.nbt")
 
-bigtest_alt_repr = ur"""
+bigtest_alt_repr = u"""
 TAG_Compound("Level"): 11 entries
 {
   TAG_Long("longTest"): 9223372036854775807
   TAG_Short("shortTest"): 32767
-  TAG_String("stringTest"): u'HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!'
+  TAG_String("stringTest"): "HELLO WORLD THIS IS A TEST STRING ÅÄÖ!"
   TAG_Float("floatTest"): 0.4982314705848694
   TAG_Int("intTest"): 2147483647
   TAG_Compound("nested compound test"): 2 entries
   {
     TAG_Compound("ham"): 2 entries
     {
-      TAG_String("name"): u'Hampus'
+      TAG_String("name"): "Hampus"
       TAG_Float("value"): 0.75
     }
     TAG_Compound("egg"): 2 entries
     {
-      TAG_String("name"): u'Eggbert'
+      TAG_String("name"): "Eggbert"
       TAG_Float("value"): 0.5
     }
   }
@@ -39,12 +39,12 @@ TAG_Compound("Level"): 11 entries
   {
     TAG_Compound: 2 entries
     {
-      TAG_String("name"): u'Compound tag #0'
+      TAG_String("name"): "Compound tag #0"
       TAG_Long("created-on"): 1264099775885
     }
     TAG_Compound: 2 entries
     {
-      TAG_String("name"): u'Compound tag #1'
+      TAG_String("name"): "Compound tag #1"
       TAG_Long("created-on"): 1264099775885
     }
   }
@@ -81,7 +81,6 @@ def test_bigtest_alt_repr():
 
 def test_bigtest_to_obj():
     bigtest = NBTFile.load(bigtest_path).root_tag
-    print bigtest.to_obj()
     assert bigtest.to_obj() == bigtest_to_obj
 
 def test_bigtest_unpack_pack():

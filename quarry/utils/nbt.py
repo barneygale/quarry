@@ -227,6 +227,12 @@ def alt_repr(tag, level=0):
                 for name, tag in tag.value.items()),
             "  " * level)
 
+    elif isinstance(tag, TagString):
+        return '%s%s: "%s"' % (
+            "  " * level,
+            name(tag),
+            tag.value)
+
     else:
         return "%s%s: %r" % (
             "  " * level,
