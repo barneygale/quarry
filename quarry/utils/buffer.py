@@ -21,6 +21,10 @@ class Buffer(object):
     buff = b""
     pos = 0
 
+    def __init__(self, data=None):
+        if data:
+            self.buff = data
+
     def __len__(self):
         return len(self.buff) - self.pos
 
