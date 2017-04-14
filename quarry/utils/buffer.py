@@ -4,6 +4,8 @@ import re
 
 from quarry.data.chat_styles import code_by_name, code_by_prop
 from quarry.utils import types
+from quarry.utils.chunk import BlockArray, LightArray
+
 from quarry.utils.errors import ProtocolError
 
 # Python 3 compat
@@ -213,6 +215,22 @@ class Buffer(object):
         from quarry.utils import nbt
         return nbt.TagRoot.from_buff(self)
 
+    def unpack_chunk(self, overworld=True):
+        bits = self.unpack('B')
+        if bits < 4:   bits = 4
+        elif bits > 8: bits = 13
+
+        palette = [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+        blocks = BlockArray(self.unpack('Q' * self.unpack_varint()), bits, palette)
+        block_lights = LightArray(self.unpack('B' * 2048))
+        if overworld:
+            sky_lights = LightArray(self.unpack('B' * 2048))
+        else:
+            sky_lights = None
+
+        return blocks, block_lights, sky_lights
+
+
     @classmethod
     def pack(cls, fmt, *fields):
         """
@@ -302,6 +320,20 @@ class Buffer(object):
     @classmethod
     def pack_nbt(cls, tag):
         return tag.to_bytes()
+
+    @classmethod
+    def pack_chunk(cls, blocks, block_lights, sky_lights=None):
+        out = (
+            Buffer.pack('B', blocks.bits) +
+            Buffer.pack_varint(len(blocks.palette)) +
+            "".join(Buffer.pack_varint(x) for x in blocks.palette) +
+            Buffer.pack_varint(len(blocks.data)) +
+            Buffer.pack('Q' * len(blocks.data), *blocks.data) +
+            Buffer.pack('B' * 2048, *block_lights.data))
+        if sky_lights:
+            out += Buffer.pack('B' * 2048, *sky_lights.data)
+
+        return out
 
     @classmethod
     def strip_chat_styles(cls, text):
