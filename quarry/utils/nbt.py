@@ -44,13 +44,13 @@ class _ArrayTag(_Tag):
     @classmethod
     def from_buff(cls, buff):
         array_length = buff.unpack('i')
-        return cls([buff.unpack(cls.fmt) for _ in range(array_length)])
+        return cls(list(buff.unpack(cls.fmt*array_length)))
 
     def to_bytes(self):
         return (
             Buffer.pack('i', len(self.value)) +
             b"".join(
-                Buffer.pack(self.fmt, elem) for elem in self.value))
+                Buffer.pack(self.fmt*len(self.value), *self.value)))
 
 
 # NBT tags ----------------------------------------------------------------------------------------
@@ -105,7 +105,10 @@ class TagList(_Tag):
         inner_kind_id = buff.unpack('b')
         inner_kind = _kinds[inner_kind_id]
         array_length = buff.unpack('i')
-        return cls([inner_kind.from_buff(buff) for _ in range(array_length)])
+        if isinstance(inner_kind, _DataTag):
+            return cls(list(buff.unpack(inner_kind.fmt * array_length)))
+        else:
+            return cls([inner_kind.from_buff(buff) for _ in range(array_length)])
 
     def to_bytes(self):
         if len(self.value) > 0:
@@ -123,10 +126,15 @@ class TagList(_Tag):
 
 class TagCompound(_Tag):
     root = False
+    preserve_order = False
 
     @classmethod
     def from_buff(cls, buff):
-        value = collections.OrderedDict()
+        if cls.preserve_order:
+            value = collections.OrderedDict()
+        else:
+            value = {}
+
         while True:
             kind_id = buff.unpack('b')
             if kind_id == 0:

@@ -2,6 +2,7 @@
 import gzip
 import os.path
 from quarry.utils.nbt import *
+TagCompound.preserve_order = True # for testing purposes.
 
 
 bigtest_path = os.path.join(os.path.dirname(__file__), "bigtest.nbt")
