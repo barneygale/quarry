@@ -1,6 +1,10 @@
 from collections import Sequence
 import math
 
+try:
+    xrange
+except NameError:
+    xrange = range
 
 class _Array(Sequence):
     def __len__(self):

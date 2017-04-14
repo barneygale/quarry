@@ -49,8 +49,7 @@ class _ArrayTag(_Tag):
     def to_bytes(self):
         return (
             Buffer.pack('i', len(self.value)) +
-            b"".join(
-                Buffer.pack(self.fmt*len(self.value), *self.value)))
+            Buffer.pack(self.fmt*len(self.value), *self.value))
 
 
 # NBT tags ----------------------------------------------------------------------------------------

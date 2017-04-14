@@ -11,8 +11,12 @@ from quarry.utils.errors import ProtocolError
 # Python 3 compat
 try:
     basestring
-except NameError:  # pragma: no cover
+except NameError:
     basestring = str
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 class BufferUnderrun(Exception):
@@ -323,13 +327,17 @@ class Buffer(object):
 
     @classmethod
     def pack_chunk(cls, blocks, block_lights, sky_lights=None):
-        out = (
-            Buffer.pack('B', blocks.bits) +
-            Buffer.pack_varint(len(blocks.palette)) +
-            "".join(Buffer.pack_varint(x) for x in blocks.palette) +
-            Buffer.pack_varint(len(blocks.data)) +
-            Buffer.pack('Q' * len(blocks.data), *blocks.data) +
-            Buffer.pack('B' * 2048, *block_lights.data))
+        out = Buffer.pack('B', blocks.bits)
+
+        if blocks.palette is None:
+            out += Buffer.pack_varint(0)
+        else:
+            out += Buffer.pack_varint(len(blocks.palette))
+            out += b"".join(Buffer.pack_varint(x) for x in blocks.palette)
+
+        out += Buffer.pack_varint(len(blocks.data))
+        out += Buffer.pack('Q' * len(blocks.data), *blocks.data)
+        out += Buffer.pack('B' * 2048, *block_lights.data)
         if sky_lights:
             out += Buffer.pack('B' * 2048, *sky_lights.data)
 
