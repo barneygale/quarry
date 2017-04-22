@@ -163,8 +163,24 @@ class ProfileCLI(object):
         if parser is None:
             parser = argparse.ArgumentParser()
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("--auth", metavar="EMAIL:PASSWORD")
-        group.add_argument("--display-name")
+        group.add_argument(
+            "--auth",
+            metavar="EMAIL:PASSWORD",
+            help="Sets the Mojang account email address and password with "
+                 "which to log in.")
+        group.add_argument(
+            "--session-name",
+            metavar="DISPLAY_NAME",
+            help="Sets the display name to look up in the "
+                 "~/.minecraft/launcher_profiles.json file. This is used to "
+                 "resume an existing logged-in session from the official "
+                 "client.")
+        group.add_argument(
+            "--offline-name",
+            metavar="DISPLAY_NAME",
+            help="Sets the offline display name to use. If none of these "
+                 "options are given, quarry uses 'quarry' as an offline "
+                 "display name.")
         return parser
 
     @classmethod
@@ -172,12 +188,10 @@ class ProfileCLI(object):
         if args.auth:
             email, password = args.auth.split(":", 1)
             return Profile.from_credentials(email, password)
-        try:
-            return Profile.from_file(args.display_name)
-        except:
-            return defer.succeed(OfflineProfile.from_display_name(
-                args.display_name or "quarry"))
-
+        if args.session_name:
+            return Profile.from_file(args.session_name)
+        return defer.succeed(
+            OfflineProfile.from_display_name(args.offline_name or "quarry"))
 
 def has_joined(timeout, digest, display_name):
     return http.request(
