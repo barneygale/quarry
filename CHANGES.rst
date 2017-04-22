@@ -4,6 +4,17 @@ Changelog
 master
 ------
 
+- Several breaking changes! Read on for more.
+- Removed the ``quarry.utils`` package. Its contents have been distributed
+  as follows:
+
+  - The ``buffer``, ``chunk``, ``nbt`` and ``uuid`` (renamed from ``types``)
+    modules have moved into a new ``quarry.types`` package.
+  - The ``auth``, ``crypto``, ``http`` and ``tasks`` modules have moved into
+    the ``quarry.net`` package.
+  - The ``error`` module was removed. ``ProtocolError`` is now part of
+    ``quarry.net.protocol``.
+
 - Revised the NBT implementation
 
   - ``TagByteArray`` and ``TagIntArray`` have more straightforward signatures
@@ -12,12 +23,13 @@ master
     of tag *values*. It no longer accepts an ``inner_kind`` initialiser
     parameter, as this is derived from the type of the first supplied tag.
   - ``NamedTag`` is removed.
-  - ``TagCompound`` now stores its value as an ``OrderedDict`` of names and
-    tags, rather than a ``list`` of ``NamedTag`` objects.
+  - ``TagCompound`` now stores its value as a ``dict`` of names and tags,
+    rather than a ``list`` of ``NamedTag`` objects.
   - ``TagRoot`` is introduced as the top-level tag. This is essentially a
     ``TagCompound`` containing a single record.
   - Added a new ``alt_repr`` function that prints a tag using the same
     representation as in the NBT specification.
+  - Improved performance.
   - Added some tests.
 
 - Substantially expanded documentation.
@@ -25,6 +37,12 @@ master
   empty world and allows player to chat to eachother.
 - Made ``Protocol.send_packet()`` accept any number of ``data`` arguments,
   which are concatenated together.
+- Made ``Buffer.__init__()`` accept a string argument, which is equivalent to
+  creating an empty buffer and calling ``add()``.
+- Added ``Buffer.pack_chunk()`` and ``Buffer.unpack_chunk()``, which
+  pack/unpack chunk sections. These methods work with new
+  ``quarry.types.chunk`` types: ``LightArray`` (4 bits per block) and
+  ``BlockArray`` (4-8 or 13 bits per block, with an optional palette).
 - Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long``
   and complements ``Buffer.unpack_position()``.
 - Added a ``Bridge.make_profile()`` method, which is called to provide a profile

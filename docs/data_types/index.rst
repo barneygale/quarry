@@ -4,5 +4,6 @@ Data Types
 .. toctree::
 
     buffers
-    uuids
+    chunks
     nbt
+    uuids

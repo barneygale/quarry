@@ -218,6 +218,12 @@ class Buffer(object):
         return nbt.TagRoot.from_buff(self)
 
     def unpack_chunk(self, overworld=True):
+        """
+        Unpacks a chunk section from the buffer. Returns a 3-tuple of
+        ``(blocks, block_lights, sky_lights)``, where *sky_lights* is ``None``
+        when *overworld* is ``False``. The returned values are sequences of
+        length 4096 (16x16x16).
+        """
         bits = self.unpack('B')
         if bits < 4:   bits = 4
         elif bits > 8: bits = 13
@@ -325,6 +331,10 @@ class Buffer(object):
 
     @classmethod
     def pack_chunk(cls, blocks, block_lights, sky_lights=None):
+        """
+        Packs a chunk section. The supplied arguments should be instances of
+        ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.
+        """
         out = Buffer.pack('B', blocks.bits)
 
         if blocks.palette is None:
