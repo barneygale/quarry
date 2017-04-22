@@ -1,10 +1,9 @@
 from twisted.internet import reactor, protocol, defer
 from twisted.python import failure
 
-from quarry.net.protocol import Factory, Protocol, protocol_modes_inv
-from quarry import auth
-from quarry.utils import crypto
-from quarry.utils.errors import ProtocolError
+from quarry.net.protocol import Factory, Protocol, ProtocolError, \
+    protocol_modes_inv
+from quarry.net import auth, crypto
 
 
 class ClientProtocol(Protocol):

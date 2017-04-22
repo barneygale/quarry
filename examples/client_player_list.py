@@ -7,7 +7,7 @@ the server and prints the players listed in the tab menu.
 
 from twisted.internet import reactor, defer
 from quarry.net.client import ClientFactory, ClientProtocol
-from quarry.auth import ProfileCLI
+from quarry.net.auth import ProfileCLI
 
 
 class PlayerListProtocol(ClientProtocol):

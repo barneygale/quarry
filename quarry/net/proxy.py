@@ -3,7 +3,7 @@ import logging
 from quarry.net.protocol import PacketDispatcher
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
-from quarry.auth import OfflineProfile
+from quarry.net.auth import OfflineProfile
 
 #
 # Rough diagram of the universe a quarry proxy usually operates in:

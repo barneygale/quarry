@@ -7,7 +7,7 @@ the server and slowly rotates (thanks c45y for the idea).
 
 from twisted.internet import reactor, defer
 from quarry.net.client import ClientFactory, SpawningClientProtocol
-from quarry.auth import ProfileCLI
+from quarry.net.auth import ProfileCLI
 
 
 class ChatLoggerProtocol(SpawningClientProtocol):

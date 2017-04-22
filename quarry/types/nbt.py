@@ -1,7 +1,7 @@
 import collections
 import gzip
 
-from .buffer import Buffer
+from quarry.types.buffer import Buffer
 
 _kinds = {}
 _ids = {}

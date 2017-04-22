@@ -1,7 +1,7 @@
 Buffers
 =======
 
-.. module:: quarry.utils.buffer
+.. module:: quarry.types.buffer
 
 Quarry implements Minecraft's data types by way of the :class:`Buffer` class.
 

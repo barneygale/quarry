@@ -62,12 +62,12 @@ for less silly clients.
 Offline Profiles
 ----------------
 
-.. module:: quarry.auth
+.. module:: quarry.net.auth
 
 Use an :class:`OfflineProfile` if you only need to log into offline-mode
 servers::
 
-    from quarry.auth import OfflineProfile
+    from quarry.net.auth import OfflineProfile
     profile = OfflineProfile("Notch")
 
 .. class:: OfflineProfile

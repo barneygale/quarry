@@ -1,7 +1,7 @@
 import pytest
 
-from quarry.utils.buffer import Buffer, BufferUnderrun
-from quarry.utils.types import UUID
+from quarry.types.buffer import Buffer, BufferUnderrun
+from quarry.types.uuid import UUID
 
 pack_unpack_vectors = [
     ("??",   b"\x00\x01", (False, True)),

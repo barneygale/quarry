@@ -3,10 +3,8 @@ import json
 import re
 
 from quarry.data.chat_styles import code_by_name, code_by_prop
-from quarry.utils import types
-from quarry.utils.chunk import BlockArray, LightArray
-
-from quarry.utils.errors import ProtocolError
+from quarry.types.uuid import UUID
+from quarry.types.chunk import BlockArray, LightArray
 
 # Python 3 compat
 try:
@@ -164,13 +162,13 @@ class Buffer(object):
         if number & (1<<31):
             number -= 1<<32
             if not signed:
-                raise ProtocolError("varint cannot be negative: %d" % number)
+                raise ValueError("varint cannot be negative: %d" % number)
 
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ProtocolError("varint does not fit in range: %d <= %d < %d"
-                                % (number_min, number, number_max))
+            raise ValueError("varint does not fit in range: %d <= %d < %d"
+                             % (number_min, number, number_max))
 
         return number
 
@@ -179,7 +177,7 @@ class Buffer(object):
         Unpacks a UUID from the buffer.
         """
 
-        return types.UUID.from_bytes(self.read(16))
+        return UUID.from_bytes(self.read(16))
 
     def unpack_position(self):
         """
@@ -216,7 +214,7 @@ class Buffer(object):
         Unpacks NBT tag(s) from the buffer.
         """
 
-        from quarry.utils import nbt
+        from quarry.types import nbt
         return nbt.TagRoot.from_buff(self)
 
     def unpack_chunk(self, overworld=True):
@@ -279,14 +277,14 @@ class Buffer(object):
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ProtocolError("varint does not fit in range: %d <= %d < %d"
-                                % (number_min, number, number_max))
+            raise ValueError("varint does not fit in range: %d <= %d < %d"
+                             % (number_min, number, number_max))
 
         if number < 0:
             if signed:
                 number += 1<<32
             else:
-                raise ProtocolError("varint cannot be negative: %d" % number)
+                raise ValueError("varint cannot be negative: %d" % number)
 
         out = b""
         for i in range(5):

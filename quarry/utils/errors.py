@@ -1,2 +1,0 @@
-class ProtocolError(Exception):
-    pass

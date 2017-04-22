@@ -1,7 +1,7 @@
 UUIDs
 =====
 
-.. module:: quarry.utils.types
+.. module:: quarry.types.uuid
 
 Minecraft UUIDs are implemented in the :class:`UUID` class.
 

@@ -9,7 +9,7 @@ import sys
 
 from twisted.internet import defer, reactor, stdio
 from twisted.protocols import basic
-from quarry.auth import ProfileCLI
+from quarry.net.auth import ProfileCLI
 from quarry.net.client import ClientFactory, SpawningClientProtocol
 
 

@@ -119,7 +119,7 @@ Call :meth:`~Protocol.send_packet` to send a packet::
 
 
 To construct the payload, call static methods on
-:class:`~quarry.utils.buffer.Buffer`. A reference to this class is available as
+:class:`~quarry.types.buffer.Buffer`. A reference to this class is available as
 ``self.buff_type``.
 
 To receive a packet, implement a method in your subclass of
@@ -134,7 +134,7 @@ To receive a packet, implement a method in your subclass of
 
 .. seealso:: :doc:`packet_names`.
 
-You are passed a :class:`~quarry.utils.buffer.Buffer` instance, which contains
+You are passed a :class:`~quarry.types.buffer.Buffer` instance, which contains
 the payload of the packet. If you hook a packet, you should ensure you read the
 entire payload.
 

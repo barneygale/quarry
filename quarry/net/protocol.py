@@ -5,10 +5,9 @@ import zlib
 from twisted.internet import protocol, reactor
 
 from quarry.data import packets
-from quarry.utils.crypto import Cipher
-from quarry.utils.buffer import Buffer, BufferUnderrun
-from quarry.utils.errors import ProtocolError
-from quarry.utils.tasks import Tasks
+from quarry.types.buffer import Buffer, BufferUnderrun
+from quarry.net.crypto import Cipher
+from quarry.net.tasks import Tasks
 
 PY3 = sys.version_info > (3,)
 
@@ -21,6 +20,10 @@ protocol_modes = {
     3: 'play'
 }
 protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.items()))
+
+
+class ProtocolError(Exception):
+    pass
 
 
 class PacketDispatcher(object):

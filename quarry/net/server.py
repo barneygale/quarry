@@ -1,10 +1,10 @@
 import base64
 from twisted.internet import reactor, defer
 
-from quarry.net.protocol import Factory, Protocol, protocol_modes
-from quarry import auth
-from quarry.utils import crypto, types
-from quarry.utils.errors import ProtocolError
+from quarry.net.protocol import Factory, Protocol, ProtocolError, \
+    protocol_modes
+from quarry.net import auth, crypto
+from quarry.types.uuid import UUID
 
 
 class ServerProtocol(Protocol):
@@ -101,7 +101,7 @@ class ServerProtocol(Protocol):
     def auth_ok(self, data):
         """Called when auth with mojang succeeded (online mode only)"""
         self.display_name_confirmed = True
-        self.uuid = types.UUID.from_hex(data['id'])
+        self.uuid = UUID.from_hex(data['id'])
 
         self.player_joined()
 
@@ -175,7 +175,7 @@ class ServerProtocol(Protocol):
         else:
             self.login_expecting = None
             self.display_name_confirmed = True
-            self.uuid = types.UUID.from_offline_player(self.display_name)
+            self.uuid = UUID.from_offline_player(self.display_name)
 
             self.player_joined()
 

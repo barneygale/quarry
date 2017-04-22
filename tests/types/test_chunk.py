@@ -1,7 +1,7 @@
 import os.path
 
-from quarry.utils.buffer import Buffer
-from quarry.utils.chunk import BlockArray
+from quarry.types.buffer import Buffer
+from quarry.types.chunk import BlockArray
 
 chunk_path = os.path.join(os.path.dirname(__file__), "chunk.bin")
 

@@ -22,7 +22,7 @@ setup(
         "quarry",
         "quarry.data",
         "quarry.net",
-        "quarry.utils"
+        "quarry.types"
     ],
     package_data={'quarry': ['data/*.csv']},
 )

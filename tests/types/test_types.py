@@ -1,4 +1,4 @@
-from quarry.utils.types import UUID
+from quarry.types.uuid import UUID
 
 hex_vector = "b50ad385-829d-3141-a216-7e7d7539ba7f"
 bytes_vector = b"\xb5\x0a\xd3\x85\x82\x9d\x31\x41" \

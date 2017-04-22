@@ -3,7 +3,8 @@ import json
 import os
 import sys
 from twisted.internet import defer
-from quarry.utils import http, types
+from quarry.net import http
+from quarry.types.uuid import UUID
 
 
 class ProfileException(http.HTTPException):
@@ -110,7 +111,7 @@ class Profile(object):
 
     @classmethod
     def from_token(cls, client_token, access_token, display_name, uuid):
-        obj = cls(client_token, access_token, display_name, types.UUID.from_hex(uuid))
+        obj = cls(client_token, access_token, display_name, UUID.from_hex(uuid))
         return obj.validate()
 
     @classmethod
@@ -145,7 +146,7 @@ class Profile(object):
             response['clientToken'],
             response['accessToken'],
             response['selectedProfile']['name'],
-            types.UUID.from_hex(response['selectedProfile']['id']))
+            UUID.from_hex(response['selectedProfile']['id']))
 
     @classmethod
     def _request(cls, endpoint, **data):

@@ -1,10 +1,10 @@
 NBT
 ===
 
-.. module:: quarry.utils.nbt
+.. module:: quarry.types.nbt
 
 Quarry implements the Named Binary Tag (NBT) format. The following tag types
-are available from the :mod:`quarry.utils.nbt` module:
+are available from the :mod:`quarry.types.nbt` module:
 
 .. list-table::
     :header-rows: 1
@@ -46,7 +46,7 @@ All tag types have the following attributes and methods:
 .. classmethod:: Tag.from_buff(buff)
 
     Returns a tag object from data at the beginning of the supplied
-    :class:`~quarry.utils.buffer.Buffer` object.
+    :class:`~quarry.types.buffer.Buffer` object.
 
 .. method:: Tag.to_obj
 
@@ -62,7 +62,7 @@ All tag types have the following attributes and methods:
 
     The value of the tag.
 
-.. currentmodule:: quarry.utils.buffer
+.. currentmodule:: quarry.types.buffer
 
 When working with NBT in relation to a :class:`~quarry.net.protocol.Protocol`,
 the :meth:`Buffer.unpack_nbt` and :meth:`Buffer.pack_nbt` methods may be
