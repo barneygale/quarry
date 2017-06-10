@@ -39,10 +39,10 @@ master
   which are concatenated together.
 - Made ``Buffer.__init__()`` accept a string argument, which is equivalent to
   creating an empty buffer and calling ``add()``.
-- Added ``Buffer.pack_chunk()`` and ``Buffer.unpack_chunk()``, which
-  pack/unpack chunk sections. These methods work with new
-  ``quarry.types.chunk`` types: ``LightArray`` (4 bits per block) and
-  ``BlockArray`` (4-8 or 13 bits per block, with an optional palette).
+- Added ``Buffer.pack_chunk_section()`` and ``Buffer.unpack_chunk_section()``.
+  These methods work with new ``quarry.types.chunk`` types: ``LightArray``
+  (4 bits per block) and ``BlockArray`` (4-8 or 13 bits per block, with an
+  optional palette).
 - Added ``Buffer.pack_position()``, which packs co-ordinates into a ``long``
   and complements ``Buffer.unpack_position()``.
 - Added a ``Bridge.make_profile()`` method, which is called to provide a profile

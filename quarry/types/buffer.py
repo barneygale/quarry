@@ -217,7 +217,7 @@ class Buffer(object):
         from quarry.types import nbt
         return nbt.TagRoot.from_buff(self)
 
-    def unpack_chunk(self, overworld=True):
+    def unpack_chunk_section(self, overworld=True):
         """
         Unpacks a chunk section from the buffer. Returns a 3-tuple of
         ``(blocks, block_lights, sky_lights)``, where *sky_lights* is ``None``
@@ -330,7 +330,7 @@ class Buffer(object):
         return tag.to_bytes()
 
     @classmethod
-    def pack_chunk(cls, blocks, block_lights, sky_lights=None):
+    def pack_chunk_section(cls, blocks, block_lights, sky_lights=None):
         """
         Packs a chunk section. The supplied arguments should be instances of
         ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.

@@ -17,11 +17,11 @@ values, etc).
 
 .. currentmodule:: quarry.types.buffer
 
-On the client side, call :meth:`Buffer.unpack_chunk()` to retrieve a tuple
-of block data, block light and (if *overworld* is ``True``) sky light.
+On the client side, call :meth:`Buffer.unpack_chunk_section()` to retrieve a
+tuple of block data, block light and (if *overworld* is ``True``) sky light.
 
-On the server side, call :meth:`Buffer.pack_chunk()`, passing in block data,
-block light and either sky light or ``None``.
+On the server side, call :meth:`Buffer.pack_chunk_section()`, passing in block
+data, block light and either sky light or ``None``.
 
 .. currentmodule:: quarry.types.chunk
 
