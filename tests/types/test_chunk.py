@@ -11,8 +11,8 @@ def test_chunk_pack_unpack():
         chunk_data_before = fd.read()
 
     buff = Buffer(chunk_data_before)
-    blocks, block_lights, sky_lights = buff.unpack_chunk()
-    chunk_data_after = Buffer.pack_chunk(blocks, block_lights, sky_lights)
+    blocks, block_lights, sky_lights = buff.unpack_chunk_section()
+    chunk_data_after = Buffer.pack_chunk_section(blocks, block_lights, sky_lights)
 
     assert len(buff) == 0
     assert blocks      [1400:1410] == [(2, 0), (2, 0), (2, 0), (18, 0), (17, 3), (18, 0), (18, 0), (31, 1), (31, 1), (0, 0)]
