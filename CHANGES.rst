@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+Nothing yet.
+
+v0.7
+----
+
 - Added support for Minecraft 1.12
 - Several breaking changes! Read on for more.
 - Removed the ``quarry.utils`` package. Its contents have been distributed
