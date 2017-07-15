@@ -15,8 +15,8 @@ from quarry.net.client import ClientFactory, SpawningClientProtocol
 
 class StdioProtocol(basic.LineReceiver):
     delimiter = os.linesep.encode('ascii')
-    in_encoding  = getattr(sys.stdin,  "encoding", None)
-    out_encoding = getattr(sys.stdout, "encoding", None)
+    in_encoding  = getattr(sys.stdin,  "encoding", 'utf8')
+    out_encoding = getattr(sys.stdout, "encoding", 'utf8')
 
     def lineReceived(self, line):
         self.minecraft_protocol.send_chat(line.decode(self.in_encoding))
