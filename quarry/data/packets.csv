@@ -54,7 +54,7 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_name
 1.12.1,338,play,downstream,resource_pack_send
 1.12.1,338,play,downstream,respawn
 1.12.1,338,play,downstream,entity_head_look
-1.12.1,338,play,downstream,advancement_progress
+1.12.1,338,play,downstream,select_advancement_tab
 1.12.1,338,play,downstream,world_border
 1.12.1,338,play,downstream,camera
 1.12.1,338,play,downstream,held_item_change
@@ -80,7 +80,8 @@ minecraft_version,protocol_version,protocol_mode,packet_direction,packet_name
 1.12.1,338,play,downstream,advancements
 1.12.1,338,play,downstream,entity_effect
 1.12.1,338,play,upstream,teleport_confirm
-1.12.1,338,play,upstream,prepare_crafting_grid
+1.12.1,338,play,upstream,craft_recipe_request
+1.12.1,338,play,downstream,craft_recipe_response
 1.12.1,338,play,upstream,tab_complete
 1.12.1,338,play,upstream,chat_message
 1.12.1,338,play,upstream,client_status
