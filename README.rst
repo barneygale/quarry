@@ -1,7 +1,7 @@
 Quarry: a Minecraft protocol library
 ====================================
 
-|pypi| |travis_ci|
+|pypi| |docs| |travis_ci|
 
 Quarry is a Python library that implements the `Minecraft protocol`_. It allows
 you to write special purpose clients, servers and proxies.
@@ -34,6 +34,10 @@ Features
 .. |pypi| image:: https://badge.fury.io/py/quarry.svg
     :target: https://pypi.python.org/pypi/quarry
     :alt: Latest version released on PyPi
+
+.. |docs| image:: https://readthedocs.org/projects/quarry/badge/?version=latest
+    :target: http://quarry.readthedocs.io/en/latest
+    :alt: Documentation
 
 .. |travis_ci| image:: https://travis-ci.org/barneygale/quarry.svg?branch=master
     :target: https://travis-ci.org/barneygale/quarry
