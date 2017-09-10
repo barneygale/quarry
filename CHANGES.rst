@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- Nothing yet
+
+v0.8
+----
+
 - Added support for Minecraft 1.12.1. Thanks to Christian Hogan for the patch.
 
 v0.7
