@@ -326,7 +326,28 @@ class Buffer(object):
             pack_twos_comp(26, z))))
 
     @classmethod
-    def pack_nbt(cls, tag):
+    def pack_slot(cls, id=-1, count=1, damage=0, tag=None):
+        """
+        Packs a slot.
+        """
+
+        if id == -1:
+            return cls.pack('h', id)
+
+        return cls.pack('hbh', id, count, damage) + cls.pack_nbt(tag)
+
+    @classmethod
+    def pack_nbt(cls, tag=None):
+        """
+        Packs an NBT tag
+        """
+
+        if tag is None:
+            # slower but more obvious:
+            #   from quarry.types import nbt
+            #   tag = nbt.TagRoot({})
+            return "\x00"
+
         return tag.to_bytes()
 
     @classmethod

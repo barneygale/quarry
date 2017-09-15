@@ -4,7 +4,8 @@ Changelog
 master
 ------
 
-- Nothing yet
+- Added ``Buffer.pack_slot()`` method.
+- Added tests for slot packing and unpacking.
 
 v0.8
 ----

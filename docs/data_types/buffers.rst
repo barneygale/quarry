@@ -32,5 +32,6 @@ a byte string. A reference to the :class:`Buffer` class is available from
 .. automethod:: Buffer.pack_varint
 .. automethod:: Buffer.pack_uuid
 .. automethod:: Buffer.pack_position
+.. automethod:: Buffer.pack_slot
 .. automethod:: Buffer.pack_nbt
 .. automethod:: Buffer.pack_chunk_section

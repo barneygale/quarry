@@ -1,6 +1,7 @@
 import pytest
 
 from quarry.types.buffer import Buffer, BufferUnderrun
+from quarry.types.nbt import *
 from quarry.types.uuid import UUID
 
 pack_unpack_vectors = [
@@ -33,6 +34,33 @@ varint_vectors = [
     (-1, b"\xFF\xFF\xFF\xFF\x0F"),
     (2147483647, b"\xFF\xFF\xFF\xFF\x07"),
     (-2147483648, b"\x80\x80\x80\x80\x08"),
+]
+slot_vectors = [
+    # Empty slot
+    ({'id': -1}, '\xFF\xFF'),
+
+    # 20 stone blocks
+    ({'id': 276, 'count': 20, 'damage': 0, 'tag': TagRoot({})},
+
+        '\x01\x14' # ID
+        '\x14'     # Count
+        '\x00\x00' # Damage
+        '\x00'),   # NBT
+
+    # Sharpness 4 diamond sword
+    ({'id': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
+        u'ench': TagList([
+             TagCompound({
+                u'id': TagShort(16),
+                u'lvl': TagShort(4)})])})})},  # hmm
+
+        '\x01\x14' # ID
+        '\x01'     # Count
+        '\x00\x00' # Damage
+        '\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
+        '\x02\x00\x03lvl\x00\x04'                        # Enchantment level
+        '\x02\x00\x02id\x00\x10'                         # Enchantment type
+        '\x00\x00'),                                     # NBT container end
 ]
 
 def test_add():
@@ -100,6 +128,13 @@ def test_unpack_uuid():
     buffer.add(uuid_vector)
     assert buffer.unpack_uuid().to_bytes() == uuid_vector
 
+def test_unpack_slot():
+    buffer = Buffer()
+    for value, data in slot_vectors:
+        buffer.add(data)
+        assert buffer.unpack_slot() == value
+        assert len(buffer) == 0
+
 def test_pack():
     for fmt, data, values in pack_unpack_vectors:
         if not isinstance(values, tuple):
@@ -121,3 +156,7 @@ def test_pack_varint():
 
 def test_pack_uuid():
     assert Buffer.pack_uuid(UUID.from_bytes(uuid_vector)) == uuid_vector
+
+def test_pack_slot():
+    for value, data in slot_vectors:
+        assert Buffer.pack_slot(**value) == data

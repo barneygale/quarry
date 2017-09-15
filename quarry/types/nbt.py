@@ -26,6 +26,9 @@ class _Tag(object):
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.value)
 
+    def __cmp__(self, other):
+        return cmp(self.to_obj(), other.to_obj())
+
 
 class _DataTag(_Tag):
     fmt = None
