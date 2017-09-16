@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import pytest
 
 from quarry.types.buffer import Buffer, BufferUnderrun
@@ -37,30 +39,30 @@ varint_vectors = [
 ]
 slot_vectors = [
     # Empty slot
-    ({'id': -1}, '\xFF\xFF'),
+    ({'id': -1}, b'\xFF\xFF'),
 
     # 20 stone blocks
     ({'id': 276, 'count': 20, 'damage': 0, 'tag': TagRoot({})},
 
-        '\x01\x14' # ID
-        '\x14'     # Count
-        '\x00\x00' # Damage
-        '\x00'),   # NBT
+        b'\x01\x14' # ID
+        b'\x14'     # Count
+        b'\x00\x00' # Damage
+        b'\x00'),   # NBT
 
     # Sharpness 4 diamond sword
     ({'id': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
         u'ench': TagList([
-             TagCompound({
-                u'id': TagShort(16),
-                u'lvl': TagShort(4)})])})})},  # hmm
+             TagCompound(OrderedDict({
+                 u'lvl': TagShort(4),
+                 u'id': TagShort(16)}))])})})},  # hmm
 
-        '\x01\x14' # ID
-        '\x01'     # Count
-        '\x00\x00' # Damage
-        '\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
-        '\x02\x00\x03lvl\x00\x04'                        # Enchantment level
-        '\x02\x00\x02id\x00\x10'                         # Enchantment type
-        '\x00\x00'),                                     # NBT container end
+        b'\x01\x14' # ID
+        b'\x01'     # Count
+        b'\x00\x00' # Damage
+        b'\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
+        b'\x02\x00\x03lvl\x00\x04'                        # Enchantment level
+        b'\x02\x00\x02id\x00\x10'                         # Enchantment type
+        b'\x00\x00'),                                     # NBT container end
 ]
 
 def test_add():

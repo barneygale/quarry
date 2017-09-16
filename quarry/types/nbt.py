@@ -1,4 +1,5 @@
 import collections
+import functools
 import gzip
 
 from quarry.types.buffer import Buffer
@@ -9,6 +10,7 @@ _ids = {}
 
 # Base types --------------------------------------------------------------------------------------
 
+@functools.total_ordering
 class _Tag(object):
     def __init__(self, value):
         self.value = value
@@ -26,8 +28,11 @@ class _Tag(object):
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.value)
 
-    def __cmp__(self, other):
-        return cmp(self.to_obj(), other.to_obj())
+    def __eq__(self, other):
+        return self.to_obj() == other.to_obj()
+
+    def __lt__(self, other):
+        return self.to_obj() < other.to_obj()
 
 
 class _DataTag(_Tag):

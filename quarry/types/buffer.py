@@ -346,7 +346,7 @@ class Buffer(object):
             # slower but more obvious:
             #   from quarry.types import nbt
             #   tag = nbt.TagRoot({})
-            return "\x00"
+            return b"\x00"
 
         return tag.to_bytes()
 
