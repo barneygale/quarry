@@ -234,8 +234,8 @@ class SpawningClientProtocol(ClientProtocol):
                 teleport_id))
 
         if not self.spawned:
-            self.tasks.add_loop(1.0/20, self.update_player_inc)
-            self.tasks.add_loop(1.0,    self.update_player_full)
+            self.ticker.add_loop(1, self.update_player_inc)
+            self.ticker.add_loop(20, self.update_player_full)
             self.spawned = True
 
 

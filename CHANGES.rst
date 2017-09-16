@@ -4,6 +4,14 @@ Changelog
 master
 ------
 
+- Replaced ``quarry.net.tasks`` with ``quarry.net.ticker``. An instance of the
+  ``Ticker`` class is available as ``self.ticker`` from protocols. This object
+  has ``add_delay()`` and ``add_loop()`` methods for setting up delayed and
+  repeating tasks respectively. The interface similar to the previous ``Tasks``
+  object, except that timings are now given in ticks rather than seconds. The
+  new tick loop is closer to the vanilla minecraft tick loop: delayed ticks are
+  run faster the usual, and when too many ticks are queued they are skipped
+  altogether.
 - Added ``Buffer.pack_slot()`` method.
 - Added tests for slot packing and unpacking.
 

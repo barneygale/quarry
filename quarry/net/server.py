@@ -61,7 +61,7 @@ class ServerProtocol(Protocol):
 
                 def make_unsafe():
                     self.safe_kick = defer.Deferred()
-                    self.tasks.add_delay(0.5, make_safe)
+                    self.ticker.add_delay(10, make_safe)
 
                 make_unsafe()
 

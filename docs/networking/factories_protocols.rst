@@ -53,7 +53,7 @@ respond to events.
 
     .. autoattribute:: factory
     .. autoattribute:: logger
-    .. autoattribute:: tasks
+    .. autoattribute:: ticker
 
 .. autoclass:: quarry.net.server.ServerProtocol
 .. autoclass:: quarry.net.client.ClientProtocol
@@ -151,3 +151,13 @@ matching :samp:`packet_{<packet name>}` handler. If you override
 .. automethod:: Protocol.dump_packet
 .. automethod:: Protocol.log_packet
 
+Ticking
+'''''''
+
+.. module:: quarry.net.ticker
+
+To register delayed or repeating callbacks, call methods on the
+:class:`~Ticker` object available as ``self.ticker``.
+
+.. automethod:: Ticker.add_loop
+.. automethod:: Ticker.add_delay

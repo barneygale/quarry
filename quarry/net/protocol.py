@@ -2,12 +2,12 @@ import string
 import sys
 import logging
 import zlib
-from twisted.internet import protocol, reactor
+from twisted.internet import protocol
 
 from quarry.data import packets
 from quarry.types.buffer import Buffer, BufferUnderrun
 from quarry.net.crypto import Cipher
-from quarry.net.tasks import Tasks
+from quarry.net.ticker import Ticker
 
 PY3 = sys.version_info > (3,)
 
@@ -74,9 +74,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     #: The logger for this protocol.
     logger = None
 
-    #: A reference to a :class:`Tasks` instance. This object has methods for
-    #: setting up repeating or delayed callbacks
-    tasks = None
+    #: A reference to a :class:`Ticker` instance.
+    ticker = None
 
     #: A reference to the factory
     factory = None
@@ -100,16 +99,17 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.buff_type = self.factory.buff_type
         self.recv_buff = self.buff_type()
         self.cipher = Cipher()
-        self.tasks = Tasks()
+        self.ticker = self.factory.ticker_type(self.logger)
+        self.ticker.start()
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
             self.remote_addr.host))
         self.logger.setLevel(self.factory.log_level)
 
-        self.connection_timer = self.tasks.add_delay(
-            self.factory.connection_timeout,
-            self.connection_timed_out)
+        self.connection_timer = self.ticker.add_delay(
+            delay=self.factory.connection_timeout / self.ticker.interval,
+            callback=self.connection_timed_out)
 
         self.setup()
 
@@ -203,7 +203,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.player_left()
         self.logger.debug("Connection lost")
 
-        self.tasks.stop_all()
+        self.ticker.stop()
 
     def connection_timed_out(self):
         """Called when the connection has been idle too long"""
@@ -365,6 +365,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 class Factory(protocol.Factory, object):
     protocol = Protocol
     buff_type = Buffer
+    ticker_type = Ticker
     log_level = logging.INFO
     connection_timeout = 30
 

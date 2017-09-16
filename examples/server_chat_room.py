@@ -41,7 +41,7 @@ class ChatRoomProtocol(ServerProtocol):
             self.buff_type.pack_varint(0)) # teleport id
 
         # Start sending "Keep Alive" packets
-        self.tasks.add_loop(1.0, self.update_keep_alive)
+        self.ticker.add_loop(20, self.update_keep_alive)
 
         # Announce player joined
         self.factory.send_chat(u"\u00a7e%s has joined." % self.display_name)
