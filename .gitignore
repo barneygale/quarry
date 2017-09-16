@@ -3,8 +3,10 @@ xunit-*.xml
 docs/_build
 MANIFEST
 dist
+env*
 build
 notes
 .cache
 .coverage
 .idea
+docs/networking/packet_names.rst
