@@ -52,16 +52,16 @@ slot_vectors = [
     # Sharpness 4 diamond sword
     ({'id': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
         u'ench': TagList([
-             TagCompound(OrderedDict({
-                 u'lvl': TagShort(4),
-                 u'id': TagShort(16)}))])})})},  # hmm
+             TagCompound(OrderedDict((
+                 (u'id', TagShort(16)),
+                 (u'lvl', TagShort(4)))))])})})},  # hmm
 
         b'\x01\x14' # ID
         b'\x01'     # Count
         b'\x00\x00' # Damage
         b'\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
-        b'\x02\x00\x03lvl\x00\x04'                        # Enchantment level
         b'\x02\x00\x02id\x00\x10'                         # Enchantment type
+        b'\x02\x00\x03lvl\x00\x04'                        # Enchantment level
         b'\x00\x00'),                                     # NBT container end
 ]
 
