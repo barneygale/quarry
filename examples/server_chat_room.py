@@ -5,7 +5,7 @@ This server authenticates players, then spawns them in an empty world and does
 the bare minimum to keep them in-game. Players can speak to eachother using
 chat.
 
-Supports Minecraft 1.11. Earlier versions may not work.
+Supports Minecraft 1.12.2 Earlier versions may not work.
 """
 
 from twisted.internet import reactor
@@ -54,7 +54,7 @@ class ChatRoomProtocol(ServerProtocol):
 
     def update_keep_alive(self):
         # Send a "Keep Alive" packet
-        self.send_packet("keep_alive", self.buff_type.pack_varint(0))
+        self.send_packet("keep_alive", self.buff_type.pack('l', 0))
 
     def packet_chat_message(self, buff):
         # When we receive a chat message from the player, ask the factory
