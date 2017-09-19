@@ -1,50 +1,57 @@
 import csv
+import glob
 import os.path
+import re
 
 def _load():
     default_protocol_version = 0
     minecraft_versions = {}
     packet_names = {}
     packet_idents = {}
-    packet_ident = 0
-    last_section = None
-    csvpath = os.path.abspath(os.path.join(
+    csvpaths = os.path.abspath(os.path.join(
         os.path.dirname(__file__),
-        "..",
-        "data",
-        "packets.csv"))
-    with open(csvpath) as csvfile:
-        reader = csv.reader(csvfile)
-        for i, record in enumerate(reader):
-            # Skip header
-            if i == 0: continue
+        "packets",
+        "*.csv"))
+    for csvpath in glob.glob(csvpaths):
+        match = re.match('(\d{4})_(.+)\.csv', os.path.basename(csvpath))
+        if not match:
+            continue
 
-            # Extract fields
-            minecraft_version = record[0]
-            protocol_version = int(record[1])
-            protocol_mode = record[2]
-            packet_direction = record[3]
-            packet_name = record[4]
+        protocol_version = int(match.group(1))
+        minecraft_version = match.group(2)
 
-            # Check if ident should be reset
-            section = (protocol_version, protocol_mode, packet_direction)
-            if section != last_section:
-                packet_ident = 0
-            last_section = section
+        packet_ident = None
+        last_section = None
+        with open(csvpath) as csvfile:
+            reader = csv.reader(csvfile)
+            for i, record in enumerate(reader):
+                # Skip header
+                if i == 0: continue
 
-            # Update default protocol version
-            default_protocol_version = max(default_protocol_version,
-                                           protocol_version)
+                # Extract fields
+                protocol_mode = record[0]
+                packet_direction = record[1]
+                packet_name = record[2]
 
-            # Update minecraft versions
-            minecraft_versions[protocol_version] = minecraft_version
+                section = (protocol_mode, packet_direction)
+                if section != last_section:
+                    packet_ident = 0
+                last_section = section
 
-            # Update the packet dictionaries
-            key = [protocol_version, protocol_mode, packet_direction]
-            packet_names [tuple(key + [packet_ident])] = packet_name
-            packet_idents[tuple(key + [packet_name ])] = packet_ident
 
-            packet_ident += 1
+                # Update default protocol version
+                default_protocol_version = max(default_protocol_version,
+                                               protocol_version)
+
+                # Update minecraft versions
+                minecraft_versions[protocol_version] = minecraft_version
+
+                # Update the packet dictionaries
+                key = [protocol_version, protocol_mode, packet_direction]
+                packet_names [tuple(key + [packet_ident])] = packet_name
+                packet_idents[tuple(key + [packet_name ])] = packet_ident
+
+                packet_ident += 1
 
     return default_protocol_version, minecraft_versions, \
            packet_names, packet_idents
