@@ -24,5 +24,5 @@ setup(
         "quarry.net",
         "quarry.types"
     ],
-    package_data={'quarry': ['data/*.csv', 'data/packets/*.csv']},
+    package_data={'quarry': ['data/packets/*.csv']},
 )
