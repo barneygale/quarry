@@ -3,9 +3,6 @@ Writing a Server
 
 .. currentmodule:: quarry.net.server
 
-Skeleton server
----------------
-
 A server is generally made up of two parts:
 
 - A subclass of :class:`ServerFactory`. Under normal circumstances only one
@@ -16,6 +13,10 @@ A server is generally made up of two parts:
 
 .. seealso::
     :doc:`factories_protocols`
+
+
+Skeleton Server
+---------------
 
 By default quarry takes clients through the authentication process and then
 switches into the "play" protocol mode. Normally at this point you would

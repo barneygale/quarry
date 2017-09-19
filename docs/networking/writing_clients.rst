@@ -2,9 +2,6 @@ Writing a Client
 ================
 
 
-Skeleton client
----------------
-
 .. currentmodule:: quarry.net.client
 
 A client is generally made up of three parts:
@@ -20,6 +17,11 @@ A client is generally made up of three parts:
 
 .. seealso::
     :doc:`factories_protocols`
+
+
+Skeleton Client
+---------------
+
 
 By default quarry proceeds through the authentication process and then switches
 into the "play" protocol mode. The skeleton client below will receive world
