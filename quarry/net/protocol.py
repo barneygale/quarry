@@ -184,9 +184,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     def protocol_error(self, err):
         """Called when a protocol error occurs"""
 
-        msg = "Protocol error: %s" % err
-        self.logger.error(msg)
-        self.close(msg)
+        self.logger.exception(err)
+        self.close("Protocol error")
 
     ### Connection callbacks --------------------------------------------------
 
