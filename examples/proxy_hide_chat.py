@@ -102,7 +102,6 @@ def main(argv):
 
     # Create factory
     factory = QuietDownstreamFactory()
-    factory.motd = "Proxy Server"
     factory.connect_host = args.connect_host
     factory.connect_port = args.connect_port
 

@@ -1,67 +1,52 @@
 import logging
 
-from quarry.net.protocol import PacketDispatcher
+from quarry.net.protocol import PacketDispatcher, Protocol
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.net.auth import OfflineProfile
 
-#
-# Rough diagram of the universe a quarry proxy usually operates in:
-#               .
-# outside world . server box
-#               .
-#  +--------+   .   +--------------------------------+       +--------+
-#  | mojang | ----> |              QUARRY            | ----> | mojang |
-#  | client | <---- | downstream | bridge | upstream | <---- | server |
-#  +--------+   .   +--------------------------------+       +--------+
-#               .          ^                   ^
-#               .        server              client
-#               .
-#
-# A quarry proxy has three main parts:
-#  * The "downstream" (a server) which connects with the mojang client
-#  * The "upstream" (a client) which connects with the mojang server
-#  * The "bridge", which handles packet-passing between the above
-#
-# The downstream and upstream are broken down into two parts:
-#  * DownstreamFactory - program-wide object that spawns a Downtime object for
-#      each incoming connection
-#  * Downstream - connection with the external client.
-#  * UpstreamFactory - a simple class that spawns an Upstream
-#  * Upstream - connection with the external server.
-#
-# When the user connects, the DownstreamFactory creates a Downstream object
-#   to communicate with the external client. If we're running in online-mode,
-#   we go through auth with mojang. Once the user is authed, we spawn
-#   a Bridge object, which in turn spawns a UpstreamFactory. When the
-#   connection is made external server, an Upstream object tells the Bridge
-#   to enable "pass-through" mode. At this point, the Upstream and Downstream
-#   are connected and exchange packets.
-#
-# You can inspect, drop, modify and forge packets in-transit by registering
-#   handlers in the Bridge.
-#
+def _enable_forwarding(endpoint):
+    """
+    Patches the given endpoint's ``packet_received()`` method to pass packets
+    through the bridge.
+    """
+    def packet_received(buff, name):
+        endpoint.bridge.packet_received(
+            buff,
+            endpoint.recv_direction,
+            name)
+    endpoint.packet_received = packet_received
+
+
+def _enable_fast_forwarding(endpoint1, endpoint2):
+    """
+    Patches the first given endpoint's ``data_received()`` method to network
+    data directly to the second endpoint, without any packet decoding.
+    """
+    if len(endpoint1.recv_buff) > 0:
+        endpoint2.transport.write(
+            endpoint2.cipher.encrypt(
+                endpoint1.recv_buff.read()))
+
+    def data_received(data):
+        endpoint2.transport.write(
+            endpoint2.cipher.encrypt(
+                endpoint1.cipher.decrypt(data)))
+
+    endpoint1.data_received = data_received
+
 
 class Upstream(ClientProtocol):
-    def packet_received_passthrough(self, buff, name):
-        self.log_packet(". recv", name)
-        self.factory.bridge.packet_received(
-            buff,
-            "downstream",
-            name)
-
-    def enable_passthrough(self):
-        self.packet_received = self.packet_received_passthrough
-
     def setup(self):
-        self.factory.bridge.upstream = self
+        self.bridge = self.factory.bridge
+        self.bridge.upstream = self
 
     def player_joined(self):
-        self.factory.bridge.upstream_connected()
+        self.bridge.upstream_ready()
 
     def connection_lost(self, reason=None):
         ClientProtocol.connection_lost(self, reason)
-        self.factory.bridge.upstream_disconnected()
+        self.bridge.upstream_disconnected()
 
 
 class UpstreamFactory(ClientFactory):
@@ -70,32 +55,66 @@ class UpstreamFactory(ClientFactory):
 
 
 class Bridge(PacketDispatcher):
-    downstream_factory = None
-    upstream_factory   = None
-    downstream = None
-    upstream   = None
+    """
+    This class exchanges packets between the upstream and downstream.
+    """
 
-    buff_type = None
-
+    upstream_factory_class = UpstreamFactory
     log_level = logging.INFO
 
+    logger = None
+    buff_type = None
+
+    downstream_factory = None
+    downstream = None
+
+    upstream_profile = None
+    upstream_factory   = None
+    upstream   = None
+
+
     def __init__(self, downstream_factory, downstream):
+        self.downstream_factory = downstream_factory
         self.downstream = downstream
-        self.upstream   = None
-        self.downstream_factory  = downstream_factory
-        self.upstream_factory    = downstream_factory.upstream_factory_class(
-            self.make_profile())
 
         self.buff_type = self.downstream_factory.buff_type
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
-            self.downstream.display_name))
+            self.downstream.remote_addr.host))
         self.logger.setLevel(self.log_level)
 
-        # Set up client factory
+    def make_profile(self):
+        """
+        Returns the profile to use for the upstream connection. By default, use
+        an offline profile with the same display name as the remote client.
+        """
+        return OfflineProfile(self.downstream.display_name)
+
+    def connect(self):
+        """
+        Connect to the remote server.
+        """
+
+        self.upstream_profile = self.make_profile()
+        self.upstream_factory = self.upstream_factory_class(self.upstream_profile)
         self.upstream_factory.bridge = self
-        self.upstream_factory.buff_type = self.buff_type
+        self.upstream_factory.connect(
+            self.connect_host,
+            self.connect_port,
+            "login",
+            self.downstream.protocol_version)
+
+
+    ### Connections -----------------------------------------------------------
+
+    def downstream_ready(self):
+        """
+        Called when the downstream is waiting for forwarding to begin.
+        By default, this method begins a connection to the remote server.
+        """
+
+        self.logger.debug("Downstream ready")
 
         # Connect to the server the client is requesting
         if self.downstream_factory.connect_host is None:
@@ -105,39 +124,92 @@ class Bridge(PacketDispatcher):
             self.connect_host = self.downstream_factory.connect_host
             self.connect_port = self.downstream_factory.connect_port
 
-        self.setup()
-
-    def make_profile(self):
-        return OfflineProfile(self.downstream.display_name)
-
-    def setup(self):
         self.connect()
 
-    def connect(self):
-        self.upstream_factory.connect(
-            self.connect_host,
-            self.connect_port,
-            "login",
-            self.downstream.protocol_version)
-
-    def upstream_connected(self):
-        self.downstream.enable_passthrough()
-        self.upstream.enable_passthrough()
-
-    def upstream_disconnected(self):
-        self.downstream.close("Lost connection to server.")
+    def upstream_ready(self):
+        """
+        Called when the upstream is waiting for forwarding to begin. By
+        default, enables forwarding.
+        """
+        self.logger.debug("Upstream ready")
+        self.enable_forwarding()
 
     def downstream_disconnected(self):
+        """
+        Called when the connection to the remote client is closed.
+        """
         if self.upstream:
             self.upstream.close()
 
+    def upstream_disconnected(self):
+        """
+        Called when the connection to the remote server is closed.
+        """
+        self.downstream.close("Lost connection to server.")
+
+
+
+    ### Pass through ----------------------------------------------------------
+
+    def enable_forwarding(self):
+        """
+        Enables forwarding. Packet handlers in the ``Upstream`` and
+        ``Downstream`` cease to be called, and all packets are routed via the
+        ``Bridge``. This method is called by ``upstream_ready()`` by default.
+        """
+
+        _enable_forwarding(self.downstream)
+        _enable_forwarding(self.upstream)
+        self.logger.debug("Forwarding enabled")
+
+
+    def enable_fast_forwarding(self):
+        """
+        Enables fast forwarding. Quarry passes network data between endpoints
+        without decoding packets, and therefore all packet handlers cease to be
+        called. Both parts of the proxy must be operating at the same
+        compression threshold. This method is not called by default.
+        """
+
+        def compression(endpoint):
+            if endpoint.compression_enabled:
+                return "enabled (%d bytes)" % endpoint.compression_threshold
+            else:
+                return "disabled"
+
+        if compression(self.downstream) != compression(self.upstream):
+            raise Exception(
+                "Cannot enable fast forwarding as compression differs. "
+                "downstream: %s, upstream: %s" % (
+                    compression(self.downstream),
+                    compression(self.upstream)))
+
+        _enable_fast_forwarding(self.downstream, self.upstream)
+        _enable_fast_forwarding(self.upstream, self.downstream)
+        self.logger.debug("Fast forwarding enabled")
+
+
+    ### Packet handling -------------------------------------------------------
+
     def packet_received(self, buff, direction, name):
+        """
+        Called when a packet is received a remote. Usually this method
+        dispatches the packet to a method named
+        ``packet_<direction>_<packet name>``, or calls :meth:`packet_unhandled`
+        if no such methods exists. You might want to override this to implement
+        your own dispatch logic or logging.
+        """
+
         dispatched = self.dispatch((direction, name), buff)
 
         if not dispatched:
             self.packet_unhandled(buff, direction, name)
 
     def packet_unhandled(self, buff, direction, name):
+        """
+        Called when a packet is received that is not hooked. The default
+        implementation forwards the packet.
+        """
         if direction == "downstream":
             self.downstream.send_packet(name, buff.read())
         elif direction == "upstream":
@@ -150,28 +222,20 @@ class Bridge(PacketDispatcher):
 class Downstream(ServerProtocol):
     bridge = None
 
-    def packet_received_passthrough(self, buff, name):
-        self.bridge.packet_received(
-            buff,
-            "upstream",
-            name)
-
-    def enable_passthrough(self):
-        self.packet_received = self.packet_received_passthrough
+    def setup(self):
+        self.bridge = self.factory.bridge_class(self.factory, self)
 
     def player_joined(self):
         ServerProtocol.player_joined(self)
-        self.bridge = self.factory.bridge_class(self.factory, self)
+        self.bridge.downstream_ready()
 
     def connection_lost(self, reason=None):
         ServerProtocol.connection_lost(self, reason)
-        if self.bridge:
-            self.bridge.downstream_disconnected()
+        self.bridge.downstream_disconnected()
 
 
 class DownstreamFactory(ServerFactory):
     protocol = Downstream
-    upstream_factory_class = UpstreamFactory
     connect_host = None
     connect_port = None
     bridge_class = Bridge
