@@ -54,7 +54,16 @@ class ChatRoomProtocol(ServerProtocol):
 
     def update_keep_alive(self):
         # Send a "Keep Alive" packet
-        self.send_packet("keep_alive", self.buff_type.pack_varint(0))
+
+        # 1.7.x
+        if self.protocol_version <= 338:
+            payload =  self.buff_type.pack_varint(0)
+
+        # 1.12.2
+        else:
+            payload = self.buff_type.pack('Q', 0)
+
+        self.send_packet("keep_alive", payload)
 
     def packet_chat_message(self, buff):
         # When we receive a chat message from the player, ask the factory

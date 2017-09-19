@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.12.2.
 - Replaced ``quarry.net.tasks`` with ``quarry.net.ticker``. An instance of the
   ``Ticker`` class is available as ``self.ticker`` from protocols. This object
   has ``add_delay()`` and ``add_loop()`` methods for setting up delayed and

@@ -109,13 +109,14 @@ Packets
 
 Call :meth:`~Protocol.send_packet` to send a packet::
 
-    def packet_keep_alive(self, buff):
-        # Read the keep alive ID
-        identifier = buff.unpack_varint()
-        print(identifier)
+    # Add a diamond sword to the first hotbar slot
+    window_id = 0
+    slot_id = 36
+    item_id = 276
 
-        # Send a keep alive back
-        self.send_packet("keep_alive", self.buff_type.pack_varint(identifier))
+    self.send_packet("set_slot",
+        self.buff_type.pack('bh', window_id, slot_id) +
+        self.buff_type.pack_slot(item_id))
 
 
 To construct the payload, call static methods on
