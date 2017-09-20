@@ -62,8 +62,8 @@ class Buffer(object):
 
     def read(self, length=None):
         """
-        Read *length* bytes from the beginning of the buffer buffer, or all
-        bytes if *length* is ``None``
+        Read *length* bytes from the beginning of the buffer, or all bytes if
+        *length* is ``None``
         """
 
         if length is None:
@@ -80,8 +80,8 @@ class Buffer(object):
 
     def unpack(self, fmt):
         """
-        Unpack a struct from the buffer. The format accepted is the same as
-        for ``struct.unpack()``.
+        Unpack a struct. The format accepted is the same as for
+        ``struct.unpack()``.
         """
 
         fmt = ">"+fmt
@@ -93,7 +93,7 @@ class Buffer(object):
 
     def unpack_string(self):
         """
-        Unpack a Minecraft string (varint-prefixed utf8) from the buffer.
+        Unpack a Minecraft string (varint-prefixed utf8).
         """
 
         length = self.unpack_varint(max_bits=16)
@@ -102,7 +102,7 @@ class Buffer(object):
 
     def unpack_json(self):
         """
-        Unpack a Minecraft string from the buffer and interpret it as JSON.
+        Unpack a Minecraft string and interpret it as JSON.
         """
 
         obj = json.loads(self.unpack_string())
@@ -117,7 +117,7 @@ class Buffer(object):
 
     def unpack_varint(self, max_bits=32, signed=False):
         """
-        Unpacks a varint from the buffer.
+        Unpacks a varint.
         """
 
         number = 0
@@ -142,14 +142,14 @@ class Buffer(object):
 
     def unpack_uuid(self):
         """
-        Unpacks a UUID from the buffer.
+        Unpacks a UUID.
         """
 
         return UUID.from_bytes(self.read(16))
 
     def unpack_position(self):
         """
-        Unpacks a Position from the buffer.
+        Unpacks a position.
         """
 
         def unpack_twos_comp(bits, number):
@@ -165,7 +165,7 @@ class Buffer(object):
 
     def unpack_slot(self):
         """
-        Unpacks a Slot from the buffer.
+        Unpacks a slot.
         """
 
         slot = {}
@@ -179,7 +179,7 @@ class Buffer(object):
 
     def unpack_nbt(self):
         """
-        Unpacks NBT tag(s) from the buffer.
+        Unpacks NBT tag(s).
         """
 
         from quarry.types import nbt
@@ -187,7 +187,7 @@ class Buffer(object):
 
     def unpack_chunk_section(self, overworld=True):
         """
-        Unpacks a chunk section from the buffer. Returns a 3-tuple of
+        Unpacks a chunk section. Returns a 3-tuple of
         ``(blocks, block_lights, sky_lights)``, where *sky_lights* is ``None``
         when *overworld* is ``False``. The returned values are sequences of
         length 4096 (16x16x16).
