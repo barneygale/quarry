@@ -207,6 +207,61 @@ class Buffer(object):
         return blocks, block_lights, sky_lights
 
 
+    def unpack_entity_metadata_1_7(self):
+        """
+        Unpacks entity metadata. Compatible with Minecraft 1.7 and 1.8.
+        """
+        metadata = []
+        while True:
+            b = self.unpack('B')
+            if b == 127:
+                return metadata
+            ty, key = b >> 5, b & 0x1F
+            if   ty == 0: val = self.unpack('b')
+            elif ty == 1: val = self.unpack('h')
+            elif ty == 2: val = self.unpack('i')
+            elif ty == 3: val = self.unpack('f')
+            elif ty == 4: val = self.unpack_string()
+            elif ty == 5: val = self.unpack_slot()
+            elif ty == 6: val = self.unpack('iii')
+            elif ty == 7: val = self.unpack('fff')
+            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+            metadata.append((ty, key, val))
+
+    def unpack_entity_metadata(self):
+        """
+        Unpacks entity metadata. Compatible with Minecraft 1.9+.
+        """
+        def unpack_optional(unpacker):
+            if self.unpack('?'):
+                return unpacker()
+            else:
+                return None
+
+        metadata = []
+        while True:
+            key = self.unpack('B')
+            if key == 255:
+                return metadata
+            ty = self.unpack('B')
+            if   ty == 0:  val = self.unpack('B')
+            elif ty == 1:  val = self.unpack_varint()
+            elif ty == 2:  val = self.unpack('f')
+            elif ty == 3:  val = self.unpack_string()
+            elif ty == 4:  val = self.unpack_chat()
+            elif ty == 5:  val = self.unpack_slot()
+            elif ty == 6:  val = self.unpack('?')
+            elif ty == 7:  val = self.unpack('fff')
+            elif ty == 8:  val = self.unpack_position()
+            elif ty == 9:  val = unpack_optional(self.unpack_position)
+            elif ty == 10: val = self.unpack_varint()
+            elif ty == 11: val = unpack_optional(self.unpack_uuid)
+            elif ty == 12: val = self.unpack_varint()
+            elif ty == 13: val = self.unpack_nbt()
+            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+            metadata.append((ty, key, val))
+
+
     @classmethod
     def pack(cls, fmt, *fields):
         """
@@ -342,3 +397,53 @@ class Buffer(object):
         return out
 
     @classmethod
+    def pack_entity_metadata_1_7(cls, metadata):
+        """
+        Packs entity metadata. Compatible with Minecraft 1.7 and 1.8.
+        """
+        out = b""
+        for ty, key, val in metadata:
+            out += cls.pack('B', ty << 5 | key)
+            if   ty == 0: out += cls.pack('b', val)
+            elif ty == 1: out += cls.pack('h', val)
+            elif ty == 2: out += cls.pack('i', val)
+            elif ty == 3: out += cls.pack('f', val)
+            elif ty == 4: out += cls.pack_string(val)
+            elif ty == 5: out += cls.pack_slot(**val)
+            elif ty == 6: out += cls.pack('iii', *val)
+            elif ty == 7: out += cls.pack('fff', *val)
+            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+        out += cls.pack('B', 127)
+        return out
+
+    @classmethod
+    def pack_entity_metadata(cls, metadata):
+        """
+        Packs entity metadata. Compatible with Minecraft 1.9+.
+        """
+        def pack_optional(packer, *val):
+            if val is None:
+                return cls.pack('?', False)
+            else:
+                return cls.pack('?', True) + packer(*val)
+
+        out = b""
+        for ty, key, val in metadata:
+            out += cls.pack('BB', key, ty)
+            if   ty == 0:  out += cls.pack('B', val)
+            elif ty == 1:  out += cls.pack_varint(val)
+            elif ty == 2:  out += cls.pack('f', val)
+            elif ty == 3:  out += cls.pack_string(val)
+            elif ty == 4:  out += cls.pack_chat(val)
+            elif ty == 5:  out += cls.pack_slot(**val)
+            elif ty == 6:  out += cls.pack('?', val)
+            elif ty == 7:  out += cls.pack('fff', *val)
+            elif ty == 8:  out += cls.pack_position(*val)
+            elif ty == 9:  out += pack_optional(cls.pack_position, *val)
+            elif ty == 10: out += cls.pack_varint(val)
+            elif ty == 11: out += pack_optional(cls.pack_uuid, val)
+            elif ty == 12: out += cls.pack_varint(val)
+            elif ty == 13: out += cls.pack_nbt(val)
+            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+        out += cls.pack('B', 255)
+        return out

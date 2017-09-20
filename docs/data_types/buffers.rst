@@ -16,7 +16,7 @@ Quarry supports the following methods for working with a buffer:
 .. autoclass:: Buffer
     :members: discard, read, unpack, unpack_string, unpack_json, unpack_chat,
         unpack_varint, unpack_uuid, unpack_position, unpack_slot, unpack_nbt,
-        unpack_chunk_section
+        unpack_chunk_section, unpack_entity_metadata
 
 Packing
 -------
@@ -35,3 +35,4 @@ a byte string. A reference to the :class:`Buffer` class is available from
 .. automethod:: Buffer.pack_slot
 .. automethod:: Buffer.pack_nbt
 .. automethod:: Buffer.pack_chunk_section
+.. automethod:: Buffer.pack_entity_metadata

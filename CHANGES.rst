@@ -21,7 +21,8 @@ master
   packing/unpacking methods in ``Buffer`` now accept/return an instance of the
   ``Message`` class.
 - Added ``Buffer.pack_slot()`` method.
-- Added tests for slot packing and unpacking.
+- Added ``Buffer.pack_entity_metadata()`` and
+  ``Buffer.unpack_entity_metadata()`` methods.
 
 v0.8
 ----

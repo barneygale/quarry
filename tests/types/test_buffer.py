@@ -7,6 +7,8 @@ from quarry.types.chat import Message
 from quarry.types.nbt import *
 from quarry.types.uuid import UUID
 
+TagCompound.preserve_order = True # for testing purposes.
+
 pack_unpack_vectors = [
     ("??",   b"\x00\x01", (False, True)),
     ("bbbb", b"\x00\x7F\x80\xFF", (0, 127, -128, -1)),
@@ -64,6 +66,40 @@ slot_vectors = [
         b'\x02\x00\x02id\x00\x10'                         # Enchantment type
         b'\x02\x00\x03lvl\x00\x04'                        # Enchantment level
         b'\x00\x00'),                                     # NBT container end
+]
+entity_metadata_vectors = [
+    ([
+        (0, 0, 0),
+        (1, 1, 1),
+        (2, 2, 2.0),
+        (3, 3, u'three'),
+        (4, 4, Message({'text': u'four'})),
+        (5, 5, {'count': 1, 'damage': 0, 'id': 267, 'tag': TagRoot({})}),
+        (6, 6, True),
+        (7, 7, (7.699999809265137, 7.699999809265137, 7.699999809265137)),
+        (8, 8, (8, 8, 8)),
+        (9, 9, (9, 9, 9)),
+        (10, 10, 10),
+        (11, 11, UUID.from_bytes(uuid_vector)),
+        (12, 12, 12),
+        (13, 13, TagRoot({u'foo': TagString(u'bar')}))],
+
+        b'\x00\x00\x00'
+        b'\x01\x01\x01'
+        b'\x02\x02\x40\x00\x00\x00'
+        b'\x03\x03\x05three'
+        b'\x04\x04\x10{"text": "four"}'
+        b'\x05\x05\x01\x0b\x01\x00\x00\x00'
+        b'\x06\x06\x01'
+        b'\x07\x07\x40\xf6\x66\x66\x40\xf6\x66\x66\x40\xf6\x66\x66'
+        b'\x08\x08\x00\x00\x02\x00\x20\x00\x00\x08'
+        b'\x09\x09\x01\x00\x00\x02\x40\x24\x00\x00\x09'
+        b'\x0a\x0a\x0a'
+        b'\x0b\x0b\x01' + uuid_vector +
+        b'\x0c\x0c\x0c'
+        b'\x0d\x0d\x08\x00\x03foo\x00\x03bar'
+        b'\xff'),
+
 ]
 
 def test_add():
@@ -138,6 +174,13 @@ def test_unpack_slot():
         assert buffer.unpack_slot() == value
         assert len(buffer) == 0
 
+def test_unpack_entity_metadata():
+    buffer = Buffer()
+    for value, data in entity_metadata_vectors:
+        buffer.add(data)
+        assert buffer.unpack_entity_metadata() == value
+        assert len(buffer) == 0
+
 def test_pack():
     for fmt, data, values in pack_unpack_vectors:
         if not isinstance(values, tuple):
@@ -163,3 +206,7 @@ def test_pack_uuid():
 def test_pack_slot():
     for value, data in slot_vectors:
         assert Buffer.pack_slot(**value) == data
+
+def test_pack_entity_metadata():
+    for value, data in entity_metadata_vectors:
+        assert Buffer.pack_entity_metadata(value) == data
