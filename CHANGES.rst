@@ -17,6 +17,9 @@ master
   new tick loop is closer to the vanilla minecraft tick loop: delayed ticks are
   run faster the usual, and when too many ticks are queued they are skipped
   altogether.
+- Added ``quarry.types.chat`` module for handling Minecraft chat. Chat
+  packing/unpacking methods in ``Buffer`` now accept/return an instance of the
+  ``Message`` class.
 - Added ``Buffer.pack_slot()`` method.
 - Added tests for slot packing and unpacking.
 

@@ -1,8 +1,6 @@
 import struct
 import json
-import re
 
-from quarry.data.chat_styles import code_by_name, code_by_prop
 from quarry.types.uuid import UUID
 from quarry.types.chunk import BlockArray, LightArray
 
@@ -110,42 +108,12 @@ class Buffer(object):
         obj = json.loads(self.unpack_string())
         return obj
 
-    def unpack_chat(self, strip_styles=True):
+    def unpack_chat(self):
         """
-        Unpack a Minecraft chat message from the buffer. Minecraft uses a
-        JSON format to send chat messages; this method retrieves a plaintext
-        representation, optionally including styles encoded using oldschool
-        chat codes (U+00A7 plus one character). For more control, use
-        :meth:`unpack_json`.
+        Unpack a Minecraft chat message.
         """
-
-        def parse(obj):
-            if isinstance(obj, basestring):
-                return obj
-            if isinstance(obj, list):
-                return "".join((parse(e) for e in obj))
-            if isinstance(obj, dict):
-                text = ""
-                for prop, code in code_by_prop.items():
-                    if obj.get(prop):
-                        text += u"\u00a7" + code
-                if "color" in obj:
-                    text += u"\u00a7" + code_by_name[obj["color"]]
-                if "translate" in obj:
-                    text += obj["translate"]
-                    if "with" in obj:
-                        args = ", ".join((parse(e) for e in obj["with"]))
-                        text += "{%s}" % args
-                if "text" in obj:
-                    text += obj["text"]
-                if "extra" in obj:
-                    text += parse(obj["extra"])
-                return text
-
-        text = parse(self.unpack_json())
-        if strip_styles:
-            text = self.strip_chat_styles(text)
-        return text
+        from quarry.types import chat
+        return chat.Message.from_buff(self)
 
     def unpack_varint(self, max_bits=32, signed=False):
         """
@@ -266,13 +234,14 @@ class Buffer(object):
         return cls.pack_string(json.dumps(obj))
 
     @classmethod
-    def pack_chat(cls, text):
+    def pack_chat(cls, message):
         """
-        Pack a Minecraft chat message. This method accepts plaintext; to send
-        colours and other formatting use :meth:`pack_json`.
+        Pack a Minecraft chat message.
         """
-
-        return cls.pack_json({"text": text})
+        from quarry.types import chat
+        if not isinstance(message, chat.Message):
+            message = chat.Message.from_string(message)
+        return message.to_bytes()
 
     @classmethod
     def pack_varint(cls, number, max_bits=32, signed=False):
@@ -373,8 +342,3 @@ class Buffer(object):
         return out
 
     @classmethod
-    def strip_chat_styles(cls, text):
-        """
-        Strips chat styles from text.
-        """
-        return re.sub(u"\u00A7.", "", text)

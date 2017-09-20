@@ -3,6 +3,7 @@ from collections import OrderedDict
 import pytest
 
 from quarry.types.buffer import Buffer, BufferUnderrun
+from quarry.types.chat import Message
 from quarry.types.nbt import *
 from quarry.types.uuid import UUID
 
@@ -110,13 +111,13 @@ def test_unpack_json():
 def test_unpack_chat():
     buffer = Buffer()
     buffer.add(b'\x11["spam", " eggs"]')
-    assert buffer.unpack_chat() == "spam eggs"
+    assert buffer.unpack_chat().to_string() == "spam eggs"
     buffer.add(b'\x22{"text": "spam", "extra": " eggs"}')
-    assert buffer.unpack_chat() == "spam eggs"
+    assert buffer.unpack_chat().to_string() == "spam eggs"
     buffer.add(b'\x14{"translate": "foo"}')
-    assert buffer.unpack_chat() == "foo"
+    assert buffer.unpack_chat().to_string() == "foo"
     buffer.add(b'\x2E{"translate": "foo", "with": ["spam", "eggs"]}')
-    assert buffer.unpack_chat() == "foo{spam, eggs}"
+    assert buffer.unpack_chat().to_string() == "foo{spam, eggs}"
 
 def test_unpack_varint():
     buffer = Buffer()
