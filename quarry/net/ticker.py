@@ -89,6 +89,8 @@ class Ticker(object):
     def _update(self, count):
         if count >= self.max_lag:
             self._logger.warn("Can't keep up! Skipping %d ticks" % (count - 1))
+            count = 1
+
         for _ in range(count):
             for task in list(self._tasks):
                 task.update()
