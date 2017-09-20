@@ -162,3 +162,4 @@ To register delayed or repeating callbacks, call methods on the
 
 .. automethod:: Ticker.add_loop
 .. automethod:: Ticker.add_delay
+.. automethod:: Ticker.remove

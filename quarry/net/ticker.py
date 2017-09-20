@@ -5,7 +5,7 @@ class Task(object):
     ticker = None
 
     def stop(self):
-        self.ticker._tasks.remove(self)
+        self.ticker.remove(self)
 
 
 class LoopTask(Task):
@@ -85,6 +85,14 @@ class Ticker(object):
         task = DelayTask(self, delay, self._wrap(callback))
         self._tasks.append(task)
         return task
+
+    def remove(self, task):
+        """
+        Removes a task, effectively cancelling it.
+
+        :param task: The task to remove
+        """
+        self._tasks.remove(task)
 
     def _update(self, count):
         if count >= self.max_lag:
