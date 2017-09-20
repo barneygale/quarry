@@ -34,18 +34,24 @@ are available from the :mod:`quarry.types.nbt` module:
     - * ``TagRoot``
       * ``dict`` containing a single name and tag.
 
-Unlike some other NBT libraries, a tag's name is stored by its *parent* -
-either a ``TagRoot`` or a ``TagCompound``. A tag when considered alone is
-always nameless.
+.. note::
+    Unlike some other NBT libraries, a tag's name is stored by its *parent* -
+    either a ``TagRoot`` or a ``TagCompound``. A tag when considered alone is
+    always nameless.
 
-Note that there is no ``TagEnd`` class, as this is considered an implementation
-detail.
+
+Tags
+----
 
 All tag types have the following attributes and methods:
 
+.. method:: Tag.__init__(value)
+
+    Creates a tag object from the given value.
+
 .. classmethod:: Tag.from_buff(buff)
 
-    Returns a tag object from data at the beginning of the supplied
+    Creates a tag object from data at the beginning of the supplied
     :class:`~quarry.types.buffer.Buffer` object.
 
 .. method:: Tag.to_obj
@@ -67,3 +73,23 @@ All tag types have the following attributes and methods:
 When working with NBT in relation to a :class:`~quarry.net.protocol.Protocol`,
 the :meth:`Buffer.unpack_nbt` and :meth:`Buffer.pack_nbt` methods may be
 helpful.
+
+
+.. currentmodule:: quarry.types.nbt
+
+Files
+-----
+
+You can open an NBT file using the ``NBTFile`` class.
+
+.. autoclass:: NBTFile
+    :members: __init__, load, save, root_tag
+    :undoc-members:
+
+Debugging
+---------
+
+Call ``repr(tag)`` or ``alt_repr(tag)`` for a human-readable representation of
+a tag.
+
+.. autofunction:: alt_repr

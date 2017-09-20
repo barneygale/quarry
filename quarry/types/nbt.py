@@ -192,6 +192,8 @@ _ids.update({v: k for k, v in _kinds.items()})
 # Files -------------------------------------------------------------------------------------------
 
 class NBTFile(object):
+    root_tag = None
+
     def __init__(self, root_tag):
         self.root_tag = root_tag
 
@@ -209,6 +211,10 @@ class NBTFile(object):
 # Debug --------------------------------------------------------------------------------------------
 
 def alt_repr(tag, level=0):
+    """
+    Returns a human-readable representation of a tag using the same format as
+    used the NBT specification.
+    """
     name = lambda kind: type(kind).__name__.replace("Tag", "TAG_")
 
     if isinstance(tag, _ArrayTag):
