@@ -94,6 +94,12 @@ class Ticker(object):
         """
         self._tasks.remove(task)
 
+    def remove_all(self):
+        """
+        Removes all registered tasks, effectively cancelling them.
+        """
+        del self._tasks[:]
+
     def _update(self, count):
         if count >= self.max_lag:
             self._logger.warn("Can't keep up! Skipping %d ticks" % (count - 1))
