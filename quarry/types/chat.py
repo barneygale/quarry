@@ -112,3 +112,6 @@ class Message(object):
 
     def __lt__(self, other):
         return self.value < other.value
+
+    def __str__(self):
+        return self.to_string()
