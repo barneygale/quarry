@@ -217,10 +217,14 @@ class ServerProtocol(Protocol):
             self.factory.public_key)
 
         # do auth
+        remote_host = None
+        if self.factory.prevent_proxy_connections:
+            remote_host = self.remote_addr.host
         deferred = auth.has_joined(
             self.factory.auth_timeout,
             digest,
-            self.display_name)
+            self.display_name,
+            remote_host)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_status_request(self, buff):
@@ -266,6 +270,7 @@ class ServerFactory(Factory):
     max_players = 20
     favicon = None
     online_mode = True
+    prevent_proxy_connections = True
     compression_threshold = 256
     auth_timeout = 30
     players = None

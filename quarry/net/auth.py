@@ -193,11 +193,14 @@ class ProfileCLI(object):
         return defer.succeed(
             OfflineProfile.from_display_name(args.offline_name or "quarry"))
 
-def has_joined(timeout, digest, display_name):
+def has_joined(timeout, digest, display_name, remote_host=None):
+    url = b"https://sessionserver.mojang.com/session/minecraft/hasJoined" + \
+          b"?username=" + display_name.encode('ascii') + \
+          b"&serverId=" + digest.encode('ascii')
+    if remote_host is not None:
+        url += b"&ip="  + remote_host.encode('ascii')
     return http.request(
-        url=b"https://sessionserver.mojang.com/session/minecraft/hasJoined"
-            b"?username=" + display_name.encode('ascii') + \
-            b"&serverId=" + digest.encode('ascii'),
+        url=url,
         timeout=timeout,
         err_type=AuthException,
         expect_content=True)

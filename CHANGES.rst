@@ -23,6 +23,11 @@ master
 - Added ``Buffer.pack_slot()`` method.
 - Added ``Buffer.pack_entity_metadata()`` and
   ``Buffer.unpack_entity_metadata()`` methods.
+- Added ``ServerFactory.prevent_proxy_connections`` attribute, defaulting to
+  ``True``, that prevents clients from connecting via a proxy. Note that this
+  specifically affects online mode, and works by comparing the IP of the
+  connecting client with the IP recorded as making the authentication request
+  with the Mojang session server.
 
 v0.8
 ----

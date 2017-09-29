@@ -28,8 +28,8 @@ associated :class:`ServerProtocol` objects is available as
 .. autoclass:: ServerFactory
     :undoc-members:
     :members: protocol, force_protocol_version, compression_threshold,
-        auth_timeout, online_mode, max_players, motd, favicon, __init__,
-        listen, players
+        auth_timeout, online_mode, prevent_proxy_connections, max_players,
+        motd, favicon, __init__, listen, players
 
 Protocols
 ---------
