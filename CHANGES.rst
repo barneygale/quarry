@@ -1,8 +1,8 @@
 Changelog
 =========
 
-master
-------
+v0.9
+----
 
 - Added support for Minecraft 1.12.2.
 - Added documentation for proxies
