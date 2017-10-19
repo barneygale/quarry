@@ -120,6 +120,6 @@ class Ticker(object):
         def fn():
             try:
                 callback()
-            except Exception, e:
+            except Exception as e:
                 self._logger.exception(e)
         return fn
