@@ -1,6 +1,12 @@
 Changelog
 =========
 
+master
+------
+
+- Dropped support for Python 3.3.
+- Fixed Python 3.4+ compatibility issues.
+
 v0.9
 ----
 
