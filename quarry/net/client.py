@@ -173,12 +173,14 @@ class SpawningClientProtocol(ClientProtocol):
     def update_player_inc(self):
         self.send_packet("player", self.buff_type.pack('?', True))
 
-    # Sent a 'player position' packet every 20 ticks
+    # Sent a 'player position and look' packet every 20 ticks
     def update_player_full(self):
-        self.send_packet("player_position", self.buff_type.pack('ddd?',
+        self.send_packet("player_position_and_look", self.buff_type.pack('dddff?',
             self.pos_look[0],
             self.pos_look[1],
             self.pos_look[2],
+            self.pos_look[3],
+            self.pos_look[4],
             True))
 
     def packet_player_position_and_look(self, buff):
