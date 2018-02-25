@@ -99,13 +99,14 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.buff_type = self.factory.buff_type
         self.recv_buff = self.buff_type()
         self.cipher = Cipher()
-        self.ticker = self.factory.ticker_type(self.logger)
-        self.ticker.start()
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
             self.remote_addr.host))
         self.logger.setLevel(self.factory.log_level)
+
+        self.ticker = self.factory.ticker_type(self.logger)
+        self.ticker.start()
 
         self.connection_timer = self.ticker.add_delay(
             delay=self.factory.connection_timeout / self.ticker.interval,
