@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- Nothing yet.
+
+v0.9.1
+------
+
 - Dropped support for Python 3.3.
 - Fixed Python 3.4+ compatibility issues.
 - Made ``SpawningClientProtocol`` send ``player_position_and_look`` rather than
