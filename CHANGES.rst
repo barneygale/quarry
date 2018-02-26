@@ -8,6 +8,7 @@ master
 - Fixed Python 3.4+ compatibility issues.
 - Made ``SpawningClientProtocol`` send ``player_position_and_look`` rather than
   ``player_position``.
+- Fixed ticker logger being ``None``.
 
 v0.9
 ----
