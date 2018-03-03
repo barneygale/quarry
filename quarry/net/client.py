@@ -12,9 +12,6 @@ class ClientProtocol(Protocol):
     recv_direction = "downstream"
     send_direction = "upstream"
 
-    def __init__(self, factory, remote_addr):
-        Protocol.__init__(self, factory, remote_addr)
-
     ### Convenience functions -------------------------------------------------
 
     def switch_protocol_mode(self, mode):
