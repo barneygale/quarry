@@ -29,7 +29,7 @@ class MinecraftProtocol(SpawningClientProtocol):
     spawned = False
 
     def packet_chat_message(self, buff):
-        p_text = buff.unpack_chat()
+        p_text = buff.unpack_chat().to_string()
 
         # 1.7.x
         if self.protocol_version <= 5:
