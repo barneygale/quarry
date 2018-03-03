@@ -200,9 +200,7 @@ class NBTFile(object):
     @classmethod
     def load(cls, path):
         with gzip.open(path, 'rb') as fd:
-            buff = Buffer()
-            buff.add(fd.read())
-            return cls(TagRoot.from_buff(buff))
+            return cls(TagRoot.from_buff(Buffer(fd.read())))
 
     def save(self, path):
         with gzip.open(path, 'wb') as fd:
