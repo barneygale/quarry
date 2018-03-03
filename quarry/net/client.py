@@ -11,7 +11,6 @@ class ClientProtocol(Protocol):
 
     recv_direction = "downstream"
     send_direction = "upstream"
-    protocol_mode_next = None
 
     def __init__(self, factory, remote_addr):
         Protocol.__init__(self, factory, remote_addr)
@@ -29,7 +28,7 @@ class ClientProtocol(Protocol):
                 self.buff_type.pack_string(addr.host) +
                 self.buff_type.pack('H', addr.port) +
                 self.buff_type.pack_varint(
-                    protocol_modes_inv[self.protocol_mode_next]))
+                    protocol_modes_inv[self.factory.protocol_mode_next]))
 
         self.protocol_mode = mode
 
@@ -45,10 +44,22 @@ class ClientProtocol(Protocol):
 
     ### Callbacks -------------------------------------------------------------
 
+    @defer.inlineCallbacks
     def connection_made(self):
         """Called when the connection is established"""
-        Protocol.connection_made(self)
-        self.switch_protocol_mode(self.protocol_mode_next)
+        super(ClientProtocol, self).connection_made()
+
+        # Determine protocol version
+        if self.factory.protocol_mode_next == "status":
+            pass
+        elif self.factory.force_protocol_version is not None:
+            self.protocol_version = self.factory.force_protocol_version
+        else:
+            factory = PingClientFactory()
+            factory.connect(self.remote_addr.host, self.remote_addr.port)
+            self.protocol_version = yield factory.detected_protocol_version
+
+        self.switch_protocol_mode(self.factory.protocol_mode_next)
 
     def auth_ok(self, data):
         """
@@ -243,37 +254,34 @@ class SpawningClientProtocol(ClientProtocol):
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol
+    protocol_mode_next = "login"
 
     def __init__(self, profile=None):
         if profile is None:
             profile = auth.OfflineProfile()
         self.profile = profile
 
-    def connect(self, host, port=25565, protocol_mode_next="login",
-                protocol_version=0):
+    def connect(self, host, port=25565):
+        reactor.connectTCP(host, port, self, self.connection_timeout)
 
-        if protocol_mode_next == "status" or protocol_version > 0:
-            self.protocol.protocol_mode_next = protocol_mode_next
-            if protocol_version > 0:
-                self.protocol.protocol_version = protocol_version
-            reactor.connectTCP(host, port, self, self.connection_timeout)
-            return defer.succeed(self)
+
+class PingClientProtocol(ClientProtocol):
+
+    def status_response(self, data):
+        self.close()
+        detected_version = int(data["version"]["protocol"])
+        if detected_version in self.factory.minecraft_versions:
+            self.factory.detected_protocol_version.callback(detected_version)
         else:
-            d0 = defer.Deferred()
-            factory = ClientFactory()
-            class PingProtocol(factory.protocol):
-                def status_response(s, data):
-                    s.close()
-                    detected_version = int(data["version"]["protocol"])
-                    if detected_version in self.minecraft_versions:
-                        d1 = self.connect(host, port, protocol_mode_next,
-                                     detected_version)
-                        d1.chainDeferred(d0)
-                    else:
-                        d0.errback(failure.Failure(ProtocolError(
-                            "Unsupported protocol version: %d"
-                            % detected_version)))
+            self.factory.detected_protocol_version.errback(
+                failure.Failure(ProtocolError(
+                    "Unsupported protocol version: %d" % detected_version)))
 
-            factory.protocol = PingProtocol
-            factory.connect(host, port, "status")
-            return d0
+
+class PingClientFactory(ClientFactory):
+    protocol = PingClientProtocol
+    protocol_mode_next = "status"
+
+    def __init__(self, profile=None):
+        super(PingClientFactory, self).__init__(profile)
+        self.detected_protocol_version = defer.Deferred()

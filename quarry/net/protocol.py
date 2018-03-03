@@ -368,6 +368,7 @@ class Factory(protocol.Factory, object):
     ticker_type = Ticker
     log_level = logging.INFO
     connection_timeout = 30
+    force_protocol_version = None
 
     minecraft_versions = packets.minecraft_versions
 

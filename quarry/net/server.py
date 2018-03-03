@@ -264,7 +264,6 @@ class ServerProtocol(Protocol):
 
 class ServerFactory(Factory):
     protocol = ServerProtocol
-    force_protocol_version = None
 
     motd = "A Minecraft Server"
     max_players = 20

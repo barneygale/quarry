@@ -99,11 +99,10 @@ class Bridge(PacketDispatcher):
         self.upstream_profile = self.make_profile()
         self.upstream_factory = self.upstream_factory_class(self.upstream_profile)
         self.upstream_factory.bridge = self
+        self.upstream_factory.force_protocol_version = self.downstream.protocol_version
         self.upstream_factory.connect(
             self.connect_host,
-            self.connect_port,
-            "login",
-            self.downstream.protocol_version)
+            self.connect_port)
 
 
     ### Connections -----------------------------------------------------------

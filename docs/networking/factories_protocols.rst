@@ -11,12 +11,13 @@ only one factory is created.
 
 Client factories require a :class:`~quarry.auth.Profile` object to be supplied
 to the initializer. Use the :meth:`ClientFactory.connect` method to connect.
-Without a ``protocol_version`` supplied, this method will make two connections
-to the server; the first is used to establish the server's protocol version.
+If ``force_protocol_version`` is not defined, this method will make two
+connections to the server; the first is used to establish the server's protocol
+version.
 
 .. autoclass:: ClientFactory
     :undoc-members:
-    :members: protocol, __init__, connect
+    :members: protocol, force_protocol_version, __init__, connect
 
 .. module:: quarry.net.server
 

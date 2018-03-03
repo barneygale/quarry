@@ -4,7 +4,14 @@ Changelog
 master
 ------
 
-- Nothing yet.
+- Fixed ``client_messenger`` chat unpacking.
+- Made client protocol version detection logic less terrifying.
+  - ``ClientFactory.connect()`` no longer accepts ``protocol_mode_next`` and
+    ``protocol_version`` arguments.
+  - ``ServerFactory.force_protocol_version`` has moved to
+    ``Factory.force_protocol_version``, and is now observed by clients.
+  - ``ClientProtocol.protocol_mode_next`` has moved to
+    ``ClientFactory.protocol_mode_next``, and now defaults to "login".
 
 v0.9.1
 ------

@@ -11,6 +11,7 @@ from quarry.net.client import ClientFactory, ClientProtocol
 
 
 class PingProtocol(ClientProtocol):
+    protocol_mode_next = "status"
     def status_response(self, data):
         for k, v in sorted(data.items()):
             if k != "favicon":
@@ -31,7 +32,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     factory = PingFactory()
-    factory.connect(args.host, args.port, "status")
+    factory.connect(args.host, args.port)
     reactor.run()
 
 if __name__ == "__main__":

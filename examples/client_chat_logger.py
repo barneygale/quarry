@@ -37,7 +37,7 @@ def run(args):
     factory = ChatLoggerFactory(profile)
 
     # Connect!
-    yield factory.connect(args.host, args.port)
+    factory.connect(args.host, args.port)
 
 
 def main(argv):
