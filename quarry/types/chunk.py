@@ -17,11 +17,6 @@ class BlockArray(_Array):
         self.bits = bits
         self.palette = palette
 
-    def _encode(self, val):
-        return (val[0] << 4) | val[1]
-
-    def _decode(self, val):
-        return val >> 4, val & 0x0F
 
     def __getitem__(self, n):
         if isinstance(n, slice):
@@ -38,15 +33,13 @@ class BlockArray(_Array):
         if self.palette is not None:
             val = self.palette[val]
 
-        return self._decode(int(val))
+        return int(val)
 
     def __setitem__(self, n, val):
         if isinstance(n, slice):
             for o in xrange(*n.indices(4096)):
                 self[o] = val[o]
             return
-
-        val = self._encode(val)
 
         if self.palette is not None:
             try:
@@ -72,7 +65,7 @@ class BlockArray(_Array):
     def repack(self, reserve=None):
         if reserve is None:
             # Recompute the palette by walking all blocks
-            palette = [self._encode(v) for v in set(self)]
+            palette = list(set(self))
             palette_len = len(palette)
         else:
             if self.palette is None:
