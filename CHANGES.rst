@@ -5,6 +5,7 @@ master
 ------
 
 - Fixed ``client_messenger`` chat unpacking.
+- Fixed restarting a stopped ``Ticker``.
 - Made client protocol version detection logic less terrifying.
   - ``ClientFactory.connect()`` no longer accepts ``protocol_mode_next`` and
     ``protocol_version`` arguments.

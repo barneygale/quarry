@@ -45,7 +45,7 @@ class Ticker(object):
     #: Maximum number of delayed ticks before they're all skipped
     max_lag = 40
 
-    stopped = False
+    running = False
 
     def __init__(self, logger):
         self._logger = logger
@@ -56,17 +56,17 @@ class Ticker(object):
         """
         Start running the tick loop.
         """
-        self._impl.start(self.interval, now=False)
+        if not self.running:
+            self._impl.start(self.interval, now=False)
+            self.running = True
 
     def stop(self):
         """
         Stop running the tick loop.
         """
-        if self.stopped:
-            return
-
-        self._impl.stop()
-        self.stopped = True
+        if self.running:
+            self._impl.stop()
+            self.running = False
 
     def add_loop(self, interval, callback):
         """
