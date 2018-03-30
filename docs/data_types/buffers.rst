@@ -35,8 +35,9 @@ the payload, which usually made up of multiple fields of differing types.
 Quarry supports the following methods for working with a buffer:
 
 .. autoclass:: Buffer
-    :members: discard, read, unpack, unpack_string, unpack_json, unpack_chat,
-        unpack_varint, unpack_uuid, unpack_position, unpack_slot, unpack_nbt,
+    :members: discard, read, unpack, unpack_array, unpack_optional,
+        unpack_varint, unpack_packet, unpack_string, unpack_json, unpack_chat,
+        unpack_uuid, unpack_position, unpack_slot, unpack_nbt,
         unpack_chunk_section, unpack_entity_metadata
 
 Packing
@@ -44,13 +45,16 @@ Packing
 
 Buffers also provide a number of static methods that pack data into
 a byte string. A reference to the buffer class is available from
-:class:`~quarry.net.protocol.Protocol` objects as ``self.Buffer``.
+:class:`~quarry.net.protocol.Protocol` objects as ``self.buff_type``.
 
 .. automethod:: Buffer.pack
+.. automethod:: Buffer.pack_array
+.. automethod:: Buffer.pack_optional
+.. automethod:: Buffer.pack_varint
+.. automethod:: Buffer.pack_packet
 .. automethod:: Buffer.pack_string
 .. automethod:: Buffer.pack_json
 .. automethod:: Buffer.pack_chat
-.. automethod:: Buffer.pack_varint
 .. automethod:: Buffer.pack_uuid
 .. automethod:: Buffer.pack_position
 .. automethod:: Buffer.pack_slot
