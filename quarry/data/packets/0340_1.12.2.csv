@@ -77,8 +77,8 @@ play,downstream,sound_effect
 play,downstream,player_list_header_footer
 play,downstream,collect_item
 play,downstream,entity_teleport
-play,downstream,entity_properties
 play,downstream,advancements
+play,downstream,entity_properties
 play,downstream,entity_effect
 play,upstream,teleport_confirm
 play,upstream,tab_complete

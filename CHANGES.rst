@@ -5,12 +5,14 @@ master
 ------
 
 - Made client protocol version detection logic less terrifying.
+
   - ``ClientFactory.connect()`` no longer accepts ``protocol_mode_next`` and
     ``protocol_version`` arguments.
   - ``ServerFactory.force_protocol_version`` has moved to
     ``Factory.force_protocol_version``, and is now observed by clients.
   - ``ClientProtocol.protocol_mode_next`` has moved to
     ``ClientFactory.protocol_mode_next``, and now defaults to "login".
+
 - Made ``BlockArray`` setitem/getitem accept/return an opaque ID, rather than a
   2-tuple of ``(block_id, metadata)``. In Minecraft 1.13 it's no longer
   possible to convert between the two with bitshifting.
@@ -22,7 +24,7 @@ master
   NBT tree.
 - Fixed ``client_messenger`` chat unpacking.
 - Fixed restarting a stopped ``Ticker``.
-
+- Fixed the ``entity_properties`` and ``advancements`` packets being swapped.
 
 v0.9.1
 ------
