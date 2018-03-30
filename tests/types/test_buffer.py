@@ -159,7 +159,7 @@ def test_unpack_varint():
     buffer = Buffer()
     for value, data in varint_vectors:
         buffer.add(data)
-        assert buffer.unpack_varint(signed=True) == value
+        assert buffer.unpack_varint() == value
         assert len(buffer) == 0
 
 def test_unpack_uuid():
@@ -198,7 +198,7 @@ def test_pack_chat():
 
 def test_pack_varint():
     for value, data in varint_vectors:
-        assert Buffer.pack_varint(value, signed=True) == data
+        assert Buffer.pack_varint(value) == data
 
 def test_pack_uuid():
     assert Buffer.pack_uuid(UUID.from_bytes(uuid_vector)) == uuid_vector

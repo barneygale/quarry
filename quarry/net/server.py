@@ -144,6 +144,7 @@ class ServerProtocol(Protocol):
                 self.factory.players.add(self)
 
         self.protocol_version = p_protocol_version
+        self.buff_type = self.factory.get_buff_type(self.protocol_version)
         self.connect_host = p_connect_host
         self.connect_port = p_connect_port
 

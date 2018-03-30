@@ -77,7 +77,7 @@ class Bridge(PacketDispatcher):
         self.downstream_factory = downstream_factory
         self.downstream = downstream
 
-        self.buff_type = self.downstream_factory.buff_type
+        self.buff_type = self.downstream.buff_type
 
         self.logger = logging.getLogger("%s{%s}" % (
             self.__class__.__name__,
@@ -169,19 +169,12 @@ class Bridge(PacketDispatcher):
         called. Both parts of the proxy must be operating at the same
         compression threshold. This method is not called by default.
         """
-
-        def compression(endpoint):
-            if endpoint.compression_enabled:
-                return "enabled (%d bytes)" % endpoint.compression_threshold
-            else:
-                return "disabled"
-
-        if compression(self.downstream) != compression(self.upstream):
+        if self.downstream.compression_threshold != self.upstream.compression_threshold:
             raise Exception(
                 "Cannot enable fast forwarding as compression differs. "
                 "downstream: %s, upstream: %s" % (
-                    compression(self.downstream),
-                    compression(self.upstream)))
+                    self.downstream.compression_threshold,
+                    self.upstream.compression_threshold))
 
         _enable_fast_forwarding(self.downstream, self.upstream)
         _enable_fast_forwarding(self.upstream, self.downstream)

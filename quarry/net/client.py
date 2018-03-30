@@ -27,6 +27,9 @@ class ClientProtocol(Protocol):
                 self.buff_type.pack_varint(
                     protocol_modes_inv[self.factory.protocol_mode_next]))
 
+            # Switch buff type
+            self.buff_type = self.factory.get_buff_type(self.protocol_version)
+
         self.protocol_mode = mode
 
         if mode == "status":

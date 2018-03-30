@@ -4,7 +4,38 @@ Changelog
 master
 ------
 
-- Made client protocol version detection logic less terrifying.
+- Changes to ``quarry.types.buffer``:
+
+  - Split ``Buffer`` into ``Buffer1_7`` and ``Buffer_1_9``, and select an
+    appropriate buffer type by protocol version. This is done in anticipation
+  - Moved some packet framing logic from ``Protocol`` into
+    ``Buffer.pack_packet()`` and ``Buffer.unpack_packet()``
+  - Added ``Buffer.pack_optional()`` and ``Buffer.unpack_optional()``, which
+    handle boolean-prefixed optional data.
+  - Added ``Buffer.pack_array()`` and ``Buffer.unpack_array()`` convenience
+    methods.
+  - Made ``Buffer.pack_entity_metadata()`` and
+    ``Buffer.unpack_entity_metadata()`` work with a dictionary rather than a
+    list of tuples. Also corrected a couple of issues with re-packing data.
+  - Removed the ``signed`` argument from ``Buffer.pack_varint()`` and
+    ``Buffer.unpack_varint()``. All varints are now signed.
+
+- Changes to ``quarry.types.chunk``:
+
+  - Made ``BlockArray`` setitem/getitem accept/return an opaque ID, rather than
+    a 2-tuple of ``(block_id, metadata)``. In Minecraft 1.13 it's no longer
+    possible to convert between the two with bitshifting.
+  - Added ``BlockArray.empty()`` and ``LightArray.empty()`` methods to
+    initialize empty (zero-filled) block/light arrays.
+  - Added ``BlockArray.is_empty()`` method, which can be used by servers to
+    check whether a chunk section should be sent.
+
+- Changes to ``quarry.types.nbt``:
+
+  - Added ``TagCompound.update()`` method, which performs a "deep" update of an
+    NBT tree.
+
+- Changes to ``quarry.net``:
 
   - ``ClientFactory.connect()`` no longer accepts ``protocol_mode_next`` and
     ``protocol_version`` arguments.
@@ -12,18 +43,12 @@ master
     ``Factory.force_protocol_version``, and is now observed by clients.
   - ``ClientProtocol.protocol_mode_next`` has moved to
     ``ClientFactory.protocol_mode_next``, and now defaults to "login".
+    of revisions to the slot and entity metadata formats in 1.13.
+  - Removed ``Protocol.compression_enabled``. Uncompressed connections are now
+    indicated by ``Protocol.compression_threshold == -1``.
+  - Fixed restarting a stopped ``Ticker``.
 
-- Made ``BlockArray`` setitem/getitem accept/return an opaque ID, rather than a
-  2-tuple of ``(block_id, metadata)``. In Minecraft 1.13 it's no longer
-  possible to convert between the two with bitshifting.
-- Added ``BlockArray.empty()`` and ``LightArray.empty()`` methods to initialize
-  empty (zero-filled) block/light arrays.
-- Added ``BlockArray.is_empty()`` method, which can be used by servers to
-  check whether a chunk section should be sent.
-- Added ``TagCompound.update()`` method, which performs a "deep" update of an
-  NBT tree.
 - Fixed ``client_messenger`` chat unpacking.
-- Fixed restarting a stopped ``Ticker``.
 - Fixed the ``entity_properties`` and ``advancements`` packets being swapped.
 
 v0.9.1

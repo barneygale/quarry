@@ -1,11 +1,10 @@
 import string
 import sys
 import logging
-import zlib
 from twisted.internet import protocol
 
 from quarry.data import packets
-from quarry.types.buffer import Buffer, BufferUnderrun
+from quarry.types.buffer import BufferUnderrun, buff_types
 from quarry.net.crypto import Cipher
 from quarry.net.ticker import Ticker
 
@@ -67,7 +66,7 @@ class PacketDispatcher(object):
 class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
-    #: Usually a reference to the :class:`Buffer` class. This is useful when
+    #: Usually a reference to a :class:`Buffer` class. This is useful when
     #: constructing a packet payload for use in :meth:`send_packet`
     buff_type = None
 
@@ -87,8 +86,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     send_direction = None
     protocol_version = packets.default_protocol_version
     protocol_mode = "init"
-    compression_threshold = None
-    compression_enabled = False
+    compression_threshold = -1
     in_game = False
     closed = False
 
@@ -96,7 +94,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.factory = factory
         self.remote_addr = remote_addr
 
-        self.buff_type = self.factory.buff_type
+        self.buff_type = self.factory.get_buff_type(self.protocol_version)
         self.recv_buff = self.buff_type()
         self.cipher = Cipher()
 
@@ -143,10 +141,6 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.protocol_mode = mode
 
     def set_compression(self, compression_threshold):
-        if not self.compression_enabled:
-            self.compression_enabled = True
-            self.logger.debug("Compression enabled")
-
         self.compression_threshold = compression_threshold
         self.logger.debug("Compression threshold set to %d bytes" % compression_threshold)
 
@@ -249,55 +243,42 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             # Save the buffer, in case we read an incomplete packet
             self.recv_buff.save()
 
-            # Try to read a packet
+            # Read the packet
             try:
-                max_bits = 32 if self.protocol_mode == "play" else 21
-                packet_length = self.recv_buff.unpack_varint(max_bits=max_bits)
-                packet_body = self.recv_buff.read(packet_length)
+                buff = self.recv_buff.unpack_packet(
+                    self.buff_type,
+                    self.compression_threshold)
 
-            # Incomplete packet read, restore the buffer.
             except BufferUnderrun:
                 self.recv_buff.restore()
                 break
 
-            # Load the packet body into a buffer
-            packet_buff = self.buff_type()
-            packet_buff.add(packet_body)
+            try:
+                # Identify the packet
+                key = (
+                    self.protocol_version,
+                    self.protocol_mode,
+                    self.recv_direction,
+                    buff.unpack_varint())
+                try:
+                    name = packets.packet_names[key]
+                except KeyError:
+                    raise ProtocolError("No name known for packet: %s" % (key,))
 
-            try:  # Catch protocol errors
-                try:  # Catch buffer overrun/underrun
-                    if self.compression_enabled:
-                        uncompressed_length = packet_buff.unpack_varint()
-
-                        if uncompressed_length > 0:
-                            data = zlib.decompress(packet_buff.read())
-                            packet_buff = Buffer()
-                            packet_buff.add(data)
-                    ident = packet_buff.unpack_varint()
-                    key = (
-                        self.protocol_version,
-                        self.protocol_mode,
-                        self.recv_direction,
-                        ident)
-                    try:
-                        name = packets.packet_names[key]
-                    except KeyError:
-                        raise ProtocolError("No name known for packet: %s"
-                                            % (key,))
-                    self.packet_received(packet_buff, name)
-
+                # Dispatch the packet
+                try:
+                    self.packet_received(buff, name)
                 except BufferUnderrun:
-                    raise ProtocolError("Packet is too short!")
+                    raise ProtocolError("Packet is too short: %s" % name)
+                if len(buff) > 0:
+                    raise ProtocolError("Packet is too long: %s" % name)
 
-                if len(packet_buff) > 0:
-                    raise ProtocolError("Packet is too long!")
+                # Reset the inactivity timer
+                self.connection_timer.restart()
 
             except ProtocolError as e:
                 self.protocol_error(e)
-                break
 
-            # We've read a complete packet, so reset the inactivity timeout
-            self.connection_timer.restart()
 
     def packet_received(self, buff, name):
         """
@@ -342,18 +323,10 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             ident = packets.packet_idents[key]
         except KeyError:
             raise ProtocolError("No ID known for packet: %s" % (key,))
-        data = Buffer.pack_varint(ident) + data
+        data = self.buff_type.pack_varint(ident) + data
 
-        if self.compression_enabled:
-            # Compress data and prepend uncompressed data length
-            if len(data) >= self.compression_threshold:
-                data = Buffer.pack_varint(len(data)) + zlib.compress(data)
-            else:
-                data = Buffer.pack_varint(0) + data
-
-        # Prepend packet length
-        max_bits = 32 if self.protocol_mode == "play" else 21
-        data = self.buff_type.pack_varint(len(data), max_bits=max_bits) + data
+        # Pack packet
+        data = self.buff_type.pack_packet(data, self.compression_threshold)
 
         # Encrypt
         data = self.cipher.encrypt(data)
@@ -364,7 +337,6 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
 class Factory(protocol.Factory, object):
     protocol = Protocol
-    buff_type = Buffer
     ticker_type = Ticker
     log_level = logging.INFO
     connection_timeout = 30
@@ -374,3 +346,8 @@ class Factory(protocol.Factory, object):
 
     def buildProtocol(self, addr):
         return self.protocol(self, addr)
+
+    def get_buff_type(self, protocol_version):
+        for ver, cls in reversed(buff_types):
+            if protocol_version >= ver:
+                return cls
