@@ -49,6 +49,9 @@ master
     indicated by ``Protocol.compression_threshold == -1``.
   - Modified ``Profile.validate()`` to not automatically attempt to refresh
     invalid profiles. This should be an explicit user choice.
+  - Added ``Profile.to_file()``, which saves to a JSON file containing a
+    subset of the information available in
+    ``~/.minecraft/launcher_profiles.json``.
   - Fixed restarting a stopped ``Ticker``.
 
 - Fixed ``client_messenger`` chat unpacking.

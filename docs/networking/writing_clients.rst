@@ -94,7 +94,7 @@ but it's usually cleaner to use inlineCallbacks_, as in the first example.
 
 .. autoclass:: Profile
     :undoc-members:
-    :members: from_credentials, from_token, from_file
+    :members: from_credentials, from_token, from_file, to_file
 
 
 .. _ReconnectingClientFactory: http://twistedmatrix.com/documents/current/api/twisted.internet.protocol.ReconnectingClientFactory.html

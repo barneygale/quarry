@@ -79,6 +79,21 @@ class Profile(object):
         d1.addCallbacks(_callback, d0.errback)
         return d0
 
+    def to_file(self, profiles_path=None):
+        if not profiles_path:
+            profiles_path = self._get_profiles_path()
+
+        with open(profiles_path, "w") as fd:
+            json.dump({
+                "selectedUser": self.uuid.to_hex(False),
+                "clientToken": self.client_token,
+                "authenticationDatabase": {
+                    self.uuid.to_hex(False): {
+                        "displayName": self.display_name,
+                        "accessToken": self.access_token,
+                        "uuid": self.uuid.to_hex(True)}}}, fd)
+
+
     @classmethod
     def from_credentials(cls, email, password):
         d0 = defer.Deferred()
@@ -114,11 +129,7 @@ class Profile(object):
     @classmethod
     def from_file(cls, display_name=None, uuid=None, profiles_path=None):
         if profiles_path is None:
-            if sys.platform == 'win32':
-                profiles_path = os.environ['APPDATA']
-            else:
-                profiles_path = os.path.expanduser("~")
-            profiles_path = os.path.join(profiles_path, ".minecraft", "launcher_profiles.json")
+            profiles_path = cls._get_profiles_path()
 
         with open(profiles_path) as fd:
             data = json.load(fd)
@@ -152,6 +163,15 @@ class Profile(object):
             timeout=cls.timeout,
             err_type=ProfileException,
             data=data)
+
+    @classmethod
+    def _get_profiles_path(cls):
+        if sys.platform == 'win32':
+            app_data = os.environ['APPDATA']
+        else:
+            app_data = os.path.expanduser("~")
+        return os.path.join(
+            app_data, ".minecraft", "launcher_profiles.json")
 
 
 class ProfileCLI(object):
