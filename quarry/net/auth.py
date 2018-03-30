@@ -62,12 +62,9 @@ class Profile(object):
         def _callback(data):
             d0.callback(self)
 
-        def _errback(err):
-            self.refresh().chainDeferred(d0)
-
         d1 = self._request(b"validate",
             accessToken=self.access_token)
-        d1.addCallbacks(_callback, _errback)
+        d1.addCallbacks(_callback, d0.errback)
         return d0
 
     def refresh(self):

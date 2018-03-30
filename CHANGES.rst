@@ -47,6 +47,8 @@ master
     of revisions to the slot and entity metadata formats in 1.13.
   - Removed ``Protocol.compression_enabled``. Uncompressed connections are now
     indicated by ``Protocol.compression_threshold == -1``.
+  - Modified ``Profile.validate()`` to not automatically attempt to refresh
+    invalid profiles. This should be an explicit user choice.
   - Fixed restarting a stopped ``Ticker``.
 
 - Fixed ``client_messenger`` chat unpacking.
