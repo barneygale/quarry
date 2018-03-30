@@ -1,8 +1,8 @@
 Changelog
 =========
 
-master
-------
+v1.0
+----
 
 - Changes to ``quarry.types.buffer``:
 

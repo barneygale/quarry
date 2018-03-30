@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='quarry',
-    version='0.9.1',
+    version='1.0',
     author='Barney Gale',
     author_email='barney@barneygale.co.uk',
     url='https://github.com/barneygale/quarry',
