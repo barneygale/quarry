@@ -15,7 +15,16 @@ def _enable_forwarding(endpoint):
             buff,
             endpoint.recv_direction,
             name)
+    endpoint._packet_received = endpoint.packet_received
     endpoint.packet_received = packet_received
+
+
+def _disable_forwarding(endpoint):
+    """
+    Patches the given endpoint's ``packet_received()`` method to restore
+    handling of packets within the endpoint.
+    """
+    endpoint.packet_received = endpoint._packet_received
 
 
 def _enable_fast_forwarding(endpoint1, endpoint2):
@@ -160,6 +169,18 @@ class Bridge(PacketDispatcher):
         _enable_forwarding(self.downstream)
         _enable_forwarding(self.upstream)
         self.logger.debug("Forwarding enabled")
+
+
+    def disable_forwarding(self):
+        """
+        Disable forwarding. Packet handlers in the ``Bridge`` cease to be
+        called, and packets are routed via the ``Upstream`` and ``Downstream``.
+        This method is not called by default.
+        """
+
+        _disable_forwarding(self.downstream)
+        _disable_forwarding(self.upstream)
+        self.logger.debug("Forwarding disabled")
 
 
     def enable_fast_forwarding(self):

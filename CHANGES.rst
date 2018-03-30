@@ -37,6 +37,7 @@ master
 
 - Changes to ``quarry.net``:
 
+  - Added ``Proxy.disable_forwarding()``
   - ``ClientFactory.connect()`` no longer accepts ``protocol_mode_next`` and
     ``protocol_version`` arguments.
   - ``ServerFactory.force_protocol_version`` has moved to
