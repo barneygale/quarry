@@ -15,7 +15,7 @@ def test_chunk_pack_unpack():
     chunk_data_after = Buffer.pack_chunk_section(blocks, block_lights, sky_lights)
 
     assert len(buff) == 0
-    assert blocks      [1400:1410] == [(2, 0), (2, 0), (2, 0), (18, 0), (17, 3), (18, 0), (18, 0), (31, 1), (31, 1), (0, 0)]
+    assert blocks      [1400:1410] == [32, 32, 32, 288, 275, 288, 288, 497, 497, 0]
     assert block_lights[1400:1410] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     assert sky_lights  [1400:1410] == [0, 0, 0, 13, 0, 12, 11, 10, 14, 15]
     assert chunk_data_before == chunk_data_after
@@ -26,9 +26,8 @@ def test_chunk_internals():
     # Accumulate blocks
     added = []
     for i in range(300):
-        block, meta = divmod(i, 16)
-        blocks[i] = block, meta
-        added.append((block, meta))
+        blocks[i] = i
+        added.append(i)
 
         assert blocks[:i+1] == added
 
@@ -50,21 +49,21 @@ def test_chunk_internals():
 
     # Zero the first 100 blocks
     for i in range(100):
-        blocks[i] = (0, 0)
+        blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 201
     assert blocks.bits == 8
 
     # Zero blocks 100-199
     for i in range(100, 200):
-        blocks[i] = (0, 0)
+        blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 101
     assert blocks.bits == 7
 
     # Zero blocks 205 - 300
     for i in range (205, 300):
-        blocks[i] = (0, 0)
+        blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 6
     assert blocks.bits == 4
@@ -72,6 +71,6 @@ def test_chunk_internals():
     # Check value
     for i in range(4096):
         if 200 <= i < 205:
-            assert blocks[i] == divmod(i, 16)
+            assert blocks[i] == i
         else:
-            assert blocks[i] == (0, 0)
+            assert blocks[i] == 0

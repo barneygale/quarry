@@ -68,21 +68,21 @@ slot_vectors = [
         b'\x00\x00'),                                     # NBT container end
 ]
 entity_metadata_vectors = [
-    ([
-        (0, 0, 0),
-        (1, 1, 1),
-        (2, 2, 2.0),
-        (3, 3, u'three'),
-        (4, 4, Message({'text': u'four'})),
-        (5, 5, {'count': 1, 'damage': 0, 'id': 267, 'tag': TagRoot({})}),
-        (6, 6, True),
-        (7, 7, (7.699999809265137, 7.699999809265137, 7.699999809265137)),
-        (8, 8, (8, 8, 8)),
-        (9, 9, (9, 9, 9)),
-        (10, 10, 10),
-        (11, 11, UUID.from_bytes(uuid_vector)),
-        (12, 12, 12),
-        (13, 13, TagRoot({u'foo': TagString(u'bar')}))],
+    (OrderedDict((
+        ((0, 0), 0),
+        ((1, 1), 1),
+        ((2, 2), 2.0),
+        ((3, 3), u'three'),
+        ((4, 4), Message({'text': u'four'})),
+        ((5, 5), {'count': 1, 'damage': 0, 'id': 267, 'tag': TagRoot({})}),
+        ((6, 6), True),
+        ((7, 7), (7.699999809265137, 7.699999809265137, 7.699999809265137)),
+        ((8, 8), (8, 8, 8)),
+        ((9, 9), (9, 9, 9)),
+        ((10, 10), 10),
+        ((11, 11), UUID.from_bytes(uuid_vector)),
+        ((12, 12), 12),
+        ((13, 13), TagRoot({u'foo': TagString(u'bar')})))),
 
         b'\x00\x00\x00'
         b'\x01\x01\x01'
@@ -98,8 +98,7 @@ entity_metadata_vectors = [
         b'\x0b\x0b\x01' + uuid_vector +
         b'\x0c\x0c\x0c'
         b'\x0d\x0d\x08\x00\x03foo\x00\x03bar'
-        b'\xff'),
-
+        b'\xff')
 ]
 
 def test_add():
