@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import uuid
 
+
 class UUID(uuid.UUID):
     @classmethod
     def from_hex(cls, hex):
@@ -12,7 +13,7 @@ class UUID(uuid.UUID):
 
     @classmethod
     def from_offline_player(cls, display_name):
-        class FakeNamespace():
+        class FakeNamespace(object):
             bytes = b'OfflinePlayer:'
         base_uuid = uuid.uuid3(FakeNamespace(), display_name)
         return UUID(bytes=base_uuid.bytes)

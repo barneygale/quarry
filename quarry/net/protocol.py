@@ -112,7 +112,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         self.setup()
 
-    ### Fix ugly twisted methods ----------------------------------------------
+    # Fix ugly twisted methods ------------------------------------------------
 
     def dataReceived(self, data):
         return self.data_received(data)
@@ -123,7 +123,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     def connectionLost(self, reason=None):
         return self.connection_lost(reason)
 
-    ### Convenience functions -------------------------------------------------
+    # Convenience functions ---------------------------------------------------
 
     def check_protocol_mode_switch(self, mode):
         transitions = [
@@ -142,7 +142,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
     def set_compression(self, compression_threshold):
         self.compression_threshold = compression_threshold
-        self.logger.debug("Compression threshold set to %d bytes" % compression_threshold)
+        self.logger.debug("Compression threshold set to %d bytes"
+                          % compression_threshold)
 
     def close(self, reason=None):
         """Closes the connection"""
@@ -169,7 +170,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
             self.protocol_mode,
             name))
 
-    ### General callbacks -----------------------------------------------------
+    # General callbacks -------------------------------------------------------
 
     def setup(self):
         """Called when the Protocol's initialiser is finished"""
@@ -182,7 +183,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.logger.exception(err)
         self.close("Protocol error")
 
-    ### Connection callbacks --------------------------------------------------
+    # Connection callbacks ----------------------------------------------------
 
     def connection_made(self):
         """Called when the connection is established"""
@@ -204,7 +205,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         self.close("Connection timed out")
 
-    ### Auth callbacks --------------------------------------------------------
+    # Auth callbacks ----------------------------------------------------------
 
     def auth_ok(self, data):
         """Called when auth with mojang succeeded (online mode only)"""
@@ -214,10 +215,10 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     def auth_failed(self, err):
         """Called when auth with mojang failed (online mode only)"""
 
-        self.logger.warn("Auth failed: %s" % err.value)
+        self.logger.warning("Auth failed: %s" % err.value)
         self.close("Auth failed: %s" % err.value)
 
-    ### Player callbacks ------------------------------------------------------
+    # Player callbacks --------------------------------------------------------
 
     def player_joined(self):
         """Called when the player joins the game"""
@@ -229,7 +230,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         pass
 
-    ### Packet handling -------------------------------------------------------
+    # Packet handling ---------------------------------------------------------
 
     def data_received(self, data):
         # Decrypt data
@@ -263,7 +264,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
                 try:
                     name = packets.packet_names[key]
                 except KeyError:
-                    raise ProtocolError("No name known for packet: %s" % (key,))
+                    raise ProtocolError("No name known for packet: %s"
+                                        % (key,))
 
                 # Dispatch the packet
                 try:
@@ -278,7 +280,6 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
             except ProtocolError as e:
                 self.protocol_error(e)
-
 
     def packet_received(self, buff, name):
         """

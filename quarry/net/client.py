@@ -12,7 +12,7 @@ class ClientProtocol(Protocol):
     recv_direction = "downstream"
     send_direction = "upstream"
 
-    ### Convenience functions -------------------------------------------------
+    # Convenience functions ---------------------------------------------------
 
     def switch_protocol_mode(self, mode):
         self.check_protocol_mode_switch(mode)
@@ -20,7 +20,8 @@ class ClientProtocol(Protocol):
         if mode in ("status", "login"):
             # Send handshake
             addr = self.transport.connector.getDestination()
-            self.send_packet("handshake",
+            self.send_packet(
+                "handshake",
                 self.buff_type.pack_varint(self.protocol_version) +
                 self.buff_type.pack_string(addr.host) +
                 self.buff_type.pack('H', addr.port) +
@@ -41,8 +42,7 @@ class ClientProtocol(Protocol):
             self.send_packet("login_start", self.buff_type.pack_string(
                 self.factory.profile.display_name))
 
-
-    ### Callbacks -------------------------------------------------------------
+    # Callbacks ---------------------------------------------------------------
 
     @defer.inlineCallbacks
     def connection_made(self):
@@ -85,7 +85,8 @@ class ClientProtocol(Protocol):
             pack_array = lambda d: self.buff_type.pack_varint(
                 len(d), max_bits=16) + d
 
-        self.send_packet("login_encryption_response",
+        self.send_packet(
+            "login_encryption_response",
             pack_array(p_shared_secret) +
             pack_array(p_verify_token))
 
@@ -113,7 +114,7 @@ class ClientProtocol(Protocol):
         """
         self.close()
 
-    ### Packet handlers -------------------------------------------------------
+    # Packet handlers ---------------------------------------------------------
 
     def packet_status_response(self, buff):
         p_data = buff.unpack_json()
@@ -125,7 +126,7 @@ class ClientProtocol(Protocol):
         self.close()
 
     def packet_login_encryption_request(self, buff):
-        p_server_id    = buff.unpack_string()
+        p_server_id = buff.unpack_string()
 
         # 1.7.x
         if self.protocol_version <= 5:
@@ -134,7 +135,7 @@ class ClientProtocol(Protocol):
         else:
             unpack_array = lambda b: b.read(b.unpack_varint(max_bits=16))
 
-        p_public_key   = unpack_array(buff)
+        p_public_key = unpack_array(buff)
         p_verify_token = unpack_array(buff)
 
         if not self.factory.profile.online:
@@ -143,7 +144,7 @@ class ClientProtocol(Protocol):
 
         self.shared_secret = crypto.make_shared_secret()
         self.public_key = crypto.import_public_key(p_public_key)
-        self.verify_token  = p_verify_token
+        self.verify_token = p_verify_token
 
         # make digest
         digest = crypto.make_digest(
@@ -186,13 +187,16 @@ class SpawningClientProtocol(ClientProtocol):
 
     # Sent a 'player position and look' packet every 20 ticks
     def update_player_full(self):
-        self.send_packet("player_position_and_look", self.buff_type.pack('dddff?',
-            self.pos_look[0],
-            self.pos_look[1],
-            self.pos_look[2],
-            self.pos_look[3],
-            self.pos_look[4],
-            True))
+        self.send_packet(
+            "player_position_and_look",
+            self.buff_type.pack(
+                'dddff?',
+                self.pos_look[0],
+                self.pos_look[1],
+                self.pos_look[2],
+                self.pos_look[3],
+                self.pos_look[4],
+                True))
 
     def packet_player_position_and_look(self, buff):
         p_pos_look = buff.unpack('dddff')

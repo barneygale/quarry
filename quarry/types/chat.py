@@ -4,9 +4,10 @@ import re
 from quarry.types.buffer import Buffer
 
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = str
+    basestring = str
+
 
 def _load_styles():
     data = {
@@ -48,6 +49,7 @@ def _load_styles():
     return code_by_name, code_by_prop
 
 code_by_name, code_by_prop = _load_styles()
+
 
 @functools.total_ordering
 class Message(object):

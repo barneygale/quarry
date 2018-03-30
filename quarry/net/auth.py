@@ -17,6 +17,7 @@ class AuthException(http.HTTPException):
 
 class OfflineProfile(object):
     online = False
+
     def __init__(self, display_name="quarry"):
         self.display_name = display_name
 
@@ -49,10 +50,10 @@ class Profile(object):
             return d1
         else:
             d0 = defer.Deferred()
+
             def _errback(err):
-                self.refresh()\
-                    .chainDeferred(self.join(digest, refresh=False)\
-                        .chainDeferred(d0))
+                self.refresh().chainDeferred(
+                    self.join(digest, refresh=False).chainDeferred(d0))
             d1.addCallbacks(d0.callback, _errback)
             return d0
 
@@ -62,8 +63,7 @@ class Profile(object):
         def _callback(data):
             d0.callback(self)
 
-        d1 = self._request(b"validate",
-            accessToken=self.access_token)
+        d1 = self._request(b"validate", accessToken=self.access_token)
         d1.addCallbacks(_callback, d0.errback)
         return d0
 
@@ -73,9 +73,10 @@ class Profile(object):
         def _callback(data):
             d0.callback(self)
 
-        d1 = self._request(b"refresh",
-            clientToken = self.client_token,
-            accessToken = self.access_token)
+        d1 = self._request(
+            b"refresh",
+            clientToken=self.client_token,
+            accessToken=self.access_token)
         d1.addCallbacks(_callback, d0.errback)
         return d0
 
@@ -93,7 +94,6 @@ class Profile(object):
                         "accessToken": self.access_token,
                         "uuid": self.uuid.to_hex(True)}}}, fd)
 
-
     @classmethod
     def from_credentials(cls, email, password):
         d0 = defer.Deferred()
@@ -109,21 +109,22 @@ class Profile(object):
             "version": 1
         }
 
-        clientToken = "foo" #TODO
+        client_token = "foo"  # TODO
 
-        d1 = cls._request(b"authenticate",
-            username = email,
-            password = password,
-            agent = agent,
-            clientToken = clientToken
-        )
+        d1 = cls._request(
+            b"authenticate",
+            username=email,
+            password=password,
+            agent=agent,
+            clientToken=client_token)
         d1.addCallbacks(_callback, _errback)
 
         return d0
 
     @classmethod
     def from_token(cls, client_token, access_token, display_name, uuid):
-        obj = cls(client_token, access_token, display_name, UUID.from_hex(uuid))
+        obj = cls(client_token, access_token,
+                  display_name, UUID.from_hex(uuid))
         return obj.validate()
 
     @classmethod
@@ -137,8 +138,9 @@ class Profile(object):
         if uuid is not None:
             profile_data = data["authenticationDatabase"][uuid]
         elif display_name is not None:
-            profile_data = next(p for p in data["authenticationDatabase"].values()
-                                if p["displayName"] == display_name)
+            profile_data = next(
+                p for p in data["authenticationDatabase"].values()
+                if p["displayName"] == display_name)
         else:
             profile_data = data["authenticationDatabase"][data["selectedUser"]]
 
@@ -210,12 +212,13 @@ class ProfileCLI(object):
         return defer.succeed(
             OfflineProfile.from_display_name(args.offline_name or "quarry"))
 
+
 def has_joined(timeout, digest, display_name, remote_host=None):
     url = b"https://sessionserver.mojang.com/session/minecraft/hasJoined" + \
           b"?username=" + display_name.encode('ascii') + \
           b"&serverId=" + digest.encode('ascii')
     if remote_host is not None:
-        url += b"&ip="  + remote_host.encode('ascii')
+        url += b"&ip=" + remote_host.encode('ascii')
     return http.request(
         url=url,
         timeout=timeout,

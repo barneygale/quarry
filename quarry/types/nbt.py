@@ -8,7 +8,7 @@ _kinds = {}
 _ids = {}
 
 
-# Base types --------------------------------------------------------------------------------------
+# Base types ------------------------------------------------------------------
 
 @functools.total_ordering
 class _Tag(object):
@@ -60,7 +60,7 @@ class _ArrayTag(_Tag):
             Buffer.pack(self.fmt*len(self.value), *self.value))
 
 
-# NBT tags ----------------------------------------------------------------------------------------
+# NBT tags --------------------------------------------------------------------
 
 class TagByte(_DataTag):
     fmt = 'b'
@@ -115,7 +115,8 @@ class TagList(_Tag):
         if isinstance(inner_kind, _DataTag):
             return cls(list(buff.unpack(inner_kind.fmt * array_length)))
         else:
-            return cls([inner_kind.from_buff(buff) for _ in range(array_length)])
+            return cls([inner_kind.from_buff(buff)
+                        for _ in range(array_length)])
 
     def to_bytes(self):
         if len(self.value) > 0:
@@ -174,7 +175,8 @@ class TagCompound(_Tag):
 
             if old_tag and not new_tag:
                 del self.value[name]
-            elif isinstance(old_tag, TagCompound) and isinstance(new_tag, TagCompound):
+            elif isinstance(old_tag, TagCompound) \
+                    and isinstance(new_tag, TagCompound):
                 self.value[name].update(new_tag)
             else:
                 self.value[name] = new_tag
@@ -184,7 +186,7 @@ class TagRoot(TagCompound):
     root = True
 
 
-# Register tags -----------------------------------------------------------------------------------
+# Register tags ---------------------------------------------------------------
 
 _kinds[0] = type(None)
 _kinds[1] = TagByte
@@ -200,7 +202,8 @@ _kinds[10] = TagCompound
 _kinds[11] = TagIntArray
 _ids.update({v: k for k, v in _kinds.items()})
 
-# Files -------------------------------------------------------------------------------------------
+
+# Files -----------------------------------------------------------------------
 
 class NBTFile(object):
     root_tag = None
@@ -217,7 +220,8 @@ class NBTFile(object):
         with gzip.open(path, 'wb') as fd:
             fd.write(self.root_tag.to_bytes())
 
-# Debug --------------------------------------------------------------------------------------------
+
+# Debug -----------------------------------------------------------------------
 
 def alt_repr(tag, level=0):
     """

@@ -1,10 +1,12 @@
 from collections import Sequence
 import math
 
+
 try:
     xrange
 except NameError:
     xrange = range
+
 
 class _Array(Sequence):
     def __len__(self):
@@ -65,17 +67,17 @@ class BlockArray(_Array):
                     self.palette.append(val)
                     val = len(self.palette) - 1
 
-        idx0  = (self.bits * n) // 64
-        idx1  = (self.bits * (n + 1) - 1) // 64
+        idx0 = (self.bits * n) // 64
+        idx1 = (self.bits * (n + 1) - 1) // 64
 
-        off0  = (self.bits * n) % 64
-        off1  = 64 - off0
+        off0 = (self.bits * n) % 64
+        off1 = 64 - off0
 
         mask0 = ((1 << self.bits) - 1) << off0
         mask1 = ((1 << self.bits) - 1) >> off1
 
         self.data[idx0] &= (2 ** 64 - 1) & ~mask0
-        self.data[idx0] |= (2 ** 64 - 1) &  mask0 & (val << off0)
+        self.data[idx0] |= (2 ** 64 - 1) & mask0 & (val << off0)
 
         if idx0 != idx1:
             self.data[idx1] &= ~mask1

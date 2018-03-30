@@ -1,9 +1,10 @@
 import logging
 
-from quarry.net.protocol import PacketDispatcher, Protocol
+from quarry.net.protocol import PacketDispatcher
 from quarry.net.server import ServerFactory, ServerProtocol
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.net.auth import OfflineProfile
+
 
 def _enable_forwarding(endpoint):
     """
@@ -78,9 +79,8 @@ class Bridge(PacketDispatcher):
     downstream = None
 
     upstream_profile = None
-    upstream_factory   = None
-    upstream   = None
-
+    upstream_factory = None
+    upstream = None
 
     def __init__(self, downstream_factory, downstream):
         self.downstream_factory = downstream_factory
@@ -106,15 +106,16 @@ class Bridge(PacketDispatcher):
         """
 
         self.upstream_profile = self.make_profile()
-        self.upstream_factory = self.upstream_factory_class(self.upstream_profile)
+        self.upstream_factory = self.upstream_factory_class(
+            self.upstream_profile)
         self.upstream_factory.bridge = self
-        self.upstream_factory.force_protocol_version = self.downstream.protocol_version
+        self.upstream_factory.force_protocol_version = \
+            self.downstream.protocol_version
         self.upstream_factory.connect(
             self.connect_host,
             self.connect_port)
 
-
-    ### Connections -----------------------------------------------------------
+    # Connections -------------------------------------------------------------
 
     def downstream_ready(self):
         """
@@ -155,9 +156,7 @@ class Bridge(PacketDispatcher):
         """
         self.downstream.close("Lost connection to server.")
 
-
-
-    ### Pass through ----------------------------------------------------------
+    # Pass through ------------------------------------------------------------
 
     def enable_forwarding(self):
         """
@@ -170,7 +169,6 @@ class Bridge(PacketDispatcher):
         _enable_forwarding(self.upstream)
         self.logger.debug("Forwarding enabled")
 
-
     def disable_forwarding(self):
         """
         Disable forwarding. Packet handlers in the ``Bridge`` cease to be
@@ -182,7 +180,6 @@ class Bridge(PacketDispatcher):
         _disable_forwarding(self.upstream)
         self.logger.debug("Forwarding disabled")
 
-
     def enable_fast_forwarding(self):
         """
         Enables fast forwarding. Quarry passes network data between endpoints
@@ -190,7 +187,8 @@ class Bridge(PacketDispatcher):
         called. Both parts of the proxy must be operating at the same
         compression threshold. This method is not called by default.
         """
-        if self.downstream.compression_threshold != self.upstream.compression_threshold:
+        if self.downstream.compression_threshold != \
+                self.upstream.compression_threshold:
             raise Exception(
                 "Cannot enable fast forwarding as compression differs. "
                 "downstream: %s, upstream: %s" % (
@@ -201,8 +199,7 @@ class Bridge(PacketDispatcher):
         _enable_fast_forwarding(self.upstream, self.downstream)
         self.logger.debug("Fast forwarding enabled")
 
-
-    ### Packet handling -------------------------------------------------------
+    # Packet handling ---------------------------------------------------------
 
     def packet_received(self, buff, direction, name):
         """

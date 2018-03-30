@@ -33,11 +33,10 @@ class ServerProtocol(Protocol):
 
     def __init__(self, factory, remote_addr):
         Protocol.__init__(self, factory, remote_addr)
-        self.server_id    = crypto.make_server_id()
+        self.server_id = crypto.make_server_id()
         self.verify_token = crypto.make_verify_token()
 
-
-    ### Convenience functions -------------------------------------------------
+    # Convenience functions ---------------------------------------------------
 
     def switch_protocol_mode(self, mode):
         self.check_protocol_mode_switch(mode)
@@ -45,12 +44,15 @@ class ServerProtocol(Protocol):
         if mode == "play":
             if self.factory.compression_threshold:
                 # Send set compression
-                self.send_packet("login_set_compression",
-                                 self.buff_type.pack_varint(self.factory.compression_threshold))
+                self.send_packet(
+                    "login_set_compression",
+                    self.buff_type.pack_varint(
+                        self.factory.compression_threshold))
                 self.set_compression(self.factory.compression_threshold)
 
             # Send login success
-            self.send_packet("login_success",
+            self.send_packet(
+                "login_success",
                 self.buff_type.pack_string(self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.display_name))
 
@@ -73,9 +75,10 @@ class ServerProtocol(Protocol):
             # Kick the player if possible.
             if self.protocol_mode == "play":
                 def real_kick(*a):
-                    self.send_packet("disconnect",
+                    self.send_packet(
+                        "disconnect",
                         self.buff_type.pack_chat(reason))
-                    Protocol.close(self, reason)
+                    super(ServerProtocol, self).close(reason)
 
                 if self.safe_kick:
                     self.safe_kick.addCallback(real_kick)
@@ -83,14 +86,14 @@ class ServerProtocol(Protocol):
                     real_kick()
             else:
                 if self.protocol_mode == "login":
-                    self.send_packet("login_disconnect",
+                    self.send_packet(
+                        "login_disconnect",
                         self.buff_type.pack_chat(reason))
                 Protocol.close(self, reason)
         else:
             Protocol.close(self, reason)
 
-
-    ### Callbacks -------------------------------------------------------------
+    # Callbacks ---------------------------------------------------------------
 
     def connection_lost(self, reason=None):
         """Called when the connection is lost"""
@@ -119,7 +122,7 @@ class ServerProtocol(Protocol):
 
         self.logger.info("%s has left." % self.display_name)
 
-    ### Packet handlers -------------------------------------------------------
+    # Packet handlers ---------------------------------------------------------
 
     def packet_handshake(self, buff):
         p_protocol_version = buff.unpack_varint()
@@ -168,9 +171,10 @@ class ServerProtocol(Protocol):
                 pack_array = lambda a: self.buff_type.pack_varint(
                     len(a), max_bits=16) + a
 
-            self.send_packet("login_encryption_request",
-                self.buff_type.pack_string(self.server_id) +
-                pack_array(self.factory.public_key) +
+            self.send_packet(
+                "login_encryption_request",
+                self.buff_type.pack_string(self.server_id),
+                pack_array(self.factory.public_key),
                 pack_array(self.verify_token))
 
         else:
@@ -250,7 +254,8 @@ class ServerProtocol(Protocol):
         }
         if self.factory.favicon is not None:
             with open(self.factory.favicon, "rb") as fd:
-                d["favicon"] = "data:image/png;base64," + base64.encodestring(fd.read()).decode('ascii')
+                d["favicon"] = "data:image/png;base64," + base64.encodestring(
+                    fd.read()).decode('ascii')
 
         # send status response
         self.send_packet("status_response", self.buff_type.pack_json(d))

@@ -14,7 +14,6 @@ except NameError:
     xrange = range
 
 
-
 class Buffer1_7(object):
     buff = b""
     pos = 0
@@ -74,7 +73,6 @@ class Buffer1_7(object):
 
         return data
 
-
     # Basic data types --------------------------------------------------------
 
     @classmethod
@@ -101,13 +99,20 @@ class Buffer1_7(object):
     # Array data types --------------------------------------------------------
 
     @classmethod
-    def pack_array(cls, fmt, obj):
-        return struct.pack(">" + fmt * len(obj), *obj)
+    def pack_array(cls, fmt, array):
+        """
+        Packs *array* into a struct. The format accepted is the same as for
+        ``struct.pack()``.
+        """
+        return struct.pack(">" + fmt * len(array), *array)
 
     def unpack_array(self, fmt, length):
+        """
+        Unpack an array struct. The format accepted is the same as for
+        ``struct.unpack()``.
+        """
         data = self.read(struct.calcsize(">" + fmt) * length)
         return list(struct.unpack(">" + fmt * length, data))
-
 
     # Optional ----------------------------------------------------------------
 
@@ -133,7 +138,6 @@ class Buffer1_7(object):
         else:
             return None
 
-
     # Varint ------------------------------------------------------------------
 
     @classmethod
@@ -149,7 +153,7 @@ class Buffer1_7(object):
                              % (number_min, number, number_max))
 
         if number < 0:
-            number += 1<<32
+            number += 1 << 32
 
         out = b""
         for i in xrange(10):
@@ -172,8 +176,8 @@ class Buffer1_7(object):
             if not b & 0x80:
                 break
 
-        if number & (1<<31):
-            number -= 1<<32
+        if number & (1 << 31):
+            number -= 1 << 32
 
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
@@ -182,7 +186,6 @@ class Buffer1_7(object):
                              % (number_min, number, number_max))
 
         return number
-
 
     # Packet ------------------------------------------------------------------
 
@@ -218,7 +221,6 @@ class Buffer1_7(object):
 
         return buff
 
-
     # String ------------------------------------------------------------------
 
     @classmethod
@@ -239,7 +241,6 @@ class Buffer1_7(object):
         text = self.read(length).decode("utf-8")
         return text
 
-
     # JSON --------------------------------------------------------------------
 
     @classmethod
@@ -256,7 +257,6 @@ class Buffer1_7(object):
 
         obj = json.loads(self.unpack_string())
         return obj
-
 
     # Chat --------------------------------------------------------------------
 
@@ -277,7 +277,6 @@ class Buffer1_7(object):
         from quarry.types import chat
         return chat.Message.from_buff(self)
 
-
     # UUID --------------------------------------------------------------------
 
     @classmethod
@@ -294,7 +293,6 @@ class Buffer1_7(object):
         """
 
         return UUID.from_bytes(self.read(16))
-
 
     # Position ----------------------------------------------------------------
 
@@ -330,7 +328,6 @@ class Buffer1_7(object):
         z = unpack_twos_comp(26, (number & 0x3FFFFFF))
         return x, y, z
 
-
     # Slot --------------------------------------------------------------------
 
     @classmethod
@@ -358,7 +355,6 @@ class Buffer1_7(object):
 
         return slot
 
-
     # NBT ---------------------------------------------------------------------
 
     @classmethod
@@ -382,7 +378,6 @@ class Buffer1_7(object):
 
         from quarry.types import nbt
         return nbt.TagRoot.from_buff(self)
-
 
     # Chunk section -----------------------------------------------------------
 
@@ -416,11 +411,14 @@ class Buffer1_7(object):
         length 4096 (16x16x16).
         """
         bits = self.unpack('B')
-        if bits < 4:   bits = 4
-        elif bits > 8: bits = 13
+        if bits < 4:
+            bits = 4
+        elif bits > 8:
+            bits = 13
 
         palette = [self.unpack_varint() for _ in xrange(self.unpack_varint())]
-        blocks = BlockArray(self.unpack_array('Q', self.unpack_varint()), bits, palette)
+        blocks = BlockArray(
+            self.unpack_array('Q', self.unpack_varint()), bits, palette)
         block_lights = LightArray(self.unpack_array('B', 2048))
         if overworld:
             sky_lights = LightArray(self.unpack_array('B', 2048))
@@ -428,7 +426,6 @@ class Buffer1_7(object):
             sky_lights = None
 
         return blocks, block_lights, sky_lights
-
 
     # Entity metadata ---------------------------------------------------------
 

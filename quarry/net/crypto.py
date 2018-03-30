@@ -11,12 +11,14 @@ backend = default_backend()
 
 PY3 = sys.version_info > (3,)
 
-class Cipher:
+
+class Cipher(object):
     def __init__(self):
         self.disable()
 
     def enable(self, key):
-        cipher = ciphers.Cipher(algorithms.AES(key), modes.CFB8(key), backend=backend)
+        cipher = ciphers.Cipher(
+            algorithms.AES(key), modes.CFB8(key), backend=backend)
         self.encryptor = cipher.encryptor()
         self.decryptor = cipher.decryptor()
 
@@ -43,6 +45,7 @@ def make_keypair():
         key_size=1024,
         backend=default_backend())
 
+
 def make_server_id():
     data = os.urandom(10)
     if PY3:
@@ -52,15 +55,19 @@ def make_server_id():
 
     return "".join(parts)
 
+
 def make_verify_token():
     return os.urandom(4)
+
 
 def make_shared_secret():
     return os.urandom(16)
 
+
 def make_digest(*data):
     sha1 = hashlib.sha1()
-    for d in data: sha1.update(d)
+    for d in data:
+        sha1.update(d)
 
     digest = int(sha1.hexdigest(), 16)
     if digest >> 39*4 & 0x8:
@@ -68,20 +75,24 @@ def make_digest(*data):
     else:
         return "%x" % digest
 
+
 def export_public_key(keypair):
     return keypair.public_key().public_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PublicFormat.SubjectPublicKeyInfo)
+
 
 def import_public_key(data):
     return serialization.load_der_public_key(
         data=data,
         backend=default_backend())
 
+
 def encrypt_secret(public_key, shared_secret):
     return public_key.encrypt(
         plaintext=shared_secret,
         padding=padding.PKCS1v15())
+
 
 def decrypt_secret(keypair, data):
     return keypair.decrypt(

@@ -11,6 +11,7 @@ class Buffer1_9(Buffer1_7):
         Packs entity metadata.
         """
 
+        pack_position = lambda pos: cls.pack_position(*pos)
         out = b""
         for ty_key, val in metadata.items():
             ty, key = ty_key
@@ -24,7 +25,7 @@ class Buffer1_9(Buffer1_7):
             elif ty == 6:  out += cls.pack('?', val)
             elif ty == 7:  out += cls.pack('fff', *val)
             elif ty == 8:  out += cls.pack_position(*val)
-            elif ty == 9:  out += cls.pack_optional(lambda pos: cls.pack_position(*pos), val)
+            elif ty == 9:  out += cls.pack_optional(pack_position, val)
             elif ty == 10: out += cls.pack_varint(val)
             elif ty == 11: out += cls.pack_optional(cls.pack_uuid, val)
             elif ty == 12: out += cls.pack_varint(val)

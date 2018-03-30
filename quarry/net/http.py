@@ -6,6 +6,7 @@ from twisted.python import failure
 
 client.HTTPClientFactory.noisy = False
 
+
 class HTTPException(Exception):
     def __init__(self, error_type, error_message):
         self.error_type = error_type
@@ -13,6 +14,7 @@ class HTTPException(Exception):
 
     def __str__(self):
         return "%s: %s" % (self.error_type, self.error_message)
+
 
 def request(url, timeout, err_type=Exception, expect_content=False, data=None):
     d0 = defer.Deferred()
@@ -40,9 +42,9 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
     if data:
         d1 = client.getPage(
             url,
-            headers = {b'Content-Type': b'application/json'},
-            method = b'POST',
-            postdata = json.dumps(data).encode('ascii'))
+            headers={b'Content-Type': b'application/json'},
+            method=b'POST',
+            postdata=json.dumps(data).encode('ascii'))
     else:
         d1 = client.getPage(url)
     d1.addCallbacks(_callback, _errback)

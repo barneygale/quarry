@@ -3,6 +3,7 @@ import glob
 import os.path
 import re
 
+
 def _load():
     default_protocol_version = 0
     minecraft_versions = {}
@@ -26,7 +27,8 @@ def _load():
             reader = csv.reader(csvfile)
             for i, record in enumerate(reader):
                 # Skip header
-                if i == 0: continue
+                if i == 0:
+                    continue
 
                 # Extract fields
                 protocol_mode = record[0]
@@ -38,7 +40,6 @@ def _load():
                     packet_ident = 0
                 last_section = section
 
-
                 # Update default protocol version
                 default_protocol_version = max(default_protocol_version,
                                                protocol_version)
@@ -48,13 +49,13 @@ def _load():
 
                 # Update the packet dictionaries
                 key = [protocol_version, protocol_mode, packet_direction]
-                packet_names [tuple(key + [packet_ident])] = packet_name
-                packet_idents[tuple(key + [packet_name ])] = packet_ident
+                packet_names[tuple(key + [packet_ident])] = packet_name
+                packet_idents[tuple(key + [packet_name])] = packet_ident
 
                 packet_ident += 1
 
-    return default_protocol_version, minecraft_versions, \
-           packet_names, packet_idents
+    return (default_protocol_version, minecraft_versions,
+            packet_names, packet_idents)
 
 default_protocol_version, minecraft_versions, \
 packet_names, packet_idents = _load()
