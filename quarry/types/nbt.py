@@ -168,6 +168,17 @@ class TagCompound(_Tag):
     def to_obj(self):
         return dict((name, tag.to_obj()) for name, tag in self.value.items())
 
+    def update(self, other_tag):
+        for name, new_tag in other_tag.value.items():
+            old_tag = self.value.get(name)
+
+            if old_tag and not new_tag:
+                del self.value[name]
+            elif isinstance(old_tag, TagCompound) and isinstance(new_tag, TagCompound):
+                self.value[name].update(new_tag)
+            else:
+                self.value[name] = new_tag
+
 
 class TagRoot(TagCompound):
     root = True
