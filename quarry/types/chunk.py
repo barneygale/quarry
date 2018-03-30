@@ -17,18 +17,32 @@ class BlockArray(_Array):
         self.bits = bits
         self.palette = palette
 
+    @classmethod
+    def empty(cls):
+        return cls([0] * 256, 4, [0])
+
+    def is_empty(self):
+        if self.palette is not None:
+            return self.palette == [0]
+        else:
+            return not any(self.data)
 
     def __getitem__(self, n):
         if isinstance(n, slice):
             return [self[o] for o in xrange(*n.indices(4096))]
-        max_val = (1 << self.bits) - 1
-        idx0, off0 = divmod(n * self.bits, 64)
-        idx1 = ((n + 1) * self.bits - 1) // 64
+
+        idx0 = (self.bits * n) // 64
+        idx1 = (self.bits * (n + 1) - 1) // 64
+
+        off0 = (self.bits * n) % 64
+        off1 = 64 - off0
+
         if idx0 == idx1:
-            val = max_val & (self.data[idx0] >> off0)
+            val = self.data[idx0] >> off0
         else:
-            val = max_val & (self.data[idx0] >> off0 |
-                             self.data[idx1] << (64 - off0))
+            val = (self.data[idx0] >> off0) | (self.data[idx1] << off1)
+
+        val &= (1 << self.bits) - 1
 
         if self.palette is not None:
             val = self.palette[val]
@@ -51,16 +65,21 @@ class BlockArray(_Array):
                     self.palette.append(val)
                     val = len(self.palette) - 1
 
-        max_val = (1 << self.bits) - 1
-        idx0, off0 = divmod(n * self.bits, 64)
-        idx1, off1 = ((n + 1) * self.bits - 1) // 64, 64 - off0
+        idx0  = (self.bits * n) // 64
+        idx1  = (self.bits * (n + 1) - 1) // 64
 
-        self.data[idx0] &= ~(max_val << off0)
-        self.data[idx0] |=       val << off0
+        off0  = (self.bits * n) % 64
+        off1  = 64 - off0
+
+        mask0 = ((1 << self.bits) - 1) << off0
+        mask1 = ((1 << self.bits) - 1) >> off1
+
+        self.data[idx0] &= (2 ** 64 - 1) & ~mask0
+        self.data[idx0] |= (2 ** 64 - 1) &  mask0 & (val << off0)
 
         if idx0 != idx1:
-            self.data[idx1] &= ~(max_val >> off1)
-            self.data[idx1] |=       val >> off1
+            self.data[idx1] &= ~mask1
+            self.data[idx1] |= mask1 & (val >> off1)
 
     def repack(self, reserve=None):
         if reserve is None:
@@ -103,6 +122,10 @@ class BlockArray(_Array):
 class LightArray(_Array):
     def __init__(self, data):
         self.data = data
+
+    @classmethod
+    def empty(cls):
+        return cls([0] * 2048)
 
     def __getitem__(self, n):
         if isinstance(n, slice):

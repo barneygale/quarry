@@ -14,6 +14,10 @@ master
 - Made ``BlockArray`` setitem/getitem accept/return an opaque ID, rather than a
   2-tuple of ``(block_id, metadata)``. In Minecraft 1.13 it's no longer
   possible to convert between the two with bitshifting.
+- Added ``BlockArray.empty()`` and ``LightArray.empty()`` methods to initialize
+  empty (zero-filled) block/light arrays.
+- Added ``BlockArray.is_empty()`` method, which can be used by servers to
+  check whether a chunk section should be sent.
 - Fixed ``client_messenger`` chat unpacking.
 - Fixed restarting a stopped ``Ticker``.
 
