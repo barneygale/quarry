@@ -1,6 +1,11 @@
 Changelog
 =========
 
+master
+------
+
+- Added ``quarry.types.nbt.TagLongArray`` class.
+
 v1.0
 ----
 

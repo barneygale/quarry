@@ -106,6 +106,10 @@ class TagIntArray(_ArrayTag):
     fmt = 'i'
 
 
+class TagLongArray(_ArrayTag):
+    fmt = 'q'
+
+
 class TagList(_Tag):
     @classmethod
     def from_buff(cls, buff):
@@ -200,6 +204,7 @@ _kinds[8] = TagString
 _kinds[9] = TagList
 _kinds[10] = TagCompound
 _kinds[11] = TagIntArray
+_kinds[12] = TagLongArray
 _ids.update({v: k for k, v in _kinds.items()})
 
 

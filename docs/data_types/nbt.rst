@@ -27,6 +27,8 @@ are available from the :mod:`quarry.types.nbt` module:
       * ``list`` of ``int``
     - * ``TagIntArray``
       * ``list`` of ``int``
+    - * ``TagLongArray``
+      * ``list`` of ``int``
     - * ``TagList``
       * ``list`` of tags.
     - * ``TagCompound``
