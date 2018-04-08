@@ -13,6 +13,7 @@ v1.0
 
   - Split ``Buffer`` into ``Buffer1_7`` and ``Buffer_1_9``, and select an
     appropriate buffer type by protocol version. This is done in anticipation
+    of revisions to the slot and entity metadata formats in 1.13.
   - Moved some packet framing logic from ``Protocol`` into
     ``Buffer.pack_packet()`` and ``Buffer.unpack_packet()``
   - Added ``Buffer.pack_optional()`` and ``Buffer.unpack_optional()``, which
@@ -49,7 +50,6 @@ v1.0
     ``Factory.force_protocol_version``, and is now observed by clients.
   - ``ClientProtocol.protocol_mode_next`` has moved to
     ``ClientFactory.protocol_mode_next``, and now defaults to "login".
-    of revisions to the slot and entity metadata formats in 1.13.
   - Removed ``Protocol.compression_enabled``. Uncompressed connections are now
     indicated by ``Protocol.compression_threshold == -1``.
   - Modified ``Profile.validate()`` to not automatically attempt to refresh
