@@ -16,6 +16,10 @@ class _Tag(object):
         self.value = value
 
     @classmethod
+    def from_bytes(cls, bytes):
+        return cls.from_buff(Buffer(bytes))
+
+    @classmethod
     def from_buff(cls, buff):
         raise NotImplementedError
 
@@ -219,7 +223,7 @@ class NBTFile(object):
     @classmethod
     def load(cls, path):
         with gzip.open(path, 'rb') as fd:
-            return cls(TagRoot.from_buff(Buffer(fd.read())))
+            return cls(TagRoot.from_bytes(fd.read()))
 
     def save(self, path):
         with gzip.open(path, 'wb') as fd:

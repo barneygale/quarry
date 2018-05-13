@@ -5,6 +5,7 @@ master
 ------
 
 - Added ``quarry.types.nbt.TagLongArray`` class.
+- Added ``quarry.types.nbt._Tag.from_bytes()`` method.
 - Added ``Buffer.get_packet_name()`` and ``Buffer.get_packet_ident()`` methods.
   These can be overridden to support custom packet name lookup behaviour.
 - Added ``quarry.types.block`` module, containing three classes for handling
