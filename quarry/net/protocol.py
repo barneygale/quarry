@@ -232,6 +232,22 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
     # Packet handling ---------------------------------------------------------
 
+    def get_packet_name(self, ident):
+        key = (self.protocol_version, self.protocol_mode, self.recv_direction,
+               ident)
+        try:
+            return packets.packet_names[key]
+        except KeyError:
+            raise ProtocolError("No name known for packet: %s" % (key,))
+
+    def get_packet_ident(self, name):
+        key = (self.protocol_version, self.protocol_mode, self.send_direction,
+               name)
+        try:
+            return packets.packet_idents[key]
+        except KeyError:
+            raise ProtocolError("No ID known for packet: %s" % (key,))
+
     def data_received(self, data):
         # Decrypt data
         data = self.cipher.decrypt(data)
@@ -256,16 +272,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
             try:
                 # Identify the packet
-                key = (
-                    self.protocol_version,
-                    self.protocol_mode,
-                    self.recv_direction,
-                    buff.unpack_varint())
-                try:
-                    name = packets.packet_names[key]
-                except KeyError:
-                    raise ProtocolError("No name known for packet: %s"
-                                        % (key,))
+                name = self.get_packet_name(buff.unpack_varint())
 
                 # Dispatch the packet
                 try:
@@ -315,16 +322,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         data = b"".join(data)
 
         # Prepend ident
-        key = (
-            self.protocol_version,
-            self.protocol_mode,
-            self.send_direction,
-            name)
-        try:
-            ident = packets.packet_idents[key]
-        except KeyError:
-            raise ProtocolError("No ID known for packet: %s" % (key,))
-        data = self.buff_type.pack_varint(ident) + data
+        data = self.buff_type.pack_varint(self.get_packet_ident(name)) + data
 
         # Pack packet
         data = self.buff_type.pack_packet(data, self.compression_threshold)
