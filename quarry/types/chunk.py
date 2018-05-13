@@ -14,14 +14,15 @@ class _Array(Sequence):
 
 
 class BlockArray(_Array):
-    def __init__(self, data, bits, palette=None):
+    def __init__(self, block_map, data, bits, palette=None):
+        self.block_map = block_map
         self.data = data
         self.bits = bits
         self.palette = palette
 
     @classmethod
-    def empty(cls):
-        return cls([0] * 256, 4, [0])
+    def empty(cls, block_map):
+        return cls(block_map, [0] * 256, 4, [0])
 
     def is_empty(self):
         if self.palette is not None:
@@ -49,13 +50,15 @@ class BlockArray(_Array):
         if self.palette is not None:
             val = self.palette[val]
 
-        return int(val)
+        return self.block_map.decode(int(val))
 
     def __setitem__(self, n, val):
         if isinstance(n, slice):
             for o in xrange(*n.indices(4096)):
                 self[o] = val[o]
             return
+
+        val = self.block_map.encode(val)
 
         if self.palette is not None:
             try:
@@ -86,7 +89,7 @@ class BlockArray(_Array):
     def repack(self, reserve=None):
         if reserve is None:
             # Recompute the palette by walking all blocks
-            palette = list(set(self))
+            palette = [self.block_map.encode(val) for val in set(self)]
             palette_len = len(palette)
         else:
             if self.palette is None:
@@ -102,7 +105,7 @@ class BlockArray(_Array):
             if bits < 4:
                 bits = 4
         else:
-            bits = 13
+            bits = self.block_map.max_bits
             palette = None
 
         if self.bits == bits:

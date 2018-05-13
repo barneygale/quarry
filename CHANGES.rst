@@ -7,6 +7,25 @@ master
 - Added ``quarry.types.nbt.TagLongArray`` class.
 - Added ``Buffer.get_packet_name()`` and ``Buffer.get_packet_ident()`` methods.
   These can be overridden to support custom packet name lookup behaviour.
+- Added ``quarry.types.block`` module, containing three classes for handling
+  block IDs:
+
+  - ``OpaqueBlockMap`` passes IDs through unchanged
+  - ``BitShiftBlockMap`` decodes by bit-shifting - this format is used in
+    Minecraft 1.7 through 1.12
+  - ``LookupBlockMap`` decodes by looking up in a dictionary. This class has
+    ``from_jar()`` and ``from_json()`` methods for loading this dictionary
+    from the official server (1.13+).
+
+  ``Buffer`` types gain a ``block_map`` attribute. By default this is a
+  ``OpaqueBlockMap(13)``. The buffer's block map is used by methods dealing
+  with entity metadata and chunk column. It is also used by the
+  newly-introduced ``pack_block()`` and ``unpack_block()`` methods.
+
+  ``BlockArray`` objects must now be given a block map on initialization, and
+  will pass getitem/setitem values through the map.
+
+
 
 v1.0
 ----

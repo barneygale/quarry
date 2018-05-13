@@ -3,7 +3,7 @@ from quarry.types.buffer.v1_7 import Buffer1_7
 
 class Buffer1_9(Buffer1_7):
 
-    # Pack/unpack entity metadata ---------------------------------------------
+    # Entity metadata ---------------------------------------------------------
 
     @classmethod
     def pack_entity_metadata(cls, metadata):
@@ -28,7 +28,7 @@ class Buffer1_9(Buffer1_7):
             elif ty == 9:  out += cls.pack_optional(pack_position, val)
             elif ty == 10: out += cls.pack_varint(val)
             elif ty == 11: out += cls.pack_optional(cls.pack_uuid, val)
-            elif ty == 12: out += cls.pack_varint(val)
+            elif ty == 12: out += cls.pack_block(val)
             elif ty == 13: out += cls.pack_nbt(val)
             else: raise ValueError("Unknown entity metadata type: %d" % ty)
         out += cls.pack('B', 255)
@@ -57,7 +57,7 @@ class Buffer1_9(Buffer1_7):
             elif ty == 9:  val = self.unpack_optional(self.unpack_position)
             elif ty == 10: val = self.unpack_varint()
             elif ty == 11: val = self.unpack_optional(self.unpack_uuid)
-            elif ty == 12: val = self.unpack_varint()
+            elif ty == 12: val = self.unpack_block()
             elif ty == 13: val = self.unpack_nbt()
             else: raise ValueError("Unknown entity metadata type: %d" % ty)
             metadata[ty, key] = val

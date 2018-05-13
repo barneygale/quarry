@@ -17,7 +17,8 @@ version.
 
 .. autoclass:: ClientFactory
     :undoc-members:
-    :members: protocol, force_protocol_version, __init__, connect
+    :members: protocol, force_protocol_version, __init__, connect,
+        get_buff_type
 
 .. module:: quarry.net.server
 
@@ -30,7 +31,7 @@ associated :class:`ServerProtocol` objects is available as
     :undoc-members:
     :members: protocol, force_protocol_version, compression_threshold,
         auth_timeout, online_mode, prevent_proxy_connections, max_players,
-        motd, favicon, __init__, listen, players
+        motd, favicon, __init__, listen, players, get_buff_type
 
 Protocols
 ---------
@@ -152,6 +153,8 @@ matching :samp:`packet_{<packet name>}` handler. If you override
 .. automethod:: Protocol.packet_unhandled
 .. automethod:: Protocol.dump_packet
 .. automethod:: Protocol.log_packet
+.. automethod:: Protocol.get_packet_name
+.. automethod:: Protocol.get_packet_ident
 
 Ticking
 '''''''

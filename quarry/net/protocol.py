@@ -347,6 +347,9 @@ class Factory(protocol.Factory, object):
         return self.protocol(self, addr)
 
     def get_buff_type(self, protocol_version):
+        """
+        Gets a buffer type for the given protocol version.
+        """
         for ver, cls in reversed(buff_types):
             if protocol_version >= ver:
                 return cls

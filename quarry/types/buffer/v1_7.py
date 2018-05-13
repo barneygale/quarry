@@ -5,6 +5,7 @@ import zlib
 from quarry.types.buffer import BufferUnderrun
 from quarry.types.uuid import UUID
 from quarry.types.chunk import BlockArray, LightArray
+from quarry.types.block import OpaqueBlockMap
 
 
 # Python 3 compat
@@ -17,6 +18,7 @@ except NameError:
 class Buffer1_7(object):
     buff = b""
     pos = 0
+    block_map = OpaqueBlockMap(13)
 
     def __init__(self, data=None):
         if data:
@@ -328,6 +330,25 @@ class Buffer1_7(object):
         z = unpack_twos_comp(26, (number & 0x3FFFFFF))
         return x, y, z
 
+    # Block -------------------------------------------------------------------
+
+    @classmethod
+    def pack_block(cls, block, packer=None):
+        """
+        Packs a block.
+        """
+        if packer is None:
+            packer = cls.pack_varint
+        return packer(cls.block_map.encode(block))
+
+    def unpack_block(self, unpacker=None):
+        """
+        Unpacks a block.
+        """
+        if unpacker is None:
+            unpacker = self.unpack_varint
+        return self.block_map.decode(unpacker())
+
     # Slot --------------------------------------------------------------------
 
     @classmethod
@@ -410,6 +431,7 @@ class Buffer1_7(object):
         when *overworld* is ``False``. The returned values are sequences of
         length 4096 (16x16x16).
         """
+
         bits = self.unpack('B')
         if bits < 4:
             bits = 4
@@ -418,7 +440,10 @@ class Buffer1_7(object):
 
         palette = [self.unpack_varint() for _ in xrange(self.unpack_varint())]
         blocks = BlockArray(
-            self.unpack_array('Q', self.unpack_varint()), bits, palette)
+            self.block_map,
+            self.unpack_array('Q', self.unpack_varint()),
+            bits,
+            palette)
         block_lights = LightArray(self.unpack_array('B', 2048))
         if overworld:
             sky_lights = LightArray(self.unpack_array('B', 2048))
