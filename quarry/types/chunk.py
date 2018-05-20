@@ -22,13 +22,62 @@ class BlockArray(_Array):
 
     @classmethod
     def empty(cls, block_map):
+        """
+        Creates an empty block array.
+        """
         return cls(block_map, [0] * 256, 4, [0])
 
     def is_empty(self):
+        """
+        Checks if this block array is entirely air. You may wish to call
+        ``repack()`` before this method to avoid false negatives.
+        """
         if self.palette is not None:
             return self.palette == [0]
         else:
             return not any(self.data)
+
+    def repack(self, reserve=None):
+        """
+        Re-packs internal data to use the smallest possible bits-per-block by
+        eliminating unused palette entries. This operation is slow as it walks
+        all blocks to determine the new palette.
+        """
+        if reserve is None:
+            # Recompute the palette by walking all blocks
+            palette = [self.block_map.encode(val) for val in set(self)]
+            palette_len = len(palette)
+        else:
+            if self.palette is None:
+                # Reserving space in an unpaletted array is a no-op.
+                return
+
+            palette = self.palette
+            palette_len = len(palette) + reserve
+
+        # Compute new bits
+        bits = int(math.ceil(math.log(palette_len, 2)))
+        if bits <= 8:
+            if bits < 4:
+                bits = 4
+        else:
+            bits = self.block_map.max_bits
+            palette = None
+
+        if self.bits == bits:
+            # Nothing to do.
+            return
+
+        # Save contents
+        values = self[:]
+
+        # Update internals
+        self.data[:] = [0] * (64 * bits)
+        self.bits = bits
+        self.palette = palette
+
+        # Load contents
+        self[:] = values
 
     def __getitem__(self, n):
         if isinstance(n, slice):
@@ -86,43 +135,6 @@ class BlockArray(_Array):
             self.data[idx1] &= ~mask1
             self.data[idx1] |= mask1 & (val >> off1)
 
-    def repack(self, reserve=None):
-        if reserve is None:
-            # Recompute the palette by walking all blocks
-            palette = [self.block_map.encode(val) for val in set(self)]
-            palette_len = len(palette)
-        else:
-            if self.palette is None:
-                # Reserving space in an unpaletted array is a no-op.
-                return
-
-            palette = self.palette
-            palette_len = len(palette) + reserve
-
-        # Compute new bits
-        bits = int(math.ceil(math.log(palette_len, 2)))
-        if bits <= 8:
-            if bits < 4:
-                bits = 4
-        else:
-            bits = self.block_map.max_bits
-            palette = None
-
-        if self.bits == bits:
-            # Nothing to do.
-            return
-
-        # Save contents
-        values = self[:]
-
-        # Update internals
-        self.data[:] = [0] * (64 * bits)
-        self.bits = bits
-        self.palette = palette
-
-        # Load contents
-        self[:] = values
-
 
 class LightArray(_Array):
     def __init__(self, data):
@@ -130,6 +142,9 @@ class LightArray(_Array):
 
     @classmethod
     def empty(cls):
+        """
+        Creates an empty light array.
+        """
         return cls([0] * 2048)
 
     def __getitem__(self, n):

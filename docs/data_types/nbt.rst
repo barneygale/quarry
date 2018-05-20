@@ -23,6 +23,8 @@ are available from the :mod:`quarry.types.nbt` module:
       * ``float``
     - * ``TagDouble``
       * ``float``
+    - * ``TagString``
+      * ``str`` (py3) or ``unicode`` (py2)
     - * ``TagByteArray``
       * ``list`` of ``int``
     - * ``TagIntArray``
@@ -50,6 +52,11 @@ All tag types have the following attributes and methods:
 .. method:: Tag.__init__(value)
 
     Creates a tag object from the given value.
+
+.. classmethod:: Tag.from_bytes(bytes)
+
+    Creates a tag object from data at the beginning of the supplied byte
+    string.
 
 .. classmethod:: Tag.from_buff(buff)
 

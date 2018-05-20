@@ -5,27 +5,6 @@ Buffers
 
 Quarry implements Minecraft's data types by way of the :class:`Buffer` class.
 
-Protocol Versions
------------------
-
-Some data types vary between Minecraft versions. Quarry automatically sets the
-``buff_type`` attribute of ``Protocol`` instance to an appropriate buffer
-class when the protocol version becomes known.
-
-Minecraft 1.7
-~~~~~~~~~~~~~
-
-Support for Minecraft 1.7+ is implemented in the :class:`Buffer1_7` class.
-
-Minecraft 1.9
-~~~~~~~~~~~~~
-
-Support for Minecraft 1.9+ is implemented in the :class:`Buffer1_9` class.
-
-Changes from 1.7:
-
-- ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
-
 Unpacking
 ---------
 
@@ -62,3 +41,24 @@ a byte string. A reference to the buffer class is available from
 .. automethod:: Buffer.pack_nbt
 .. automethod:: Buffer.pack_chunk_section
 .. automethod:: Buffer.pack_entity_metadata
+
+Protocol Versions
+-----------------
+
+Some data types vary between Minecraft versions. Quarry automatically sets the
+``buff_type`` attribute of ``Protocol`` instance to an appropriate buffer
+class when the protocol version becomes known.
+
+Minecraft 1.7
+~~~~~~~~~~~~~
+
+Support for Minecraft 1.7+ is implemented in the :class:`Buffer1_7` class.
+
+Minecraft 1.9
+~~~~~~~~~~~~~
+
+Support for Minecraft 1.9+ is implemented in the :class:`Buffer1_9` class.
+
+Changes from 1.7:
+
+- ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.

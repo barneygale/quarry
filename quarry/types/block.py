@@ -23,7 +23,7 @@ class OpaqueBlockMap(object):
 
 class BitShiftBlockMap(object):
     """
-    Block map implementing the Minecraft 1.7 - 1.11 bit-shift format. Decodes
+    Block map implementing the Minecraft 1.7 - 1.12 bit-shift format. Decodes
     to a ``(block_id, metadata)`` pair.
     """
 
@@ -39,7 +39,7 @@ class BitShiftBlockMap(object):
 
 class LookupBlockMap(object):
     """
-    Block map implementing a dictionary lookup, recommended for 1.12+. Decodes
+    Block map implementing a dictionary lookup, recommended for 1.13+. Decodes
     to a ``dict`` where the only guaranteed key is ``u'name'``. Use the
     ``from_jar()`` or ``from_json()`` class methods to load data from the
     official server.

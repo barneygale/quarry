@@ -7,8 +7,10 @@ Quarry implements the `Chunk Section`_ data type used in `Chunk Data`_ packets.
 This format consists of:
 
 * A tightly-packed array of blocks using either:
+
   - 4-8 bits per block, with a palette
-  - 13 (Minecraft 1.9 - 1.12) or 14 (1.12+) bits per block, without a palette.
+  - 13 (Minecraft 1.9 - 1.12) or 14 (1.13+) bits per block, without a palette.
+
 * A tightly-packed array of light using 4 bits per block.
 
 .. _Chunk Section: http://wiki.vg/SMP_Map_Format
