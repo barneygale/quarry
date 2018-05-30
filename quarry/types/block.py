@@ -1,12 +1,45 @@
 import json
 import math
 import os.path
-import shutil
 import subprocess
-import tempfile
 
 
-class OpaqueBlockMap(object):
+class BlockMap(object):
+    """
+    Base type for block maps.
+    """
+
+    #: Number of bits needed to represent the greatest block ID.
+    max_bits = None
+
+    def encode_block(self, obj):
+        """
+        Encodes a block to an integer ID.
+        """
+
+        raise NotImplementedError
+
+    def decode_block(self, val):
+        """
+        Decodes a block from an integer ID.
+        """
+        raise NotImplementedError
+
+    def encode_item(self, obj):
+        """
+        Encodes an item to an integer ID.
+        """
+
+        raise NotImplementedError
+
+    def decode_item(self, val):
+        """
+        Decodes an item from an integer ID..
+        """
+        raise NotImplementedError
+
+
+class OpaqueBlockMap(BlockMap):
     """
     Block map that passes IDs through unchanged. This is the default.
     """
@@ -14,96 +47,113 @@ class OpaqueBlockMap(object):
     def __init__(self, max_bits):
         self.max_bits = max_bits
 
-    def encode(self, obj):
-        return obj
+    def encode_block(self, obj): return obj
+    def decode_block(self, val): return val
 
-    def decode(self, val):
-        return val
+    def encode_item(self, obj): return obj
+    def decode_item(self, val): return val
 
 
-class BitShiftBlockMap(object):
+class BitShiftBlockMap(BlockMap):
     """
-    Block map implementing the Minecraft 1.7 - 1.12 bit-shift format. Decodes
-    to a ``(block_id, metadata)`` pair.
-    """
+    Block map implementing the Minecraft 1.7 - 1.12 bit-shift format.
 
-    def __init__(self):
-        self.max_bits = 13
-
-    def encode(self, obj):
-        return (obj[0] << 4) | obj[1]
-
-    def decode(self, val):
-        return val >> 4, val & 0x0F
-
-
-class LookupBlockMap(object):
-    """
-    Block map implementing a dictionary lookup, recommended for 1.13+. Decodes
-    to a ``dict`` where the only guaranteed key is ``u'name'``. Use the
-    ``from_jar()`` or ``from_json()`` class methods to load data from the
-    official server.
+    Blocks decode to a ``(block_id, metadata)`` pair. Items pass through
+    unchanged.
     """
 
+    max_bits = 13
 
-    def __init__(self, mapping):
-        self.decode_mapping = mapping
-        self.encode_mapping = {
+    def encode_block(self, obj): return (obj[0] << 4) | obj[1]
+    def decode_block(self, val): return val >> 4, val & 0x0F
+
+    def encode_item(self, obj): return obj
+    def decode_item(self, val): return val
+
+
+class LookupBlockMap(BlockMap):
+    """
+    Block map implementing a dictionary lookup, recommended for 1.13+.
+
+    Blocks decode to a ``dict`` where the only guaranteed key is ``u'name'``.
+    Items decode to a ``str`` name.
+
+    Use the ``from_jar()`` or ``from_json()`` class methods to load data from
+    the official server.
+    """
+
+
+    def __init__(self, blocks, items):
+        self.max_bits = int(math.ceil(math.log(max(blocks.keys()), 2)))
+
+        self.decode_block_map = blocks
+        self.encode_block_map = {
             frozenset(value.items()): key
-            for key, value in mapping.items()}
-        self.max_bits = int(math.ceil(math.log(max(mapping.keys()), 2)))
+            for key, value in blocks.items()}
 
-    def encode(self, obj):
-        return self.encode_mapping[frozenset(obj.items())]
+        self.decode_item_map = items
+        self.encode_item_map = {value: key for key, value in items.items()}
 
-    def decode(self, val):
-        return dict(self.decode_mapping[obj])
+    def encode_block(self, obj):
+        return self.encode_block_map[frozenset(obj.items())]
+
+    def decode_block(self, val):
+        return dict(self.decode_block_map[val])
+
+    def encode_item(self, obj):
+        return self.encode_item_map[obj]
+
+    def decode_item(self, val):
+        return self.decode_item_map[val]
 
     @classmethod
-    def from_jar(cls, path):
+    def from_jar(cls, jar_path):
         """
         Create a ``LookupBlockMap`` from a Minecraft server jar file. This
-        method generates a JSON file by running the Minecraft server like so::
+        method generates JSON files by running the Minecraft server like so::
 
             java -cp minecraft_server.jar net.minecraft.data.Main --reports
 
-        It then feeds the generated JSON file to ``from_json()``.
+        It then feeds the generated JSON files to ``from_json()``.
         """
-        temp_path = tempfile.mkdtemp('-quarry')
-        jar_path = os.path.join(temp_path, "minecraft_server.jar")
-        eula_path = os.path.join(temp_path, "eula.txt")
-        blocks_path = os.path.join(temp_path, "generated", "reports",
-                                   "blocks.json")
 
-        # Copy server
-        shutil.copy(path, jar_path)
+        root_path = os.path.dirname(jar_path)
 
         # Accept EULA
-        with open(eula_path, "w") as fd:
-            fd.write("eula=true\n")
+        eula_path = os.path.join(root_path, "eula.txt")
+        if not os.path.exists(eula_path):
+            with open(eula_path, "w") as fd:
+                fd.write("eula=true\n")
 
         # Export blocks
-        subprocess.check_call(
-            ["java", "-cp", jar_path, "net.minecraft.data.Main", "--reports"],
-            cwd=temp_path)
+        blocks_path = os.path.join(root_path, "generated", "reports", "blocks.json")
+        items_path = os.path.join(root_path, "generated", "reports", "items.json")
+        if not os.path.exists(blocks_path) or not os.path.exists(items_path):
+            subprocess.check_call(
+                ["java", "-cp", jar_path, "net.minecraft.data.Main", "--reports"],
+                cwd=root_path)
 
         # Load data
-        return cls.from_json(blocks_path)
+        return cls.from_json(blocks_path, items_path)
 
     @classmethod
-    def from_json(cls, path):
+    def from_json(cls, blocks_path, items_path):
         """
-        Create a ``LookupBlockMap`` from a JSON file generated by the official
+        Create a ``LookupBlockMap`` from JSON files generated by the official
         server.
         """
-        with open(path) as fd:
-            data = json.load(fd)
+        blocks = {}
+        items = {}
 
-        mapping = {}
-        for name, obj in data.items():
-            for state in obj['states']:
-                properties = state.get("properties", {})
-                properties[u'name'] = name
-                mapping[state['id']] = properties
+        with open(blocks_path) as fd:
+            for name, obj in json.load(fd).items():
+                for state in obj['states']:
+                    properties = state.get("properties", {})
+                    properties[u'name'] = name
+                    blocks[state['id']] = properties
 
-        return cls(mapping)
+        with open(items_path) as fd:
+            for name, obj in json.load(fd).items():
+                items[obj['protocol_id']] = name
+
+        return cls(blocks, items)

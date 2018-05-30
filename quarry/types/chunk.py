@@ -45,7 +45,7 @@ class BlockArray(_Array):
         """
         if reserve is None:
             # Recompute the palette by walking all blocks
-            palette = [self.block_map.encode(val) for val in set(self)]
+            palette = [self.block_map.encode_block(val) for val in set(self)]
             palette_len = len(palette)
         else:
             if self.palette is None:
@@ -99,7 +99,7 @@ class BlockArray(_Array):
         if self.palette is not None:
             val = self.palette[val]
 
-        return self.block_map.decode(int(val))
+        return self.block_map.decode_block(int(val))
 
     def __setitem__(self, n, val):
         if isinstance(n, slice):
@@ -107,7 +107,7 @@ class BlockArray(_Array):
                 self[o] = val[o]
             return
 
-        val = self.block_map.encode(val)
+        val = self.block_map.encode_block(val)
 
         if self.palette is not None:
             try:

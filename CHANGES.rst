@@ -9,24 +9,27 @@ master
 - Added ``Protocol.get_packet_name()`` and ``Protocol.get_packet_ident()``
   methods. These can be overridden to support custom packet name lookup
   behaviour.
+- Added ``Buffer.pack_block()`` and ``Buffer.unpack_block()`` methods.
 - Added ``quarry.types.block`` module, containing three classes for handling
-  block IDs:
+  block and item IDs:
 
   - ``OpaqueBlockMap`` passes IDs through unchanged
-  - ``BitShiftBlockMap`` decodes by bit-shifting - this format is used in
-    Minecraft 1.7 through 1.12
+  - ``BitShiftBlockMap`` decodes blocks by bit-shifting - this format is used
+    in Minecraft 1.7 through 1.12. Item IDs pass through unchanged.
   - ``LookupBlockMap`` decodes by looking up in a dictionary. This class has
     ``from_jar()`` and ``from_json()`` methods for loading this dictionary
     from the official server (1.13+).
 
-  ``Buffer`` types gain a ``block_map`` attribute. By default this is a
-  ``OpaqueBlockMap(13)``. The buffer's block map is used by methods dealing
-  with entity metadata and chunk column. It is also used by the
-  newly-introduced ``pack_block()`` and ``unpack_block()`` methods.
+  ``Buffer`` types gain a ``block_map`` attribute. By default this is an
+  ``OpaqueBlockMap(13)``. The buffer's block map is consulted by methods that
+  deal with slots, entity metadata and chunk data.
 
   ``BlockArray`` objects must now be given a block map on initialization, and
   will pass getitem/setitem values through the map.
 
+- Slot dictionaries now use an ``'item'`` key to store the item identifier,
+  rather than ``'id'``. An empty slot is now represented with an ``'item'``
+  value of ``None`` rather than ``-1``.
 - Moved ``PacketDispatcher.dump_packet()`` to ``Buffer.hexdump()``.
 
 

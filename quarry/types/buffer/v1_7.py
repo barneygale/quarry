@@ -374,7 +374,7 @@ class Buffer1_7(object):
         """
         if packer is None:
             packer = cls.pack_varint
-        return packer(cls.block_map.encode(block))
+        return packer(cls.block_map.encode_block(block))
 
     def unpack_block(self, unpacker=None):
         """
@@ -382,20 +382,21 @@ class Buffer1_7(object):
         """
         if unpacker is None:
             unpacker = self.unpack_varint
-        return self.block_map.decode(unpacker())
+        return self.block_map.decode_block(unpacker())
 
     # Slot --------------------------------------------------------------------
 
     @classmethod
-    def pack_slot(cls, id=-1, count=1, damage=0, tag=None):
+    def pack_slot(cls, item=None, count=1, damage=0, tag=None):
         """
         Packs a slot.
         """
 
-        if id == -1:
-            return cls.pack('h', id)
+        if item is None:
+            return cls.pack('h', -1)
 
-        return cls.pack('hbh', id, count, damage) + cls.pack_nbt(tag)
+        item_id = cls.block_map.encode_item(item)
+        return cls.pack('hbh', item_id, count, damage) + cls.pack_nbt(tag)
 
     def unpack_slot(self):
         """
@@ -403,8 +404,11 @@ class Buffer1_7(object):
         """
 
         slot = {}
-        slot['id'] = self.unpack('h')
-        if slot['id'] != -1:
+        item_id = self.unpack('h')
+        if item_id == -1:
+            slot['item'] = None
+        else:
+            slot['item'] = self.block_map.decode_item(item_id)
             slot['count'] = self.unpack('b')
             slot['damage'] = self.unpack('h')
             slot['tag'] = self.unpack_nbt()

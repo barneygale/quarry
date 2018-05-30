@@ -45,11 +45,12 @@ Block Maps
 
 .. currentmodule:: quarry.types.buffer
 
-Quarry can be told to encode/decode block information by setting the
+Quarry can be told to encode/decode block and item information by setting the
 :attr:`Buffer.block_map` attribute on the in-use buffer. This can be set
 directly or by deriving a subclass and customizing
 :meth:`Factory.get_buff_type()`. The block map affects the following methods:
 
+- :meth:`~Buffer.unpack_slot()` and :meth:`~Buffer.pack_slot()`
 - :meth:`~Buffer.unpack_block()` and :meth:`~Buffer.pack_block()`
 - :meth:`~Buffer.unpack_entity_metadata()` and
   :meth:`~Buffer.pack_entity_metadata()`
@@ -57,16 +58,16 @@ directly or by deriving a subclass and customizing
 
 .. module:: quarry.types.block
 
-Quarry supports three kinds of block maps:
+Quarry supports the following block map types:
 
 .. autoclass:: OpaqueBlockMap
-    :undoc-members:
-    :members: encode, decode
-
 .. autoclass:: BitShiftBlockMap
-    :undoc-members:
-    :members: encode, decode
-
 .. autoclass:: LookupBlockMap
-    :undoc-members:
-    :members: encode, decode, from_jar, from_json
+    :members: from_jar, from_json
+
+All block map objects have the following methods:
+
+.. automethod:: BlockMap.encode_block
+.. automethod:: BlockMap.decode_block
+.. automethod:: BlockMap.encode_item
+.. automethod:: BlockMap.decode_item
