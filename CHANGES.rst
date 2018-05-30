@@ -27,6 +27,7 @@ master
   ``BlockArray`` objects must now be given a block map on initialization, and
   will pass getitem/setitem values through the map.
 
+- Moved ``PacketDispatcher.dump_packet()`` to ``Buffer.hexdump()``.
 
 
 v1.0

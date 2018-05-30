@@ -14,10 +14,10 @@ the payload, which usually made up of multiple fields of differing types.
 Quarry supports the following methods for working with a buffer:
 
 .. autoclass:: Buffer
-    :members: block_map, discard, read, unpack, unpack_array, unpack_optional,
-        unpack_varint, unpack_packet, unpack_string, unpack_json, unpack_chat,
-        unpack_uuid, unpack_position, unpack_block, unpack_slot, unpack_nbt,
-        unpack_chunk_section, unpack_entity_metadata
+    :members: block_map, discard, read, hexdump, unpack, unpack_array,
+        unpack_optional, unpack_varint, unpack_packet, unpack_string,
+        unpack_json, unpack_chat, unpack_uuid, unpack_position, unpack_block,
+        unpack_slot, unpack_nbt, unpack_chunk_section, unpack_entity_metadata
 
 Packing
 -------

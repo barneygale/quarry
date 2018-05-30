@@ -1,5 +1,3 @@
-import string
-import sys
 import logging
 from twisted.internet import protocol
 
@@ -7,8 +5,6 @@ from quarry.data import packets
 from quarry.types.buffer import BufferUnderrun, buff_types
 from quarry.net.crypto import Cipher
 from quarry.net.ticker import Ticker
-
-PY3 = sys.version_info > (3,)
 
 logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
 
@@ -32,35 +28,6 @@ class PacketDispatcher(object):
             handler(buff)
             return True
         return False
-
-    def dump_packet(self, data):
-        lines = ['Packet dump:']
-        bytes_read = 0
-        while len(data) > 0:
-            data_line, data = data[:16], data[16:]
-
-            l_hex = []
-            l_str = []
-            for i, c in enumerate(data_line):
-                if PY3:
-                    l_hex.append("%02x" % c)
-                    c_str = data_line[i:i+1]
-                    l_str.append(c_str if c_str in string.printable else ".")
-                else:
-                    l_hex.append("%02x" % ord(c))
-                    l_str.append(c if c in string.printable else ".")
-
-            l_hex.extend(['  '] * (16 - len(l_hex)))
-            l_hex.insert(8, '')
-
-            lines.append("%08x  %s  |%s|" % (
-                bytes_read,
-                " ".join(l_hex),
-                "".join(l_str)))
-
-            bytes_read += len(data_line)
-
-        return "\n    ".join(lines + ["%08x" % bytes_read])
 
 
 class Protocol(protocol.Protocol, PacketDispatcher, object):

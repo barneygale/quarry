@@ -151,7 +151,6 @@ matching :samp:`packet_{<packet name>}` handler. If you override
 .. autoattribute:: Protocol.buff_type
 .. automethod:: Protocol.packet_received
 .. automethod:: Protocol.packet_unhandled
-.. automethod:: Protocol.dump_packet
 .. automethod:: Protocol.log_packet
 .. automethod:: Protocol.get_packet_name
 .. automethod:: Protocol.get_packet_ident
