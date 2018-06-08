@@ -448,13 +448,7 @@ class Buffer1_7(object):
         ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.
         """
         out = cls.pack('B', blocks.bits)
-
-        if blocks.palette is None:
-            out += cls.pack_varint(0)
-        else:
-            out += cls.pack_varint(len(blocks.palette))
-            out += b"".join(cls.pack_varint(x) for x in blocks.palette)
-
+        out += cls.pack_chunk_section_palette(blocks.palette)
         out += cls.pack_varint(len(blocks.data))
         out += cls.pack_array('Q', blocks.data)
         out += cls.pack_array('B', block_lights.data)
@@ -462,6 +456,14 @@ class Buffer1_7(object):
             out += cls.pack_array('B', sky_lights.data)
 
         return out
+
+    @classmethod
+    def pack_chunk_section_palette(cls, palette):
+        if palette is None:
+            return cls.pack_varint(0)
+        else:
+            return cls.pack_varint(len(palette)) + b"".join(
+                cls.pack_varint(x) for x in palette)
 
     def unpack_chunk_section(self, overworld=True):
         """
@@ -472,12 +474,7 @@ class Buffer1_7(object):
         """
 
         bits = self.unpack('B')
-        if bits < 4:
-            bits = 4
-        elif bits > 8:
-            bits = 13
-
-        palette = [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+        palette = self.unpack_chunk_section_palette(bits)
         blocks = BlockArray(
             self.block_map,
             self.unpack_array('Q', self.unpack_varint()),
@@ -490,6 +487,13 @@ class Buffer1_7(object):
             sky_lights = None
 
         return blocks, block_lights, sky_lights
+
+    def unpack_chunk_section_palette(self, bits):
+        if bits > 8:
+            _ = self.unpack_varint()
+            return None
+        else:
+            return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
 
     # Entity metadata ---------------------------------------------------------
 
