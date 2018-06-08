@@ -1,7 +1,65 @@
 from quarry.types.buffer.v1_7 import Buffer1_7
+from quarry.types.chunk import BlockArray, LightArray
 
 
 class Buffer1_9(Buffer1_7):
+
+    # Chunk section -----------------------------------------------------------
+
+    @classmethod
+    def pack_chunk_section(cls, blocks, block_lights, sky_lights=None):
+        """
+        Packs a chunk section. The supplied arguments should be instances of
+        ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.
+        """
+        out = cls.pack('B', blocks.bits)
+        out += cls.pack_chunk_section_palette(blocks.palette)
+        out += cls.pack_varint(len(blocks.data))
+        out += cls.pack_array('Q', blocks.data)
+        out += cls.pack_array('B', block_lights.data)
+        if sky_lights:
+            out += cls.pack_array('B', sky_lights.data)
+
+        return out
+
+    @classmethod
+    def pack_chunk_section_palette(cls, palette):
+        if palette is None:
+            return cls.pack_varint(0)
+        else:
+            return cls.pack_varint(len(palette)) + b"".join(
+                cls.pack_varint(x) for x in palette)
+
+    def unpack_chunk_section(self, overworld=True):
+        """
+        Unpacks a chunk section. Returns a 3-tuple of
+        ``(blocks, block_lights, sky_lights)``, where *sky_lights* is ``None``
+        when *overworld* is ``False``. The returned values are sequences of
+        length 4096 (16x16x16).
+        """
+
+        bits = self.unpack('B')
+        palette = self.unpack_chunk_section_palette(bits)
+        blocks = BlockArray(
+            self.block_map,
+            self.unpack_array('Q', self.unpack_varint()),
+            bits,
+            palette)
+        block_lights = LightArray(self.unpack_array('B', 2048))
+        if overworld:
+            sky_lights = LightArray(self.unpack_array('B', 2048))
+        else:
+            sky_lights = None
+
+        return blocks, block_lights, sky_lights
+
+    def unpack_chunk_section_palette(self, bits):
+        if bits > 8:
+            _ = self.unpack_varint()
+            return None
+        else:
+            return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+
 
     # Entity metadata ---------------------------------------------------------
 

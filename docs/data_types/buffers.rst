@@ -61,4 +61,5 @@ Support for Minecraft 1.9+ is implemented in the :class:`Buffer1_9` class.
 
 Changes from 1.7:
 
+- ``pack_chunk_section()`` and ``unpack_chunk_section()`` added.
 - ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
