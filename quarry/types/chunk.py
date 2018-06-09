@@ -89,11 +89,10 @@ class BlockArray(_Array):
         off0 = (self.bits * n) % 64
         off1 = 64 - off0
 
-        if idx0 == idx1:
-            val = self.data[idx0] >> off0
-        else:
-            val = (self.data[idx0] >> off0) | (self.data[idx1] << off1)
-
+        val = self.data[idx0] >> off0
+        val &= (1 << off1) - 1
+        if idx0 != idx1:
+            val |= self.data[idx1] << off1
         val &= (1 << self.bits) - 1
 
         if self.palette is not None:
@@ -128,7 +127,7 @@ class BlockArray(_Array):
         mask0 = ((1 << self.bits) - 1) << off0
         mask1 = ((1 << self.bits) - 1) >> off1
 
-        self.data[idx0] &= (2 ** 64 - 1) & ~mask0
+        self.data[idx0] &= ~mask0
         self.data[idx0] |= (2 ** 64 - 1) & mask0 & (val << off0)
 
         if idx0 != idx1:
