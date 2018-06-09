@@ -187,6 +187,10 @@ class TagCompound(_Tag):
 class TagRoot(TagCompound):
     root = True
 
+    @property
+    def body(self):
+        return self.value[u""]
+
 
 # Register tags ---------------------------------------------------------------
 

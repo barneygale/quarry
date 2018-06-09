@@ -37,6 +37,7 @@ master
     palette is not in use
 
 - Added ``quarry.types.nbt.TagLongArray`` class.
+- Added ``quarry.types.nbt.TagRoot.body`` property to retrieve the child tag.
 - Added ``quarry.types.nbt._Tag.from_bytes()`` method.
 - Added ``Protocol.get_packet_name()`` and ``Protocol.get_packet_ident()``
   methods. These can be overridden to support custom packet name lookup
