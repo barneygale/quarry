@@ -24,11 +24,8 @@ class Buffer1_9(Buffer1_7):
 
     @classmethod
     def pack_chunk_section_palette(cls, palette):
-        if palette is None:
-            return cls.pack_varint(0)
-        else:
-            return cls.pack_varint(len(palette)) + b"".join(
-                cls.pack_varint(x) for x in palette)
+        return cls.pack_varint(len(palette)) + b"".join(
+            cls.pack_varint(x) for x in palette)
 
     def unpack_chunk_section(self, overworld=True):
         """
@@ -54,11 +51,7 @@ class Buffer1_9(Buffer1_7):
         return blocks, block_lights, sky_lights
 
     def unpack_chunk_section_palette(self, bits):
-        if bits > 8:
-            _ = self.unpack_varint()
-            return None
-        else:
-            return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+        return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
 
 
     # Entity metadata ---------------------------------------------------------

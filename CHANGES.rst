@@ -30,8 +30,11 @@ master
     rather than ``'id'``. An empty slot is now represented with an ``'item'``
     value of ``None`` rather than ``-1``.
 
-  - Chunk section data now internally uses signed rather than unsigned 64-bit
+  - ``BlockArray`` now internally uses signed rather than unsigned 64-bit
     integers.
+
+  - ``BlockArray.palette`` is now an empty list rather than ``None`` when a
+    palette is not in use
 
 - Added ``quarry.types.nbt.TagLongArray`` class.
 - Added ``quarry.types.nbt._Tag.from_bytes()`` method.

@@ -52,7 +52,7 @@ class BlockArray(_Array):
             palette = [self.block_map.encode_block(block) for block in palette]
             palette_len = len(palette)
         else:
-            if self.palette is None:
+            if not self.palette:
                 # Reserving space in an unpaletted array is a no-op.
                 return
 
@@ -66,7 +66,7 @@ class BlockArray(_Array):
                 bits = 4
         else:
             bits = self.block_map.max_bits
-            palette = None
+            palette = []
 
         if self.bits == bits:
             # Nothing to do.
@@ -78,7 +78,8 @@ class BlockArray(_Array):
         # Update internals
         self.data[:] = [0] * (64 * bits)
         self.bits = bits
-        self.palette = palette
+        self.palette.clear()
+        self.palette.extend(palette)
 
         # Load contents
         self[:] = values
@@ -99,7 +100,7 @@ class BlockArray(_Array):
             val |= self.data[idx1] << off1
         val &= (1 << self.bits) - 1
 
-        if self.palette is not None:
+        if self.palette:
             val = self.palette[val]
 
         return self.block_map.decode_block(int(val))
@@ -112,13 +113,13 @@ class BlockArray(_Array):
 
         val = self.block_map.encode_block(val)
 
-        if self.palette is not None:
+        if self.palette:
             try:
                 val = self.palette.index(val)
             except ValueError:
                 self.repack(reserve=1)
 
-                if self.palette is not None:
+                if self.palette:
                     self.palette.append(val)
                     val = len(self.palette) - 1
 
