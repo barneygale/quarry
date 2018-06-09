@@ -36,6 +36,10 @@ master
   - ``BlockArray.palette`` is now an empty list rather than ``None`` when a
     palette is not in use
 
+  - ``BlockArray`` repacking now occurs when the optimal palette differs from
+    the in-use palette, and not just when the number of bits needed to
+    represent these palettes differs.
+
 - Added ``quarry.types.nbt.TagLongArray`` class.
 - Added ``quarry.types.nbt.TagRoot.body`` property to retrieve the child tag.
 - Added ``quarry.types.nbt._Tag.from_bytes()`` method.

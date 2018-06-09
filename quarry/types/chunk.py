@@ -68,7 +68,7 @@ class BlockArray(_Array):
             bits = self.block_map.max_bits
             palette = []
 
-        if self.bits == bits:
+        if self.palette == palette:
             # Nothing to do.
             return
 
