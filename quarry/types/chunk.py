@@ -45,7 +45,11 @@ class BlockArray(_Array):
         """
         if reserve is None:
             # Recompute the palette by walking all blocks
-            palette = [self.block_map.encode_block(val) for val in set(self)]
+            palette = []
+            for block in self:
+                if block not in palette:
+                    palette.append(block)
+            palette = [self.block_map.encode_block(block) for block in palette]
             palette_len = len(palette)
         else:
             if self.palette is None:
