@@ -165,6 +165,10 @@ class LightArray(_Array):
         assert isinstance(n, int)
         idx, off = divmod(n, 2)
         if off == 0:
-            self.data[idx] = (self.data[idx] & 0xF0) | val
+            val = (self.data[idx] & 0xF0) | val
         else:
-            self.data[idx] = (self.data[idx] & 0x0F) | (val << 4)
+            val = (self.data[idx] & 0x0F) | (val << 4)
+
+        if val > 127:
+            val -= 256
+        self.data[idx] = val

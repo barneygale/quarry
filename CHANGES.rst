@@ -30,8 +30,8 @@ master
     rather than ``'id'``. An empty slot is now represented with an ``'item'``
     value of ``None`` rather than ``-1``.
 
-  - ``BlockArray`` now internally uses signed rather than unsigned 64-bit
-    integers.
+  - ``BlockArray`` and ``LightArray`` now internally uses signed rather than
+    unsigned integers.
 
   - ``BlockArray.palette`` is now an empty list rather than ``None`` when a
     palette is not in use
