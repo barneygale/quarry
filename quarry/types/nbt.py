@@ -56,12 +56,12 @@ class _ArrayTag(_Tag):
     @classmethod
     def from_buff(cls, buff):
         array_length = buff.unpack('i')
-        return cls(list(buff.unpack(cls.fmt*array_length)))
+        return cls(list(buff.unpack_array(cls.fmt, array_length)))
 
     def to_bytes(self):
         return (
             Buffer.pack('i', len(self.value)) +
-            Buffer.pack(self.fmt*len(self.value), *self.value))
+            Buffer.pack_array(self.fmt, self.value))
 
 
 # NBT tags --------------------------------------------------------------------
@@ -117,24 +117,18 @@ class TagLongArray(_ArrayTag):
 class TagList(_Tag):
     @classmethod
     def from_buff(cls, buff):
-        inner_kind_id = buff.unpack('b')
+        inner_kind_id, array_length = buff.unpack('bi')
         inner_kind = _kinds[inner_kind_id]
-        array_length = buff.unpack('i')
-        if isinstance(inner_kind, _DataTag):
-            return cls(list(buff.unpack(inner_kind.fmt * array_length)))
-        else:
-            return cls([inner_kind.from_buff(buff)
-                        for _ in range(array_length)])
+        return cls([inner_kind.from_buff(buff) for _ in range(array_length)])
 
     def to_bytes(self):
         if len(self.value) > 0:
-            type_id = _ids[type(self.value[0])]
+            head = self.value[0]
         else:
-            type_id = 1
-        return (
-            Buffer.pack('b', type_id) +
-            Buffer.pack('i', len(self.value)) +
-            b"".join(tag.to_bytes() for tag in self.value))
+            head = TagByte(0)
+
+        return Buffer.pack('bi', _ids[type(head)], len(self.value)) + \
+               b"".join(tag.to_bytes() for tag in self.value)
 
     def to_obj(self):
         return [tag.to_obj() for tag in self.value]
