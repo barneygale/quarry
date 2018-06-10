@@ -24,6 +24,11 @@ class _NBTPaletteProxy(MutableSequence):
         self.palette = []
 
     def insert(self, n, val):
+        # FIXME: NBT chunk sections are *always* paletted, and so the format
+        # diverges for palettes longer than 255 entries.
+        if len(self.palette) >= 255:
+            raise ValueError("Can't add more than 255 entries to NBT palette "
+                             "proxy.")
         self.palette.insert(n, None)
         self[n] = val
 

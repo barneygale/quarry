@@ -232,7 +232,7 @@ class NBTFile(object):
 
 class RegionFile(object):
     """
-    Experimental support for the Minecraft 1.13+ world storage format.
+    Experimental support for the Minecraft world storage format (``.mca``).
     """
     def __init__(self, path):
         self.fd = open(path, "r+b")
