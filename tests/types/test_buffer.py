@@ -42,10 +42,10 @@ varint_vectors = [
 ]
 slot_vectors = [
     # Empty slot
-    ({'id': -1}, b'\xFF\xFF'),
+    ({'item': None}, b'\xFF\xFF'),
 
     # 20 stone blocks
-    ({'id': 276, 'count': 20, 'damage': 0, 'tag': TagRoot({})},
+    ({'item': 276, 'count': 20, 'damage': 0, 'tag': TagRoot({})},
 
         b'\x01\x14' # ID
         b'\x14'     # Count
@@ -53,7 +53,7 @@ slot_vectors = [
         b'\x00'),   # NBT
 
     # Sharpness 4 diamond sword
-    ({'id': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
+    ({'item': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
         u'ench': TagList([
              TagCompound(OrderedDict((
                  (u'id', TagShort(16)),
@@ -74,7 +74,7 @@ entity_metadata_vectors = [
         ((2, 2), 2.0),
         ((3, 3), u'three'),
         ((4, 4), Message({'text': u'four'})),
-        ((5, 5), {'count': 1, 'damage': 0, 'id': 267, 'tag': TagRoot({})}),
+        ((5, 5), {'count': 1, 'damage': 0, 'item': 267, 'tag': TagRoot({})}),
         ((6, 6), True),
         ((7, 7), (7.699999809265137, 7.699999809265137, 7.699999809265137)),
         ((8, 8), (8, 8, 8)),

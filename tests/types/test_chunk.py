@@ -45,7 +45,7 @@ def test_chunk_internals():
             else:
                 assert blocks.bits == 8
         else:
-            assert blocks.palette is None
+            assert blocks.palette == []
             assert blocks.bits == 13
 
     # Zero the first 100 blocks

@@ -27,9 +27,6 @@ class _NBTPaletteProxy(MutableSequence):
         self.palette.insert(n, None)
         self[n] = val
 
-    def clear(self):
-        self.palette.clear()
-
     def __len__(self):
         return len(self.palette)
 
@@ -128,7 +125,7 @@ class BlockArray(_Array):
                 # Reserving space in an unpaletted array is a no-op.
                 return
 
-            palette = self.palette
+            palette = self.palette[:]
             palette_len = len(palette) + reserve
 
         # Compute new bits
@@ -136,7 +133,7 @@ class BlockArray(_Array):
         if bits > 8:
             palette = []
 
-        if set(self.palette) == set(palette):
+        if len(self.palette) == palette_len and set(self.palette) == set(palette):
             # Nothing to do.
             return
 
@@ -146,7 +143,7 @@ class BlockArray(_Array):
         # Update internals
         self.data[:] = [0] * (64 * bits)
         self.bits = bits
-        self.palette.clear()
+        del self.palette[:]
         self.palette.extend(palette)
 
         # Load contents
@@ -234,10 +231,13 @@ class LightArray(_Array):
             return [self[o] for o in xrange(*n.indices(4096))]
         assert isinstance(n, int)
         idx, off = divmod(n, 2)
+        val = self.data[idx]
+        if val < 0:
+            val += 256
         if off == 0:
-            return self.data[idx] & 0x0F
+            return val & 0x0F
         else:
-            return self.data[idx] >> 4
+            return val >> 4
 
     def __setitem__(self, n, val):
         assert isinstance(n, int)
