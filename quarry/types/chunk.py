@@ -82,12 +82,14 @@ class BlockArray(_Array):
         """
 
         # Set up palette proxy
-        proxy = _NBTPaletteProxy(block_map)
-        for entry in section.value['Palette'].value:
-            proxy.append(entry)
-
-        # Replace palette tag value with proxy into block array palette
-        section.value['Palette'].value = proxy
+        nbt_palette = section.value['Palette']
+        if isinstance(nbt_palette.value, _NBTPaletteProxy):
+            proxy = nbt_palette.value
+        else:
+            proxy = _NBTPaletteProxy(block_map)
+            for entry in nbt_palette.value:
+                proxy.append(entry)
+            nbt_palette.value = proxy
 
         # Load block data
         return cls(
