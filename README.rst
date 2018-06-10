@@ -21,6 +21,8 @@ Features
 - Supports Minecraft versions 1.7 through 1.12.2
 - Supports Python 2.7 and 3.4+
 - Built upon ``twisted`` and ``cryptography``
+- Implements many Minecraft data types, such as NBT, chunk sections, `.mca',
+  command graphs and entity metadata.
 - Exposes base classes and hooks for implementing your own client, server or
   proxy.
 - Implements the design of the protocol - packet headers, modes, compression,
