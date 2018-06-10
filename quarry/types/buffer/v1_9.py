@@ -2,6 +2,13 @@ from quarry.types.buffer.v1_7 import Buffer1_7
 from quarry.types.chunk import BlockArray, LightArray
 
 
+# Python 3 compat
+try:
+    xrange
+except NameError:
+    xrange = range
+
+
 class Buffer1_9(Buffer1_7):
 
     # Chunk section -----------------------------------------------------------
