@@ -260,8 +260,7 @@ class RegionFile(object):
         chunk_z = chunk.body.value["Level"].value["zPos"].value
         chunk = zlib.compress(chunk.to_bytes())
         chunk = Buffer.pack('IB', len(chunk), 2) + chunk
-        chunk = chunk + b"\x00" * (4096 - ((len(chunk) - 1) % 4096) - 1)
-        chunk_length = len(chunk) // 4096
+        chunk_length = 1 + (len(chunk) - 1) // 4096
 
         # Load extents
         extents = [(0, 2)]
