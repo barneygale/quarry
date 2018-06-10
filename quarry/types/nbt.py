@@ -281,6 +281,7 @@ class RegionFile(object):
             end = extents[idx+1][0]
             if (end - start) >= chunk_length:
                 chunk_offset = start
+                extents.insert(idx+1, (chunk_offset, chunk_length))
                 break
 
         # Write extent header
@@ -295,6 +296,10 @@ class RegionFile(object):
         # Write chunk
         self.fd.seek(4096 * chunk_offset)
         self.fd.write(chunk)
+
+        # Truncate file
+        self.fd.seek(4096 * extents[-1][0])
+        self.fd.truncate()
 
     def load_chunk(self, chunk_x, chunk_z):
         """
