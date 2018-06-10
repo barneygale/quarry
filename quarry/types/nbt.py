@@ -1,6 +1,7 @@
 import collections
 import functools
 import gzip
+import time
 import zlib
 
 from quarry.types.buffer import Buffer
@@ -283,12 +284,14 @@ class RegionFile(object):
                 chunk_offset = start
                 break
 
-        # Write header
+        # Write extent header
         self.fd.seek(4 * (32 * chunk_z + chunk_x))
         self.fd.write(Buffer.pack(
             'I', (chunk_offset << 8) | (chunk_length & 0xFF)))
 
-        # TODO: write timestamp
+        # Write timestamp header
+        self.fd.seek(4096 + 4 * (32 * chunk_z + chunk_x))
+        self.fd.write(Buffer.pack('I', int(time.time())))
 
         # Write chunk
         self.fd.seek(4096 * chunk_offset)
@@ -302,13 +305,11 @@ class RegionFile(object):
 
         buff = Buffer()
 
-        # Read header
+        # Read extent header
         self.fd.seek(4 * (32 * chunk_z + chunk_x))
         buff.add(self.fd.read(4))
         entry = buff.unpack('I')
         chunk_offset, chunk_length = entry >> 8, entry & 0xFF
-
-        # TODO: read timestamp
 
         # Read chunk
         self.fd.seek(4096 * chunk_offset)
