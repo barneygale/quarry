@@ -23,12 +23,13 @@ master
     ``BlockArray`` objects must now be given a block map on initialization, and
     will pass getitem/setitem values through the map.
 
+  - Added ``quarry.types.nbt.RegionFile`` class, which supports reading and
+    writing NBT chunk data to ``.mca`` files.
 
-  - Added ``Buffer.pack_block()`` and ``Buffer.unpack_block()`` methods.
-
-  - Slot dictionaries now use an ``'item'`` key to store the item identifier,
-    rather than ``'id'``. An empty slot is now represented with an ``'item'``
-    value of ``None`` rather than ``-1``.
+  - ``BlockArray`` and ``LightArray`` now support a ``from_nbt()`` class
+    method. This creates an array that is a view on to an NBT compound tag
+    representing a section (as might be retrieved via a ``RegionFile``).
+    Supports Minecraft 1.13+ only.
 
   - ``BlockArray`` and ``LightArray`` now internally uses signed rather than
     unsigned integers.
@@ -39,6 +40,12 @@ master
   - ``BlockArray`` repacking now occurs when the optimal palette differs from
     the in-use palette, and not just when the number of bits needed to
     represent these palettes differs.
+
+  - Added ``Buffer.pack_block()`` and ``Buffer.unpack_block()`` methods.
+
+  - Slot dictionaries now use an ``'item'`` key to store the item identifier,
+    rather than ``'id'``. An empty slot is now represented with an ``'item'``
+    value of ``None`` rather than ``-1``.
 
 - Added ``quarry.types.nbt.TagLongArray`` class.
 - Added ``quarry.types.nbt.TagRoot.body`` property to retrieve the child tag.

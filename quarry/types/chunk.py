@@ -1,4 +1,4 @@
-from collections import Sequence
+from collections import Sequence, MutableSequence
 import math
 
 
@@ -6,6 +6,56 @@ try:
     xrange
 except NameError:
     xrange = range
+
+
+def length_to_bits(max_bits, length):
+    bits = int(math.ceil(math.log(length, 2)))
+    if bits < 4:
+        return 4
+    elif bits > 8:
+        return max_bits
+    else:
+        return bits
+
+
+class _NBTPaletteProxy(MutableSequence):
+    def __init__(self, block_map):
+        self.block_map = block_map
+        self.palette = []
+
+    def insert(self, n, val):
+        self.palette.insert(n, None)
+        self[n] = val
+
+    def clear(self):
+        self.palette.clear()
+
+    def __len__(self):
+        return len(self.palette)
+
+    def __delitem__(self, n):
+        del self.palette[n]
+
+    def __getitem__(self, n):
+        from quarry.types import nbt
+
+        block = self.block_map.decode_block(self.palette[n])
+        entry = nbt.TagCompound({'Name': nbt.TagString(block['name'])})
+        if len(block) > 1:
+            entry.value['Properties'] = nbt.TagCompound({
+                key: nbt.TagString(value)
+                for key, value in block.items()
+                if key != "name"})
+
+        return entry
+
+    def __setitem__(self, n, tag):
+        block = {'name': tag.value['Name'].value}
+        properties = tag.value.get('Properties')
+        if properties:
+            block.update(properties.to_obj())
+
+        self.palette[n] = self.block_map.encode_block(block)
 
 
 class _Array(Sequence):
@@ -26,6 +76,28 @@ class BlockArray(_Array):
         Creates an empty block array.
         """
         return cls(block_map, [0] * 256, 4, [0])
+
+    @classmethod
+    def from_nbt(cls, section, block_map):
+        """
+        Creates a block array that uses the given NBT section tag as storage
+        for block data and the palette. Minecraft 1.13+ only.
+        """
+
+        # Set up palette proxy
+        proxy = _NBTPaletteProxy(block_map)
+        for entry in section.value['Palette'].value:
+            proxy.append(entry)
+
+        # Replace palette tag value with proxy into block array palette
+        section.value['Palette'].value = proxy
+
+        # Load block data
+        return cls(
+            block_map,
+            section.value["BlockStates"].value,
+            length_to_bits(block_map.max_bits, len(proxy)),
+            proxy.palette)
 
     def is_empty(self):
         """
@@ -60,12 +132,8 @@ class BlockArray(_Array):
             palette_len = len(palette) + reserve
 
         # Compute new bits
-        bits = int(math.ceil(math.log(palette_len, 2)))
-        if bits <= 8:
-            if bits < 4:
-                bits = 4
-        else:
-            bits = self.block_map.max_bits
+        bits = length_to_bits(self.block_map.max_bits, palette_len)
+        if bits > 8:
             palette = []
 
         if set(self.palette) == set(palette):
@@ -152,6 +220,14 @@ class LightArray(_Array):
         Creates an empty light array.
         """
         return cls([0] * 2048)
+
+    @classmethod
+    def from_nbt(cls, section, sky=True):
+        """
+        Creates a light array that uses the given NBT section tag as storage
+        for light data. Minecraft 1.13+ only.
+        """
+        return cls(section.value['SkyLight' if sky else 'BlockLight'].value)
 
     def __getitem__(self, n):
         if isinstance(n, slice):

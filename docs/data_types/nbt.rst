@@ -95,6 +95,13 @@ You can open an NBT file using the ``NBTFile`` class.
     :members: __init__, load, save, root_tag
     :undoc-members:
 
+You can open Minecraft 1.13+ world files (``.mca``) using the ``RegionFile``
+class, which can also function as a context manager. See :doc:`chunks` for
+information on loading block and light data.
+
+.. autoclass:: RegionFile
+    :members: __init__, close, load_chunk, save_chunk
+
 Debugging
 ---------
 

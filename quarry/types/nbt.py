@@ -1,6 +1,7 @@
 import collections
 import functools
 import gzip
+import zlib
 
 from quarry.types.buffer import Buffer
 
@@ -226,6 +227,96 @@ class NBTFile(object):
     def save(self, path):
         with gzip.open(path, 'wb') as fd:
             fd.write(self.root_tag.to_bytes())
+
+
+class RegionFile(object):
+    """
+    Experimental support for the Minecraft 1.13+ world storage format.
+    """
+    def __init__(self, path):
+        self.fd = open(path, "r+b")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.fd.close()
+
+    def close(self):
+        """
+        Closes the region file.
+        """
+        self.fd.close()
+
+    def save_chunk(self, chunk):
+        """
+        Saves the given chunk, which should be a ``TagRoot``, to the region
+        file.
+        """
+
+        # Compress chunk
+        chunk_x = chunk.body.value["Level"].value["xPos"].value
+        chunk_z = chunk.body.value["Level"].value["zPos"].value
+        chunk = zlib.compress(chunk.to_bytes())
+        chunk = Buffer.pack('IB', len(chunk), 2) + chunk
+        chunk = chunk + b"\x00" * (4096 - ((len(chunk) - 1) % 4096) - 1)
+        chunk_length = len(chunk) // 4096
+
+        # Load extents
+        extents = [(0, 2)]
+        self.fd.seek(0)
+        buff = Buffer(self.fd.read(4096))
+        for idx in range(1024):
+            z, x = divmod(idx, 32)
+            entry = buff.unpack('I')
+            offset, length = entry >> 8, entry & 0xFF
+            if offset > 0 and not (x == chunk_x and z == chunk_z):
+                extents.append((offset, length))
+        extents.sort()
+        extents.append((extents[-1][0] + extents[-1][1] + chunk_length, 0))
+
+        # Compute new extent
+        for idx in range(len(extents) - 1):
+            start = extents[idx][0] + extents[idx][1]
+            end = extents[idx+1][0]
+            if (end - start) >= chunk_length:
+                chunk_offset = start
+                break
+
+        # Write header
+        self.fd.seek(4 * (32 * chunk_z + chunk_x))
+        self.fd.write(Buffer.pack(
+            'I', (chunk_offset << 8) | (chunk_length & 0xFF)))
+
+        # TODO: write timestamp
+
+        # Write chunk
+        self.fd.seek(4096 * chunk_offset)
+        self.fd.write(chunk)
+
+    def load_chunk(self, chunk_x, chunk_z):
+        """
+        Loads the chunk at the given co-ordinates from the region file.
+        The co-ordinates should range from 0 to 31. Returns a ``TagRoot``.
+        """
+
+        buff = Buffer()
+
+        # Read header
+        self.fd.seek(4 * (32 * chunk_z + chunk_x))
+        buff.add(self.fd.read(4))
+        entry = buff.unpack('I')
+        chunk_offset, chunk_length = entry >> 8, entry & 0xFF
+
+        # TODO: read timestamp
+
+        # Read chunk
+        self.fd.seek(4096 * chunk_offset)
+        buff.add(self.fd.read(4096 * chunk_length))
+        chunk = buff.read(buff.unpack('IB')[0])
+        chunk = zlib.decompress(chunk)
+        chunk = TagRoot.from_bytes(chunk)
+        return chunk
 
 
 # Debug -----------------------------------------------------------------------
