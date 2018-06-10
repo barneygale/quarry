@@ -134,6 +134,8 @@ class BlockArray(_Array):
 
         self.data[idx0] &= ~mask0
         self.data[idx0] |= (2 ** 64 - 1) & mask0 & (val << off0)
+        if (self.data[idx0] & (1 << (64 - 1))) != 0:
+            self.data[idx0] = self.data[idx0]  - (1 << 64)
 
         if idx0 != idx1:
             self.data[idx1] &= ~mask1
