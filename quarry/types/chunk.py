@@ -70,7 +70,7 @@ class BlockArray(_Array):
         self.block_map = block_map
         self.data = data
         self.bits = bits
-        self.palette = palette
+        self.palette = palette or []
 
     @classmethod
     def empty(cls, block_map):
@@ -108,7 +108,7 @@ class BlockArray(_Array):
         Checks if this block array is entirely air. You may wish to call
         ``repack()`` before this method to avoid false negatives.
         """
-        if self.palette is not None:
+        if self.palette:
             return self.palette == [0]
         else:
             return not any(self.data)
