@@ -74,7 +74,7 @@ class Buffer1_9(Buffer1_7):
         for ty_key, val in metadata.items():
             ty, key = ty_key
             out += cls.pack('BB', key, ty)
-            if   ty == 0:  out += cls.pack('B', val)
+            if   ty == 0:  out += cls.pack('b', val)
             elif ty == 1:  out += cls.pack_varint(val)
             elif ty == 2:  out += cls.pack('f', val)
             elif ty == 3:  out += cls.pack_string(val)
@@ -103,7 +103,7 @@ class Buffer1_9(Buffer1_7):
             if key == 255:
                 return metadata
             ty = self.unpack('B')
-            if   ty == 0:  val = self.unpack('B')
+            if   ty == 0:  val = self.unpack('b')
             elif ty == 1:  val = self.unpack_varint()
             elif ty == 2:  val = self.unpack('f')
             elif ty == 3:  val = self.unpack_string()

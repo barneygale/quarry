@@ -47,6 +47,7 @@ master
   methods. These can be overridden to support custom packet name lookup
   behaviour.
 - Moved ``PacketDispatcher.dump_packet()`` to ``Buffer.hexdump()``.
+- Fixed unpacking of byte entity metadata.
 - Fixed NBT handling of 1-length arrays.
 
 
