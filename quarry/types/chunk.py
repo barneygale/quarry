@@ -140,7 +140,7 @@ class BlockArray(_Array):
         if bits > 8:
             palette = []
 
-        if len(self.palette) == palette_len and set(self.palette) == set(palette):
+        if self.bits == bits:
             # Nothing to do.
             return
 

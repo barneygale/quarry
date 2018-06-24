@@ -34,10 +34,6 @@ master
   - ``BlockArray.palette`` is now an empty list rather than ``None`` when a
     palette is not in use
 
-  - ``BlockArray`` repacking now occurs when the optimal palette differs from
-    the in-use palette, and not just when the number of bits needed to
-    represent these palettes differs.
-
   - Added ``Buffer.pack_block()`` and ``Buffer.unpack_block()`` methods.
 
   - Slot dictionaries now use an ``'item'`` key to store the item identifier,
