@@ -22,10 +22,10 @@ class Buffer1_9(Buffer1_7):
         out = cls.pack('B', blocks.bits)
         out += cls.pack_chunk_section_palette(blocks.palette)
         out += cls.pack_varint(len(blocks.data))
-        out += cls.pack_array('q', blocks.data)
-        out += cls.pack_array('b', block_lights.data)
+        out += cls.pack_array('Q', blocks.data)
+        out += cls.pack_array('B', block_lights.data)
         if sky_lights:
-            out += cls.pack_array('b', sky_lights.data)
+            out += cls.pack_array('B', sky_lights.data)
 
         return out
 
@@ -46,12 +46,12 @@ class Buffer1_9(Buffer1_7):
         palette = self.unpack_chunk_section_palette(bits)
         blocks = BlockArray(
             self.block_map,
-            self.unpack_array('q', self.unpack_varint()),
+            self.unpack_array('Q', self.unpack_varint()),
             bits,
             palette)
-        block_lights = LightArray(self.unpack_array('b', 2048))
+        block_lights = LightArray(self.unpack_array('B', 2048))
         if overworld:
-            sky_lights = LightArray(self.unpack_array('b', 2048))
+            sky_lights = LightArray(self.unpack_array('B', 2048))
         else:
             sky_lights = None
 

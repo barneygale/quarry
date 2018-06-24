@@ -31,9 +31,6 @@ master
     representing a section (as might be retrieved via a ``RegionFile``).
     Supports Minecraft 1.13+ only.
 
-  - ``BlockArray`` and ``LightArray`` now internally uses signed rather than
-    unsigned integers.
-
   - ``BlockArray.palette`` is now an empty list rather than ``None`` when a
     palette is not in use
 

@@ -166,10 +166,11 @@ class BlockArray(_Array):
         off0 = (self.bits * n) % 64
         off1 = 64 - off0
 
-        val = self.data[idx0] >> off0
-        val &= (1 << off1) - 1
-        if idx0 != idx1:
-            val |= self.data[idx1] << off1
+        if idx0 == idx1:
+            val = self.data[idx0] >> off0
+        else:
+            val = (self.data[idx0] >> off0) | (self.data[idx1] << off1)
+
         val &= (1 << self.bits) - 1
 
         if self.palette:
@@ -204,10 +205,8 @@ class BlockArray(_Array):
         mask0 = ((1 << self.bits) - 1) << off0
         mask1 = ((1 << self.bits) - 1) >> off1
 
-        self.data[idx0] &= ~mask0
+        self.data[idx0] &= (2 ** 64 - 1) & ~mask0
         self.data[idx0] |= (2 ** 64 - 1) & mask0 & (val << off0)
-        if (self.data[idx0] & (1 << (64 - 1))) != 0:
-            self.data[idx0] = self.data[idx0]  - (1 << 64)
 
         if idx0 != idx1:
             self.data[idx1] &= ~mask1
@@ -239,8 +238,6 @@ class LightArray(_Array):
         assert isinstance(n, int)
         idx, off = divmod(n, 2)
         val = self.data[idx]
-        if val < 0:
-            val += 256
         if off == 0:
             return val & 0x0F
         else:
@@ -250,10 +247,6 @@ class LightArray(_Array):
         assert isinstance(n, int)
         idx, off = divmod(n, 2)
         if off == 0:
-            val = (self.data[idx] & 0xF0) | val
+            self.data[idx] = (self.data[idx] & 0xF0) | val
         else:
-            val = (self.data[idx] & 0x0F) | (val << 4)
-
-        if val > 127:
-            val -= 256
-        self.data[idx] = val
+            self.data[idx] = (self.data[idx] & 0x0F) | (val << 4)
