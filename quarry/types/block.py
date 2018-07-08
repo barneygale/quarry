@@ -117,7 +117,7 @@ class LookupBlockMap(BlockMap):
         It then feeds the generated JSON files to ``from_json()``.
         """
 
-        root_path = os.path.dirname(jar_path)
+        root_path, jar_name = os.path.split(jar_path)
 
         # Accept EULA
         eula_path = os.path.join(root_path, "eula.txt")
@@ -130,7 +130,7 @@ class LookupBlockMap(BlockMap):
         items_path = os.path.join(root_path, "generated", "reports", "items.json")
         if not os.path.exists(blocks_path) or not os.path.exists(items_path):
             subprocess.check_call(
-                ["java", "-cp", jar_path, "net.minecraft.data.Main", "--reports"],
+                ["java", "-cp", jar_name, "net.minecraft.data.Main", "--reports"],
                 cwd=root_path)
 
         # Load data
