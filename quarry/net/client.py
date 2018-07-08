@@ -255,6 +255,9 @@ class SpawningClientProtocol(ClientProtocol):
             self.ticker.add_loop(20, self.update_player_full)
             self.spawned = True
 
+    def packet_keep_alive(self, buff):
+        self.send_packet('keep_alive', buff.read())
+
 
 class ClientFactory(Factory, protocol.ClientFactory):
     protocol = ClientProtocol

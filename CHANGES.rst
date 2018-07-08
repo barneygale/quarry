@@ -50,6 +50,7 @@ master
 - Moved ``PacketDispatcher.dump_packet()`` to ``Buffer.hexdump()``.
 - Fixed unpacking of byte entity metadata.
 - Fixed NBT handling of 1-length arrays.
+- Fixed ``SpawningClientProtocol`` not responding to keep-alives.
 
 
 v1.0
