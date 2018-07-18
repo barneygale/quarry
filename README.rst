@@ -18,18 +18,18 @@ Use ``pip`` to install quarry:
 Features
 --------
 
-- Supports Minecraft versions 1.7 through 1.12.2
+- Supports Minecraft versions 1.7 through 1.13
 - Supports Python 2.7 and 3.4+
 - Built upon ``twisted`` and ``cryptography``
-- Implements many Minecraft data types, such as NBT, Anvil, chunk sections,
-  command graphs and entity metadata.
 - Exposes base classes and hooks for implementing your own client, server or
-  proxy.
+  proxy
+- Implements many Minecraft data types, such as NBT, Anvil, chunk sections,
+  command graphs and entity metadata
 - Implements the design of the protocol - packet headers, modes, compression,
   encryption, login/session, etc.
 - Implements all packets in "init", "status" and "login" modes
 - Does *not* implement most packets in "play" mode - it is left up to you to
-  hook and implement the packets you're interested in.
+  hook and implement the packets you're interested in
 
 .. _Minecraft protocol: http://wiki.vg/Protocol
 

@@ -4,6 +4,17 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.13.
+
+  - Added 1.13 packet enumeration.
+  - The wire format of chunk sections, entity metadata and slots has changed.
+    Slots no longer contain a 'damage' field.
+  - Added methods for packing/unpacking particles and command graphs.
+  - Clients now respond to ``login_plugin_request`` messages with a
+    ``login_plugin_response`` indicating that the client didn't understand the
+    request. Like other quarry packet handlers, this method can be overridden
+    in a subclass to implement a custom authentication flow.
+
 - Slot/blocks/chunks/regions improvements:
 
   - Added ``quarry.types.block`` module, containing three classes for handling

@@ -120,6 +120,16 @@ class ClientProtocol(Protocol):
         p_data = buff.unpack_json()
         self.status_response(p_data)
 
+    def packet_login_plugin_request(self, buff):
+        p_message_id = buff.unpack_varint()
+        p_channel = buff.unpack_string()
+        p_payload = buff.read()
+
+        self.send_packet(
+            "login_plugin_response",
+            self.buff_type.pack_varint(p_message_id),
+            self.buff_type.pack('?', False))
+
     def packet_login_disconnect(self, buff):
         p_data = buff.unpack_chat()
         self.logger.warn("Kicked: %s" % p_data)

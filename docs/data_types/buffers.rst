@@ -17,7 +17,8 @@ Quarry supports the following methods for working with a buffer:
     :members: block_map, discard, read, hexdump, unpack, unpack_array,
         unpack_optional, unpack_varint, unpack_packet, unpack_string,
         unpack_json, unpack_chat, unpack_uuid, unpack_position, unpack_block,
-        unpack_slot, unpack_nbt, unpack_chunk_section, unpack_entity_metadata
+        unpack_slot, unpack_nbt, unpack_chunk_section, unpack_entity_metadata,
+        unpack_commands, unpack_particle
 
 Packing
 -------
@@ -41,6 +42,8 @@ a byte string. A reference to the buffer class is available from
 .. automethod:: Buffer.pack_nbt
 .. automethod:: Buffer.pack_chunk_section
 .. automethod:: Buffer.pack_entity_metadata
+.. automethod:: Buffer.pack_commands
+.. automethod:: Buffer.pack_particle
 
 Protocol Versions
 -----------------
@@ -62,4 +65,18 @@ Support for Minecraft 1.9+ is implemented in the :class:`Buffer1_9` class.
 Changes from 1.7:
 
 - ``pack_chunk_section()`` and ``unpack_chunk_section()`` added.
+- ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
+
+Minecraft 1.13
+~~~~~~~~~~~~~~
+
+Support for Minecraft 1.13+ is implemented in the :class:`Buffer1_13` class.
+
+Changes from 1.9:
+
+- ``pack_commands()`` and ``unpack_commands()`` added.
+- ``pack_particle()`` and ``unpack_particle()`` added.
+- ``pack_chunk_section_palette()`` and ``unpack_chunk_section_palette()``
+  modified.
+- ``pack_slot()`` and ``unpack_slot()`` modified.
 - ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
