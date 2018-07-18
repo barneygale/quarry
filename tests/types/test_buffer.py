@@ -45,15 +45,14 @@ slot_vectors = [
     ({'item': None}, b'\xFF\xFF'),
 
     # 20 stone blocks
-    ({'item': 276, 'count': 20, 'damage': 0, 'tag': TagRoot({})},
+    ({'item': 276, 'count': 20, 'tag': TagRoot({})},
 
         b'\x01\x14' # ID
         b'\x14'     # Count
-        b'\x00\x00' # Damage
         b'\x00'),   # NBT
 
     # Sharpness 4 diamond sword
-    ({'item': 276, 'count': 1, 'damage': 0, 'tag': TagRoot({u'': TagCompound({
+    ({'item': 276, 'count': 1, 'tag': TagRoot({u'': TagCompound({
         u'ench': TagList([
              TagCompound(OrderedDict((
                  (u'id', TagShort(16)),
@@ -61,7 +60,6 @@ slot_vectors = [
 
         b'\x01\x14' # ID
         b'\x01'     # Count
-        b'\x00\x00' # Damage
         b'\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
         b'\x02\x00\x02id\x00\x10'                         # Enchantment type
         b'\x02\x00\x03lvl\x00\x04'                        # Enchantment level
@@ -74,30 +72,32 @@ entity_metadata_vectors = [
         ((2, 2), 2.0),
         ((3, 3), u'three'),
         ((4, 4), Message({'text': u'four'})),
-        ((5, 5), {'count': 1, 'damage': 0, 'item': 267, 'tag': TagRoot({})}),
-        ((6, 6), True),
-        ((7, 7), (7.699999809265137, 7.699999809265137, 7.699999809265137)),
-        ((8, 8), (8, 8, 8)),
-        ((9, 9), (9, 9, 9)),
-        ((10, 10), 10),
-        ((11, 11), UUID.from_bytes(uuid_vector)),
-        ((12, 12), 12),
-        ((13, 13), TagRoot({u'foo': TagString(u'bar')})))),
+        ((5, 5), Message({'text': u'five'})),
+        ((6, 6), {'count': 1, 'item': 267, 'tag': TagRoot({})}),
+        ((7, 7), True),
+        ((8, 8), (7.699999809265137, 7.699999809265137, 7.699999809265137)),
+        ((9, 9), (8, 8, 8)),
+        ((10, 10), (9, 9, 9)),
+        ((11, 11), 10),
+        ((12, 12), UUID.from_bytes(uuid_vector)),
+        ((13, 13), 12),
+        ((14, 14), TagRoot({u'foo': TagString(u'bar')})))),
 
         b'\x00\x00\x00'
         b'\x01\x01\x01'
         b'\x02\x02\x40\x00\x00\x00'
         b'\x03\x03\x05three'
         b'\x04\x04\x10{"text": "four"}'
-        b'\x05\x05\x01\x0b\x01\x00\x00\x00'
-        b'\x06\x06\x01'
-        b'\x07\x07\x40\xf6\x66\x66\x40\xf6\x66\x66\x40\xf6\x66\x66'
-        b'\x08\x08\x00\x00\x02\x00\x20\x00\x00\x08'
-        b'\x09\x09\x01\x00\x00\x02\x40\x24\x00\x00\x09'
-        b'\x0a\x0a\x0a'
-        b'\x0b\x0b\x01' + uuid_vector +
-        b'\x0c\x0c\x0c'
-        b'\x0d\x0d\x08\x00\x03foo\x00\x03bar'
+        b'\x05\x05\x01\x10{"text": "five"}'
+        b'\x06\x06\x01\x0b\x01\x00'
+        b'\x07\x07\x01'
+        b'\x08\x08\x40\xf6\x66\x66\x40\xf6\x66\x66\x40\xf6\x66\x66'
+        b'\x09\x09\x00\x00\x02\x00\x20\x00\x00\x08'
+        b'\x0a\x0a\x01\x00\x00\x02\x40\x24\x00\x00\x09'
+        b'\x0b\x0b\x0a'
+        b'\x0c\x0c\x01' + uuid_vector +
+        b'\x0d\x0d\x0c'
+        b'\x0e\x0e\x08\x00\x03foo\x00\x03bar'
         b'\xff')
 ]
 
