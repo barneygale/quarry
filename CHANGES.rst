@@ -62,6 +62,7 @@ master
 - Fixed unpacking of byte entity metadata.
 - Fixed NBT handling of 1-length arrays.
 - Fixed ``SpawningClientProtocol`` not responding to keep-alives.
+- Fixed unicode handling in chat unpacking.
 
 
 v1.0

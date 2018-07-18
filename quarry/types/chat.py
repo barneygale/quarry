@@ -92,8 +92,8 @@ class Message(object):
                 if "translate" in obj:
                     text += obj["translate"]
                     if "with" in obj:
-                        args = ", ".join((parse(e) for e in obj["with"]))
-                        text += "{%s}" % args
+                        args = u", ".join((parse(e) for e in obj["with"]))
+                        text += u"{%s}" % args
                 if "text" in obj:
                     text += obj["text"]
                 if "extra" in obj:
