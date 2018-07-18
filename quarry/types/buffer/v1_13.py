@@ -1,6 +1,12 @@
 from quarry.types.buffer.v1_9 import Buffer1_9
 from quarry.types.block import OpaqueBlockMap
 
+# Python 3 compat
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 class Buffer1_13(Buffer1_9):
     block_map = OpaqueBlockMap(14)
