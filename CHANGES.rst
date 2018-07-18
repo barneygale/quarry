@@ -1,8 +1,13 @@
 Changelog
 =========
 
-master
+v1.1.1
 ------
+
+- Various bugfixes.
+
+v1.1
+----
 
 - Added support for Minecraft 1.13.
 
