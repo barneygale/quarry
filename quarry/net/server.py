@@ -255,7 +255,7 @@ class ServerProtocol(Protocol):
         if self.factory.favicon is not None:
             with open(self.factory.favicon, "rb") as fd:
                 d["favicon"] = "data:image/png;base64," + base64.encodestring(
-                    fd.read()).decode('ascii')
+                    fd.read()).decode('ascii').replace('\n', '')
 
         # send status response
         self.send_packet("status_response", self.buff_type.pack_json(d))
