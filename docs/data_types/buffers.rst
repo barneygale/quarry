@@ -80,3 +80,13 @@ Changes from 1.9:
   modified.
 - ``pack_slot()`` and ``unpack_slot()`` modified.
 - ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
+
+Minecraft 1.13.2
+~~~~~~~~~~~~~~~~
+
+Support for Minecraft 1.13.2+ is implemented in the :class:`Buffer1_13_2`
+class.
+
+Changes from 1.13:
+
+- ``pack_slot()`` and ``unpack_slot()`` modified.
