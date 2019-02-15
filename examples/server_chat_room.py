@@ -78,7 +78,7 @@ class ChatRoomFactory(ServerFactory):
 
     def send_chat(self, message)
         for player in self.players:
-            player.send_packet("chat_message",self.buff_type.pack_chat(message) + self.buff_type.pack('B', 0) )
+            player.send_packet("chat_message",player.buff_type.pack_chat(message) + player.buff_type.pack('B', 0) )
 
 
 def main(argv):
