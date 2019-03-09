@@ -42,12 +42,13 @@ varint_vectors = [
 ]
 slot_vectors = [
     # Empty slot
-    ({'item': None}, b'\xFF\xFF'),
+    ({'item': None}, b'\x00'),
 
     # 20 stone blocks
     ({'item': 276, 'count': 20, 'tag': TagRoot({})},
 
-        b'\x01\x14' # ID
+        b'\x01'     # Present
+        b'\x94\x02' # ID
         b'\x14'     # Count
         b'\x00'),   # NBT
 
@@ -58,7 +59,8 @@ slot_vectors = [
                  (u'id', TagShort(16)),
                  (u'lvl', TagShort(4)))))])})})},  # hmm
 
-        b'\x01\x14' # ID
+        b'\x01'     # Present
+        b'\x94\x02' # ID
         b'\x01'     # Count
         b'\x0A\x00\x00\x09\x00\x04ench\n\x00\x00\x00\x01' # NBT container start
         b'\x02\x00\x02id\x00\x10'                         # Enchantment type
@@ -89,7 +91,7 @@ entity_metadata_vectors = [
         b'\x03\x03\x05three'
         b'\x04\x04\x10{"text": "four"}'
         b'\x05\x05\x01\x10{"text": "five"}'
-        b'\x06\x06\x01\x0b\x01\x00'
+        b'\x06\x06\x01\x8b\x02\x01\x00'
         b'\x07\x07\x01'
         b'\x08\x08\x40\xf6\x66\x66\x40\xf6\x66\x66\x40\xf6\x66\x66'
         b'\x09\x09\x00\x00\x02\x00\x20\x00\x00\x08'
