@@ -10,6 +10,7 @@ setup(
     description='Minecraft protocol library',
     long_description=open('README.rst').read(),
     install_requires=[
+        'cached_property >= 1.2.0',
         'twisted >= 13.0.0',
         'cryptography >= 0.9',
         'pyOpenSSL >= 0.15.1',

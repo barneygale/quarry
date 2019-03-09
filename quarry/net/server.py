@@ -1,5 +1,6 @@
 import base64
 from twisted.internet import reactor, defer
+from cached_property import cached_property
 
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes
@@ -252,10 +253,8 @@ class ServerProtocol(Protocol):
                 "protocol": protocol_version
             }
         }
-        if self.factory.favicon is not None:
-            with open(self.factory.favicon, "rb") as fd:
-                d["favicon"] = "data:image/png;base64," + base64.encodestring(
-                    fd.read()).decode('ascii').replace('\n', '')
+        if self.factory.icon is not None:
+            d['favicon'] = self.factory.icon
 
         # send status response
         self.send_packet("status_response", self.buff_type.pack_json(d))
@@ -273,7 +272,7 @@ class ServerFactory(Factory):
 
     motd = "A Minecraft Server"
     max_players = 20
-    favicon = None
+    icon_path = None
     online_mode = True
     prevent_proxy_connections = True
     compression_threshold = 256
@@ -288,3 +287,10 @@ class ServerFactory(Factory):
 
     def listen(self, host, port=25565):
         reactor.listenTCP(port, self, interface=host)
+
+    @cached_property
+    def icon(self):
+        if self.icon_path is not None:
+            with open(self.icon_path, "rb") as fd:
+                return "data:image/png;base64," + base64.encodebytes(
+                    fd.read()).decode('ascii').replace('\n', '')
