@@ -261,9 +261,12 @@ class SpawningClientProtocol(ClientProtocol):
                 teleport_id))
 
         if not self.spawned:
-            self.ticker.add_loop(1, self.update_player_inc)
-            self.ticker.add_loop(20, self.update_player_full)
-            self.spawned = True
+            self.spawn()
+
+    def spawn(self):
+        self.ticker.add_loop(1, self.update_player_inc)
+        self.ticker.add_loop(20, self.update_player_full)
+        self.spawned = True
 
     def packet_keep_alive(self, buff):
         self.send_packet('keep_alive', buff.read())
