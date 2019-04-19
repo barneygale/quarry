@@ -80,7 +80,7 @@ entity_metadata_vectors = [
         ((8, 8), (7.699999809265137, 7.699999809265137, 7.699999809265137)),
         ((9, 9), (8, 8, 8)),
         ((10, 10), (9, 9, 9)),
-        ((11, 11), 10),
+        ((11, 11), 'north'),
         ((12, 12), UUID.from_bytes(uuid_vector)),
         ((13, 13), 12),
         ((14, 14), TagRoot({u'foo': TagString(u'bar')})))),
@@ -96,7 +96,7 @@ entity_metadata_vectors = [
         b'\x08\x08\x40\xf6\x66\x66\x40\xf6\x66\x66\x40\xf6\x66\x66'
         b'\x09\x09\x00\x00\x02\x00\x20\x00\x00\x08'
         b'\x0a\x0a\x01\x00\x00\x02\x40\x24\x00\x00\x09'
-        b'\x0b\x0b\x0a'
+        b'\x0b\x0b\x02'
         b'\x0c\x0c\x01' + uuid_vector +
         b'\x0d\x0d\x0c'
         b'\x0e\x0e\x08\x00\x03foo\x00\x03bar'

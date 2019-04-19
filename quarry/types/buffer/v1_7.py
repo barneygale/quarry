@@ -6,7 +6,7 @@ import zlib
 
 from quarry.types.buffer import BufferUnderrun
 from quarry.types.uuid import UUID
-from quarry.types.block import OpaqueBlockMap
+from quarry.types.registry import OpaqueRegistry
 
 PY3 = sys.version_info > (3,)
 
@@ -20,7 +20,7 @@ except NameError:
 class Buffer1_7(object):
     buff = b""
     pos = 0
-    block_map = OpaqueBlockMap(13)
+    registry = OpaqueRegistry(13)
 
     def __init__(self, data=None):
         if data:
@@ -373,7 +373,7 @@ class Buffer1_7(object):
         """
         if packer is None:
             packer = cls.pack_varint
-        return packer(cls.block_map.encode_block(block))
+        return packer(cls.registry.encode_block(block))
 
     def unpack_block(self, unpacker=None):
         """
@@ -381,7 +381,7 @@ class Buffer1_7(object):
         """
         if unpacker is None:
             unpacker = self.unpack_varint
-        return self.block_map.decode_block(unpacker())
+        return self.registry.decode_block(unpacker())
 
     # Slot --------------------------------------------------------------------
 
@@ -394,7 +394,7 @@ class Buffer1_7(object):
         if item is None:
             return cls.pack('h', -1)
 
-        item_id = cls.block_map.encode_item(item)
+        item_id = cls.registry.encode('item', item)
         return cls.pack('hbh', item_id, count, damage) + cls.pack_nbt(tag)
 
     def unpack_slot(self):
@@ -407,7 +407,7 @@ class Buffer1_7(object):
         if item_id == -1:
             slot['item'] = None
         else:
-            slot['item'] = self.block_map.decode_item(item_id)
+            slot['item'] = self.registry.decode('item', item_id)
             slot['count'] = self.unpack('b')
             slot['damage'] = self.unpack('h')
             slot['tag'] = self.unpack_nbt()
@@ -457,7 +457,7 @@ class Buffer1_7(object):
             elif ty == 4: out += cls.pack_string(val)
             elif ty == 5: out += cls.pack_slot(**val)
             elif ty == 6: out += cls.pack('iii', *val)
-            elif ty == 7: out += cls.pack('fff', *val)
+            elif ty == 7: out += cls.pack_rotation(*val)
             else: raise ValueError("Unknown entity metadata type: %d" % ty)
         out += cls.pack('B', 127)
         return out
@@ -479,6 +479,41 @@ class Buffer1_7(object):
             elif ty == 4: val = self.unpack_string()
             elif ty == 5: val = self.unpack_slot()
             elif ty == 6: val = self.unpack('iii')
-            elif ty == 7: val = self.unpack('fff')
+            elif ty == 7: val = self.unpack_rotation()
             else: raise ValueError("Unknown entity metadata type: %d" % ty)
             metadata[ty, key] = val
+
+    # Direction ---------------------------------------------------------------
+
+    @classmethod
+    def pack_direction(cls, direction):
+        """
+        Packs a direction.
+        """
+
+        return cls.pack_varint(directions.index(direction))
+
+    def unpack_direction(self):
+        """
+        Unpacks a direction.
+        """
+
+        return directions[self.unpack_varint()]
+
+
+    # Rotation ----------------------------------------------------------------
+
+    @classmethod
+    def pack_rotation(cls, x, y, z):
+        """
+        Packs a rotation.
+        """
+
+        return cls.pack('fff', x, y, z)
+
+    def unpack_rotation(self):
+        """
+        Unpacks a rotation
+        """
+
+        return self.unpack('fff')

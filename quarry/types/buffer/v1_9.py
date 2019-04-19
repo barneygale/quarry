@@ -8,6 +8,8 @@ try:
 except NameError:
     xrange = range
 
+directions = ("down", "up", "north", "south", "west", "east")
+
 
 class Buffer1_9(Buffer1_7):
 
@@ -19,6 +21,7 @@ class Buffer1_9(Buffer1_7):
         Packs a chunk section. The supplied arguments should be instances of
         ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.
         """
+
         out = cls.pack('B', blocks.bits)
         out += cls.pack_chunk_section_palette(blocks.palette)
         out += cls.pack_varint(len(blocks.data))
@@ -45,7 +48,7 @@ class Buffer1_9(Buffer1_7):
         bits = self.unpack('B')
         palette = self.unpack_chunk_section_palette(bits)
         blocks = BlockArray(
-            self.block_map,
+            self.registry,
             self.unpack_array('Q', self.unpack_varint()),
             bits,
             palette)
@@ -81,10 +84,10 @@ class Buffer1_9(Buffer1_7):
             elif ty == 4:  out += cls.pack_chat(val)
             elif ty == 5:  out += cls.pack_slot(**val)
             elif ty == 6:  out += cls.pack('?', val)
-            elif ty == 7:  out += cls.pack('fff', *val)
+            elif ty == 7:  out += cls.pack_rotation(*val)
             elif ty == 8:  out += cls.pack_position(*val)
             elif ty == 9:  out += cls.pack_optional(pack_position, val)
-            elif ty == 10: out += cls.pack_varint(val)
+            elif ty == 10: out += cls.pack_direction(val)
             elif ty == 11: out += cls.pack_optional(cls.pack_uuid, val)
             elif ty == 12: out += cls.pack_block(val)
             elif ty == 13: out += cls.pack_nbt(val)
@@ -110,10 +113,10 @@ class Buffer1_9(Buffer1_7):
             elif ty == 4:  val = self.unpack_chat()
             elif ty == 5:  val = self.unpack_slot()
             elif ty == 6:  val = self.unpack('?')
-            elif ty == 7:  val = self.unpack('fff')
+            elif ty == 7:  val = self.unpack_rotation()
             elif ty == 8:  val = self.unpack_position()
             elif ty == 9:  val = self.unpack_optional(self.unpack_position)
-            elif ty == 10: val = self.unpack_varint()
+            elif ty == 10: val = self.unpack_direction()
             elif ty == 11: val = self.unpack_optional(self.unpack_uuid)
             elif ty == 12: val = self.unpack_block()
             elif ty == 13: val = self.unpack_nbt()

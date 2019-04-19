@@ -19,8 +19,8 @@ def length_to_bits(max_bits, length):
 
 
 class _NBTPaletteProxy(MutableSequence):
-    def __init__(self, block_map):
-        self.block_map = block_map
+    def __init__(self, registry):
+        self.registry = registry
         self.palette = []
 
     def insert(self, n, val):
@@ -41,7 +41,7 @@ class _NBTPaletteProxy(MutableSequence):
     def __getitem__(self, n):
         from quarry.types import nbt
 
-        block = self.block_map.decode_block(self.palette[n])
+        block = self.registry.decode_block(self.palette[n])
         entry = nbt.TagCompound({'Name': nbt.TagString(block['name'])})
         if len(block) > 1:
             entry.value['Properties'] = nbt.TagCompound({
@@ -57,7 +57,7 @@ class _NBTPaletteProxy(MutableSequence):
         if properties:
             block.update(properties.to_obj())
 
-        self.palette[n] = self.block_map.encode_block(block)
+        self.palette[n] = self.registry.encode_block(block)
 
 
 class _Array(Sequence):
@@ -66,21 +66,25 @@ class _Array(Sequence):
 
 
 class BlockArray(_Array):
-    def __init__(self, block_map, data, bits, palette=None):
-        self.block_map = block_map
+    def __init__(self, registry, data, bits, palette=None, non_air=None):
+        self.registry = registry
         self.data = data
+        self.non_air = non_air
         self.bits = bits
-        self.palette = palette or []
+        self.palette = palette or [0]
+        self.non_air = non_air if non_air is not None else \
+            [registry.is_air_block(obj) for obj in self].count(True)
 
     @classmethod
-    def empty(cls, block_map):
+    def empty(cls, registry):
         """
         Creates an empty block array.
         """
-        return cls(block_map, [0] * 256, 4, [0])
+
+        return cls(registry, [0] * 256, 4)
 
     @classmethod
-    def from_nbt(cls, section, block_map):
+    def from_nbt(cls, section, registry):
         """
         Creates a block array that uses the given NBT section tag as storage
         for block data and the palette. Minecraft 1.13+ only.
@@ -91,16 +95,16 @@ class BlockArray(_Array):
         if isinstance(nbt_palette.value, _NBTPaletteProxy):
             proxy = nbt_palette.value
         else:
-            proxy = _NBTPaletteProxy(block_map)
+            proxy = _NBTPaletteProxy(registry)
             for entry in nbt_palette.value:
                 proxy.append(entry)
             nbt_palette.value = proxy
 
         # Load block data
         return cls(
-            block_map,
+            registry,
             section.value["BlockStates"].value,
-            length_to_bits(block_map.max_bits, len(proxy)),
+            length_to_bits(registry.max_bits, len(proxy)),
             proxy.palette)
 
     def is_empty(self):
@@ -125,7 +129,7 @@ class BlockArray(_Array):
             for block in self:
                 if block not in palette:
                     palette.append(block)
-            palette = [self.block_map.encode_block(block) for block in palette]
+            palette = [self.registry.encode_block(block) for block in palette]
             palette_len = len(palette)
         else:
             if not self.palette:
@@ -136,7 +140,7 @@ class BlockArray(_Array):
             palette_len = len(palette) + reserve
 
         # Compute new bits
-        bits = length_to_bits(self.block_map.max_bits, palette_len)
+        bits = length_to_bits(self.registry.max_bits, palette_len)
         if bits > 8:
             palette = []
 
@@ -176,7 +180,7 @@ class BlockArray(_Array):
         if self.palette:
             val = self.palette[val]
 
-        return self.block_map.decode_block(int(val))
+        return self.registry.decode_block(int(val))
 
     def __setitem__(self, n, val):
         if isinstance(n, slice):
@@ -184,7 +188,10 @@ class BlockArray(_Array):
                 self[o] = val[o]
             return
 
-        val = self.block_map.encode_block(val)
+        self.non_air += int(self.registry.is_air_block(self[n])) - \
+                        int(self.registry.is_air_block(val))
+
+        val = self.registry.encode_block(val)
 
         if self.palette:
             try:

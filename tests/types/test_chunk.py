@@ -2,7 +2,7 @@ import os.path
 
 from quarry.types.buffer import Buffer
 from quarry.types.chunk import BlockArray
-from quarry.types.block import OpaqueBlockMap
+from quarry.types.registry import OpaqueRegistry
 
 chunk_path = os.path.join(os.path.dirname(__file__), "chunk.bin")
 
@@ -22,7 +22,7 @@ def test_chunk_pack_unpack():
     assert chunk_data_before == chunk_data_after
 
 def test_chunk_internals():
-    blocks = BlockArray(OpaqueBlockMap(13), [0]*4096, 4, [0])
+    blocks = BlockArray(OpaqueRegistry(13), [0]*4096, 4, [0])
 
     # Accumulate blocks
     added = []

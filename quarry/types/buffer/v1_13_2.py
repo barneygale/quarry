@@ -12,7 +12,7 @@ class Buffer1_13_2(Buffer1_13):
             return cls.pack('?', False)
         else:
             return cls.pack('?', True) + \
-                   cls.pack_varint(cls.block_map.encode_item(item)) + \
+                   cls.pack_varint(cls.registry.encode('item', item)) + \
                    cls.pack('b', count) + \
                    cls.pack_nbt(tag)
 
@@ -26,7 +26,7 @@ class Buffer1_13_2(Buffer1_13):
         if item_id is None:
             slot['item'] = None
         else:
-            slot['item'] = self.block_map.decode_item(item_id)
+            slot['item'] = self.registry.decode('item', item_id)
             slot['count'] = self.unpack('b')
             slot['tag'] = self.unpack_nbt()
         return slot

@@ -1,38 +1,5 @@
-Blocks, Chunks and Regions
-==========================
-
-Blocks
-------
-
-.. currentmodule:: quarry.types.buffer
-
-Quarry can be told to encode/decode block and item information by setting the
-:attr:`Buffer.block_map` attribute on the in-use buffer. This can be set
-directly or by deriving a subclass and customizing
-:meth:`Factory.get_buff_type()`. The block map affects the following methods:
-
-- :meth:`~Buffer.unpack_slot()` and :meth:`~Buffer.pack_slot()`
-- :meth:`~Buffer.unpack_block()` and :meth:`~Buffer.pack_block()`
-- :meth:`~Buffer.unpack_entity_metadata()` and
-  :meth:`~Buffer.pack_entity_metadata()`
-- :meth:`~Buffer.unpack_chunk_section()` and :meth:`~Buffer.pack_chunk_section()`
-
-.. module:: quarry.types.block
-
-All block map objects have the following methods:
-
-.. automethod:: BlockMap.encode_block
-.. automethod:: BlockMap.decode_block
-.. automethod:: BlockMap.encode_item
-.. automethod:: BlockMap.decode_item
-
-Quarry supports the following block map types:
-
-.. autoclass:: OpaqueBlockMap
-.. autoclass:: BitShiftBlockMap
-.. autoclass:: LookupBlockMap
-    :members: from_jar, from_json
-
+Chunks and Regions
+==================
 
 Chunks
 ------
@@ -84,7 +51,7 @@ Minecraft 1.13+. This requires the use of a
 :class:`~quarry.types.nbt.RegionFile`.
 
 Use :meth:`BlockArray.from_nbt` with a
-:class:`~quarry.types.block.LookupBlockMap` to create a block array backed by
+:class:`~quarry.types.block.LookupRegistry` to create a block array backed by
 NBT data. Modifications to the block array will automatically be reflected in
 the NBT data, and vice versa. Use :meth:`LightArray.from_nbt()` for equivalent
 functionality for light arrays.
@@ -95,7 +62,7 @@ block in an existing region file::
     import os.path
 
     from quarry.types.nbt import RegionFile
-    from quarry.types.block import LookupBlockMap
+    from quarry.types.registry import LookupRegistry
     from quarry.types.chunk import BlockArray
 
 
@@ -109,17 +76,12 @@ block in an existing region file::
         jar_path = os.path.join(server_path, "minecraft_server.jar")
         region_path = os.path.join(server_path, "world", "region", "r.%d.%d.mca" % (rx, rz))
 
-        block_map = LookupBlockMap.from_jar(jar_path)
+        registry = LookupRegistry.from_jar(jar_path)
         with RegionFile(region_path) as region:
-            chunk = region.load_chunk(cx, cz)
-            for section in chunk.body.value["Level"].value["Sections"].value:
-                if section.value["Y"].value == cy:
-                    blocks = BlockArray.from_nbt(section, block_map)
-                    blocks[256 * y + 16 * z + x] = block
-                    region.save_chunk(chunk)
-                    break
-            else:
-                raise Exception("Chunk section not found")
+            chunk, section = region.load_chunk_section(cx, cy, cz)
+            blocks = BlockArray.from_nbt(section, registry)
+            blocks[256 * y + 16 * z + x] = block
+            region.save_chunk(chunk)
 
 
     set_block("/path/to/server", 10, 80, 40, {'name': 'minecraft:bedrock'})

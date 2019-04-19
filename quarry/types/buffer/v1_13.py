@@ -1,5 +1,5 @@
 from quarry.types.buffer.v1_9 import Buffer1_9
-from quarry.types.block import OpaqueBlockMap
+from quarry.types.registry import OpaqueRegistry
 
 # Python 3 compat
 try:
@@ -9,7 +9,7 @@ except NameError:
 
 
 class Buffer1_13(Buffer1_9):
-    block_map = OpaqueBlockMap(14)
+    registry = OpaqueRegistry(14)
 
     # Chunk section -----------------------------------------------------------
 
@@ -39,7 +39,7 @@ class Buffer1_13(Buffer1_9):
         if item is None:
             return cls.pack('h', -1)
 
-        item_id = cls.block_map.encode_item(item)
+        item_id = cls.registry.encode('item', item)
         return cls.pack('hb', item_id, count) + cls.pack_nbt(tag)
 
     def unpack_slot(self):
@@ -52,7 +52,7 @@ class Buffer1_13(Buffer1_9):
         if item_id == -1:
             slot['item'] = None
         else:
-            slot['item'] = self.block_map.decode_item(item_id)
+            slot['item'] = self.registry.decode('item', item_id)
             slot['count'] = self.unpack('b')
             slot['tag'] = self.unpack_nbt()
         return slot
@@ -78,10 +78,10 @@ class Buffer1_13(Buffer1_9):
             elif ty == 5:  out += cls.pack_optional(cls.pack_chat, val)
             elif ty == 6:  out += cls.pack_slot(**val)
             elif ty == 7:  out += cls.pack('?', val)
-            elif ty == 8:  out += cls.pack('fff', *val)
+            elif ty == 8:  out += cls.pack_rotation(*val)
             elif ty == 9:  out += cls.pack_position(*val)
             elif ty == 10: out += cls.pack_optional(pack_position, val)
-            elif ty == 11: out += cls.pack_varint(val)
+            elif ty == 11: out += cls.pack_direction(val)
             elif ty == 12: out += cls.pack_optional(cls.pack_uuid, val)
             elif ty == 13: out += cls.pack_block(val)
             elif ty == 14: out += cls.pack_nbt(val)
@@ -109,10 +109,10 @@ class Buffer1_13(Buffer1_9):
             elif ty == 5:  val = self.unpack_optional(self.unpack_chat)
             elif ty == 6:  val = self.unpack_slot()
             elif ty == 7:  val = self.unpack('?')
-            elif ty == 8:  val = self.unpack('fff')
+            elif ty == 8:  val = self.unpack_rotation()
             elif ty == 9:  val = self.unpack_position()
             elif ty == 10: val = self.unpack_optional(self.unpack_position)
-            elif ty == 11: val = self.unpack_varint()
+            elif ty == 11: val = self.unpack_direction()
             elif ty == 12: val = self.unpack_optional(self.unpack_uuid)
             elif ty == 13: val = self.unpack_block()
             elif ty == 14: val = self.unpack_nbt()
@@ -127,6 +127,7 @@ class Buffer1_13(Buffer1_9):
         """
         Packs a particle.
         """
+
         data = data or {}
         out = cls.pack_varint(id)
         if id == 3 or id == 20:
