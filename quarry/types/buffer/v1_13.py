@@ -142,10 +142,13 @@ class Buffer1_13(Buffer1_9):
         elif id == 27:
             out += cls.pack_slot(**data['item'])
 
+        return out
+
     def unpack_particle(self):
         """
         Unpacks a particle. Returns an ``(id, data)`` pair.
         """
+
         id = self.unpack_varint()
         if id == 3 or id == 20:
             data = {'block_state': self.unpack_varint()}
