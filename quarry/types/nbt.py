@@ -328,6 +328,8 @@ class RegionFile(object):
         buff.add(self.fd.read(4))
         entry = buff.unpack('I')
         chunk_offset, chunk_length = entry >> 8, entry & 0xFF
+        if chunk_offset == 0:
+            raise ValueError((chunk_x, chunk_z))
 
         # Read chunk
         self.fd.seek(4096 * chunk_offset)
@@ -336,6 +338,20 @@ class RegionFile(object):
         chunk = zlib.decompress(chunk)
         chunk = TagRoot.from_bytes(chunk)
         return chunk
+
+    def load_chunk_section(self, chunk_x, chunk_y, chunk_z):
+        """
+        Loads the chunk section at the given co-ordinates from the region file.
+        The co-ordinates should range from 0 to 31. Returns a ``TagRoot``.
+        """
+
+        chunk = self.load_chunk(chunk_x, chunk_z)
+        sections = chunk.body.value["Level"].value["Sections"].value
+        for section in sections:
+            if section.value["Y"].value == chunk_y:
+                return chunk, section
+
+        raise ValueError((chunk_x, chunk_y, chunk_z))
 
 
 # Debug -----------------------------------------------------------------------
