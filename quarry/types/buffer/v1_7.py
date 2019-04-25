@@ -16,6 +16,8 @@ try:
 except NameError:
     xrange = range
 
+directions = ("down", "up", "north", "south", "west", "east")
+
 
 class Buffer1_7(object):
     buff = b""
