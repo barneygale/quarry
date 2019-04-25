@@ -1,6 +1,12 @@
 Changelog
 =========
 
+master
+------
+
+- Added support for Minecraft 1.13.2
+- Fixed support for server icons (thanks @dries007) and added caching.
+
 v1.1.1
 ------
 
