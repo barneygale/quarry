@@ -1,6 +1,6 @@
 import os.path
 
-from quarry.types.buffer import Buffer
+from quarry.types.buffer import Buffer1_13_2 as Buffer
 from quarry.types.chunk import BlockArray
 from quarry.types.registry import OpaqueRegistry
 
