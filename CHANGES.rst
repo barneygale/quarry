@@ -1,6 +1,21 @@
 Changelog
 =========
 
+master
+------
+
+- Added support for Minecraft 1.14
+  - BREAKING CHANGE! `BlockMap` objects are replaced by `Registry` objects with
+    greater responsibilities, reflecting the increase in information generated
+    by the official server when run with `--reports`. Villager and particle
+    data is now decoded when using a `LookupRegistry` in a buffer. Other
+    information (for example, mob names from IDs) can be decoded in packet
+    handlers.
+  - `BlockArray` objects now track the number of non-air blocks, which is
+    conveyed in `chunk_data` packets.
+  - Added methods for packing/unpacking optional varints, rotation, direction,
+    villager and pose data.
+
 v1.2
 ----
 
