@@ -55,7 +55,7 @@ class QuietBridge(Bridge):
             p_text = buff.unpack_string()
             return p_text
         elif direction == "downstream":
-            p_text = buff.unpack_chat()
+            p_text = str(buff.unpack_chat())
 
             # 1.7.x
             if self.upstream.protocol_version <= 5:
