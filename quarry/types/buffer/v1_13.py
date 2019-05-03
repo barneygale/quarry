@@ -339,3 +339,83 @@ class Buffer1_13(Buffer1_9):
                 out += cls.pack('?', properties['allow_decimals'])
 
         return out
+
+    # Recipes -----------------------------------------------------------------
+
+    def unpack_recipe(self):
+        """
+        Unpacks a crafting recipe.
+        """
+        recipe = {}
+        recipe['name'] = self.unpack_string()
+        recipe['type'] = self.unpack_string()
+
+        if recipe['type'] == 'crafting_shapeless':
+            recipe['group'] = self.unpack_string()
+            recipe['ingredients'] = [
+                self.unpack_ingredient() for _ in range(self.unpack_varint())]
+            recipe['result'] = self.unpack_slot()
+
+        elif recipe['type'] == 'crafting_shaped':
+            recipe['width'] = self.unpack_varint()
+            recipe['height'] = self.unpack_varint()
+            recipe['group'] = self.unpack_string()
+            recipe['ingredients'] = [
+                self.unpack_ingredient() for _ in range(recipe['width'] *
+                                                    recipe['height'])]
+            recipe['result'] = self.unpack_slot()
+        elif recipe['type'] == 'smelting':
+            recipe['group'] = self.unpack_string()
+            recipe['ingredient'] = self.unpack_ingredient()
+            recipe['result'] = self.unpack_slot()
+            recipe['experience'] = self.unpack('f')
+            recipe['cooking_time'] = self.unpack_varint()
+
+        return recipe
+
+    @classmethod
+    def pack_recipe(cls, name, type, **recipe):
+        """
+        Packs a crafting recipe.
+        """
+        data = cls.pack_string(name) + cls.pack_string(type)
+
+        if type == 'crafting_shapeless':
+            data += cls.pack_string(recipe['group'])
+            data += cls.pack_varint(len(recipe['ingredients']))
+            for ingredient in recipe['ingredients']:
+                data += cls.pack_ingredient(ingredient)
+            data += cls.pack_slot(**recipe['result'])
+
+        elif type == 'crafting_shaped':
+            data += cls.pack_varint(recipe['width'])
+            data += cls.pack_varint(recipe['height'])
+            data += cls.pack_string(recipe['group'])
+            for ingredient in recipe['ingredients']:
+                data += cls.pack_ingredient(ingredient)
+            data += cls.pack_slot(**recipe['result'])
+
+        elif type == 'smelting':
+            data += cls.pack_string(recipe['group'])
+            data += cls.pack_ingredient(recipe['ingredient'])
+            data += cls.pack_slot(**recipe['result'])
+            data += cls.pack('f', recipe['experience'])
+            data += cls.pack_varint(recipe['cooking_time'])
+
+        return data
+
+    def unpack_ingredient(self):
+        """
+        Unpacks a crafting recipe ingredient alternation.
+        """
+        return [self.unpack_slot() for _ in range(self.unpack_varint())]
+
+    @classmethod
+    def pack_ingredient(cls, ingredient):
+        """
+        Packs a crafting recipe ingredient alternation.
+        """
+        data = cls.pack_varint(len(ingredient))
+        for slot in ingredient:
+            data += cls.pack_slot(**slot)
+        return data

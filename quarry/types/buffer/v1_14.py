@@ -3,6 +3,8 @@ from quarry.types.buffer.v1_13_2 import Buffer1_13_2
 
 poses = ('standing', 'fall_flying', 'sleeping', 'swimming', 'spin_attack',
          'sneaking', 'dying')
+smelt_types = ('minecraft:smelting', 'minecraft:blasting',
+               'minecraft:smoking', 'minecraft:campfire_cooking')
 
 class Buffer1_14(Buffer1_13_2):
 
@@ -226,3 +228,67 @@ class Buffer1_14(Buffer1_13_2):
         """
 
         return poses[self.unpack_varint()]
+
+    # Recipes -----------------------------------------------------------------
+
+    def unpack_recipe(self):
+        """
+        Unpacks a crafting recipe.
+        """
+        recipe = {}
+        recipe['type'] = self.unpack_string()
+        recipe['name'] = self.unpack_string()
+
+        if recipe['type'] == 'minecraft:crafting_shapeless':
+            recipe['group'] = self.unpack_string()
+            recipe['ingredients'] = [
+                self.unpack_ingredient() for _ in range(self.unpack_varint())]
+            recipe['result'] = self.unpack_slot()
+
+        elif recipe['type'] == 'minecraft:crafting_shaped':
+            recipe['width'] = self.unpack_varint()
+            recipe['height'] = self.unpack_varint()
+            recipe['group'] = self.unpack_string()
+            recipe['ingredients'] = [
+                self.unpack_ingredient() for _ in range(recipe['width'] *
+                                                    recipe['height'])]
+            recipe['result'] = self.unpack_slot()
+        elif recipe['type'] in smelt_types:
+            recipe['group'] = self.unpack_string()
+            recipe['ingredient'] = self.unpack_ingredient()
+            recipe['result'] = self.unpack_slot()
+            recipe['experience'] = self.unpack('f')
+            recipe['cooking_time'] = self.unpack_varint()
+
+        return recipe
+
+    @classmethod
+    def pack_recipe(cls, name, type, **recipe):
+        """
+        Packs a crafting recipe.
+        """
+        data = cls.pack_string(type) + cls.pack_string(name)
+
+        if type == 'minecraft:crafting_shapeless':
+            data += cls.pack_string(recipe['group'])
+            data += cls.pack_varint(len(recipe['ingredients']))
+            for ingredient in recipe['ingredients']:
+                data += cls.pack_ingredient(ingredient)
+            data += cls.pack_slot(**recipe['result'])
+
+        elif type == 'minecraft:crafting_shaped':
+            data += cls.pack_varint(recipe['width'])
+            data += cls.pack_varint(recipe['height'])
+            data += cls.pack_string(recipe['group'])
+            for ingredient in recipe['ingredients']:
+                data += cls.pack_ingredient(ingredient)
+            data += cls.pack_slot(**recipe['result'])
+
+        elif type in smelt_types:
+            data += cls.pack_string(recipe['group'])
+            data += cls.pack_ingredient(recipe['ingredient'])
+            data += cls.pack_slot(**recipe['result'])
+            data += cls.pack('f', recipe['experience'])
+            data += cls.pack_varint(recipe['cooking_time'])
+
+        return data

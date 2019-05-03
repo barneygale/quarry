@@ -19,7 +19,8 @@ Quarry supports the following methods for working with a buffer:
         unpack_string, unpack_json, unpack_chat, unpack_uuid, unpack_position,
         unpack_rotation, unpack_direction, unpack_block, unpack_slot,
         unpack_nbt, unpack_chunk_section, unpack_entity_metadata,
-        unpack_commands, unpack_particle, unpack_villager, unpack_pose
+        unpack_commands, unpack_particle, unpack_villager, unpack_pose,
+        unpack_recipes
 
 Packing
 -------
@@ -50,6 +51,7 @@ a byte string. A reference to the buffer class is available from
 .. automethod:: Buffer.pack_particle
 .. automethod:: Buffer.pack_villager
 .. automethod:: Buffer.pack_pose
+.. automethod:: Buffer.pack_recipes
 
 
 Protocol Versions
@@ -83,6 +85,7 @@ Changes from 1.9:
 
 - ``pack_commands()`` and ``unpack_commands()`` added.
 - ``pack_particle()`` and ``unpack_particle()`` added.
+- ``pack_recipes()`` and ``unpack_recipes()`` added.
 - ``pack_chunk_section_palette()`` and ``unpack_chunk_section_palette()``
   modified.
 - ``pack_slot()`` and ``unpack_slot()`` modified.
@@ -105,10 +108,11 @@ Support for Minecraft 1.14+ is implemented in the :class:`Buffer1_14` class.
 
 Changes from 1.13.2:
 
+- ``pack_villager()`` and ``unpack_villager()`` added.
+- ``pack_optional_varint()`` and ``unpack_optional_varint()`` added.
+- ``pack_pose()`` and ``unpack_pose()`` added.
 - ``pack_chunk_section()`` and ``unpack_chunk_section()`` modified.
 - ``pack_position()`` and ``unpack_position()`` modified.
 - ``pack_entity_metadata()`` and ``unpack_entity_metadata()`` modified.
 - ``pack_particle()`` and ``unpack_particle()`` modified.
-- ``pack_villager()`` and ``unpack_villager()`` added.
-- ``pack_optional_varint()`` and ``unpack_optional_varint()`` added.
-- ``pack_pose()`` and ``unpack_pose()`` added.
+- ``pack_recipes()`` and ``unpack_recipes()`` modified.
