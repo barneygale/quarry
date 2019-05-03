@@ -49,7 +49,8 @@ class Buffer1_9(Buffer1_7):
             self.registry,
             self.unpack_array('Q', self.unpack_varint()),
             bits,
-            palette)
+            palette,
+            None)
         block_lights = LightArray(self.unpack_array('B', 2048))
         if overworld:
             sky_lights = LightArray(self.unpack_array('B', 2048))

@@ -66,22 +66,28 @@ class _Array(Sequence):
 
 
 class BlockArray(_Array):
-    def __init__(self, registry, data, bits, palette=None, non_air=None):
+    def __init__(self, registry, data, bits, palette=None, non_air=-1):
         self.registry = registry
         self.data = data
-        self.non_air = non_air
         self.bits = bits
         self.palette = palette or [0]
-        self.non_air = non_air if non_air is not None else \
-            [registry.is_air_block(obj) for obj in self].count(True)
+        self.non_air = non_air
+        if self.non_air == -1:
+            self.non_air = [
+                registry.is_air_block(obj) for obj in self].count(True)
 
     @classmethod
-    def empty(cls, registry):
+    def empty(cls, registry, count_non_air=True):
         """
         Creates an empty block array.
         """
 
-        return cls(registry, [0] * 256, 4)
+        return cls(
+            registry=registry,
+            data=[0] * 256,
+            bits=4,
+            palette=None,
+            non_air=-1 if count_non_air else None)
 
     @classmethod
     def from_nbt(cls, section, registry):
@@ -188,8 +194,9 @@ class BlockArray(_Array):
                 self[o] = val[o]
             return
 
-        self.non_air += int(self.registry.is_air_block(self[n])) - \
-                        int(self.registry.is_air_block(val))
+        if self.non_air is not None:
+            self.non_air += int(self.registry.is_air_block(self[n])) - \
+                            int(self.registry.is_air_block(val))
 
         val = self.registry.encode_block(val)
 
