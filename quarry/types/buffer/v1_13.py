@@ -253,7 +253,11 @@ class Buffer1_13(Buffer1_9):
         nodes = [root_node]
         idx = 0
         while idx < len(nodes):
-            children = nodes[idx]['children'].values()
+            node = nodes[idx]
+            children = list(node['children'].values())
+            if node['redirect']:
+                children.append(node['redirect'])
+
             for child in children:
                 if child not in nodes:
                     nodes.append(child)
