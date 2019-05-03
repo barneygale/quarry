@@ -39,7 +39,7 @@ class Buffer1_13(Buffer1_9):
         if item is None:
             return cls.pack('h', -1)
 
-        item_id = cls.registry.encode('item', item)
+        item_id = cls.registry.encode('minecraft:item', item)
         return cls.pack('hb', item_id, count) + cls.pack_nbt(tag)
 
     def unpack_slot(self):
@@ -52,7 +52,7 @@ class Buffer1_13(Buffer1_9):
         if item_id == -1:
             slot['item'] = None
         else:
-            slot['item'] = self.registry.decode('item', item_id)
+            slot['item'] = self.registry.decode('minecraft:item', item_id)
             slot['count'] = self.unpack('b')
             slot['tag'] = self.unpack_nbt()
         return slot

@@ -148,7 +148,7 @@ class Buffer1_14(Buffer1_13_2):
         Packs a particle.
         """
 
-        id = cls.registry.encode('particle_type', kind)
+        id = cls.registry.encode('minecraft:particle_type', kind)
         return super(Buffer1_14, cls).pack_particle(id, data)
 
 
@@ -158,7 +158,7 @@ class Buffer1_14(Buffer1_13_2):
         """
 
         id, data = super(Buffer1_14, self).unpack_particle()
-        kind = self.registry.decode('particle_type', id)
+        kind = self.registry.decode('minecraft:particle_type', id)
         return kind, data
 
 
@@ -170,8 +170,8 @@ class Buffer1_14(Buffer1_13_2):
         Packs villager data.
         """
 
-        kind = cls.registry.encode('villager_type', kind)
-        profession = cls.registry.encode('villager_profession', profession)
+        kind = cls.registry.encode('minecraft:villager_type', kind)
+        profession = cls.registry.encode('minecraft:villager_profession', profession)
         return cls.pack_varint(kind) + \
                cls.pack_varint(profession) + \
                cls.pack_varint(level)
@@ -181,9 +181,9 @@ class Buffer1_14(Buffer1_13_2):
         Unpacks villager data.
         """
         kind = self.registry.decode(
-            'villager_type', self.unpack_varint())
+            'minecraft:villager_type', self.unpack_varint())
         profession = self.registry.decode(
-            'villager_profession', self.unpack_varint())
+            'minecraft:villager_profession', self.unpack_varint())
         level = self.unpack_varint()
         return kind, profession, level
 

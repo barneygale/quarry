@@ -187,8 +187,6 @@ class LookupRegistry(Registry):
         for registry_name, registry in registries_temp.items():
             registries[registry_name] = {}
             for name, obj in registry['entries'].items():
-                assert name.startswith("minecraft:")
-                name = name[len("minecraft:"):]
                 registries[registry_name][obj['protocol_id']] = name
 
         return cls(blocks, registries)
