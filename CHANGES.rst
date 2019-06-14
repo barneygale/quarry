@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-- No changes yet
+- Fixed support for Minecraft 1.7
 
 v1.3
 ----
