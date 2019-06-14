@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+- No changes yet
+
+v1.3
+----
+
 - Added support for Minecraft 1.14 - 1.14.2
   - BREAKING CHANGE! `BlockMap` objects are replaced by `Registry` objects with
     greater responsibilities, reflecting the increase in information generated
