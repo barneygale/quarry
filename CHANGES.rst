@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-- Added support for Minecraft 1.14
+- Added support for Minecraft 1.14 - 1.14.2
   - BREAKING CHANGE! `BlockMap` objects are replaced by `Registry` objects with
     greater responsibilities, reflecting the increase in information generated
     by the official server when run with `--reports`. Villager and particle
