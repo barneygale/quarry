@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-- Added support for Minecraft 1.14.3
+- Added support for Minecraft 1.14.3 and 1.14.4
 - Fixed support for Minecraft 1.7
 
 v1.3
