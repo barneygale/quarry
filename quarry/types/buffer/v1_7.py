@@ -134,6 +134,42 @@ class Buffer1_7(object):
             fields = fields[0]
         return fields
 
+    # Blob data types ---------------------------------------------------------
+
+    @classmethod
+    def pack_blob(cls, fmt, blob):
+        """
+        Packs a length-prefixed byte string.
+
+        The *fmt* parameter gives the format of the length prefix.
+        """
+        return cls.pack(fmt, len(blob)) + blob
+
+    def unpack_blob(self, fmt):
+        """
+        Unpacks a length-prefixed byte string.
+
+        The *fmt* parameter gives the format of the length prefix.
+        """
+        return self.read(self.unpack(fmt))
+
+    @classmethod
+    def pack_varint_blob(cls, blob):
+        """
+        Packs a length-prefixed byte string.
+
+        The length prefix is packed as a varint.
+        """
+        return cls.pack_varint(len(blob)) + blob
+
+    def unpack_varint_blob(self):
+        """
+        Unpacks a length-prefixed byte string.
+
+        The length prefix is unpacked as a varint.
+        """
+        return self.read(self.unpack_varint())
+
     # Array data types --------------------------------------------------------
 
     @classmethod
