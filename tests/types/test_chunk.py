@@ -32,7 +32,6 @@ def test_wikivg_example():
     assert blocks[9] == (1, 0)  # stone
 
 
-# See https://github.com/barneygale/quarry/issues/66
 def test_chunk_pack_unpack():
     bt = Buffer1_13_2
 
@@ -52,6 +51,8 @@ def test_chunk_pack_unpack():
     chunk_data_after = bt.pack_chunk_section(blocks, block_lights, sky_lights)
     assert chunk_data_before == chunk_data_after
 
+
+# See https://github.com/barneygale/quarry/issues/66
 def test_packet_pack_unpack():
     bt = Buffer1_14
 
