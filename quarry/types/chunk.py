@@ -100,7 +100,7 @@ class BlockArray(_Array):
             registry=registry,
             data=BitArray(length=4*4096),
             palette=[0],
-            non_air=-1 if count_non_air else None)
+            non_air=0 if count_non_air else None)
 
     @classmethod
     def from_nbt(cls, section, registry):
