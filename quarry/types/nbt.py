@@ -113,17 +113,14 @@ class TagIntArray(_ArrayTag):
     fmt = 'i'
 
 
-class TagLongArray(_ArrayTag):
-    fmt = 'q'
-
-
-class TagLongBitArray(_Tag):
+class TagLongArray(_Tag):
     @classmethod
     def from_buff(cls, buff):
         return cls(bitstring.BitArray(bytes=buff.read(buff.unpack('i')*8)))
 
     def to_bytes(self):
         return Buffer.pack('i', len(self.value)//64) + self.value.bytes
+
 
 class TagList(_Tag):
     @classmethod
@@ -162,11 +159,6 @@ class TagCompound(_Tag):
                 return cls(value)
             kind = _kinds[kind_id]
             name = TagString.from_buff(buff).value
-
-            # Special-case the BlockStates array
-            if kind is TagLongArray and name == "BlockStates":
-                kind = TagLongBitArray
-
             tag = kind.from_buff(buff)
             value[name] = tag
             if cls.root:
@@ -224,7 +216,6 @@ _kinds[10] = TagCompound
 _kinds[11] = TagIntArray
 _kinds[12] = TagLongArray
 _ids.update({v: k for k, v in _kinds.items()})
-_ids[TagLongBitArray] = 12
 
 
 # Files -----------------------------------------------------------------------
