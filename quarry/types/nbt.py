@@ -195,6 +195,10 @@ class TagCompound(_Tag):
 class TagRoot(TagCompound):
     root = True
 
+    @classmethod
+    def from_body(cls, body):
+        return cls({u"": body})
+
     @property
     def body(self):
         return self.value[u""]
