@@ -3,7 +3,7 @@
 set -e
 
 # Package dependencies
-pip install twisted cryptography pyOpenSSL service_identity
+pip install twisted cryptography pyOpenSSL service_identity bitstring
 # Test dependencies
 pip install pytest
 
