@@ -19,8 +19,7 @@ class Buffer1_14(Buffer1_13_2):
 
         out = cls.pack('HB', blocks.non_air, blocks.bits)
         out += cls.pack_chunk_section_palette(blocks.palette)
-        out += cls.pack_varint(len(blocks.data))
-        out += cls.pack_array('Q', blocks.data)
+        out += cls.pack_chunk_section_array(blocks.data)
         return out
 
     def unpack_chunk_section(self):
@@ -30,10 +29,10 @@ class Buffer1_14(Buffer1_13_2):
 
         non_air, bits = self.unpack('HB')
         palette = self.unpack_chunk_section_palette(bits)
+        array = self.unpack_chunk_section_array()
         return BlockArray(
             self.registry,
-            self.unpack_array('Q', self.unpack_varint()),
-            bits,
+            array,
             palette,
             non_air)
 

@@ -1,3 +1,4 @@
+import bitstring
 import collections
 import functools
 import gzip
@@ -116,9 +117,13 @@ class TagLongArray(_ArrayTag):
     fmt = 'q'
 
 
-class TagUnsignedLongArray(_ArrayTag):
-    fmt = 'Q'
+class TagLongBitArray(_Tag):
+    @classmethod
+    def from_buff(cls, buff):
+        return cls(bitstring.BitArray(bytes=buff.read(buff.unpack('i')*8)))
 
+    def to_bytes(self):
+        return Buffer.pack('i', len(self.value)//64) + self.value.bytes
 
 class TagList(_Tag):
     @classmethod
@@ -158,13 +163,9 @@ class TagCompound(_Tag):
             kind = _kinds[kind_id]
             name = TagString.from_buff(buff).value
 
-            # ~~ Evil Hack Alert ~~
-            # Signed bitwise arithmetic in Python is simultaneously elegant and
-            # baffling. Special-case the BlockStates array to use /unsigned/
-            # integers, in contravention of spec, but to the great relief of
-            # this programmer.
+            # Special-case the BlockStates array
             if kind is TagLongArray and name == "BlockStates":
-                kind = TagUnsignedLongArray
+                kind = TagLongBitArray
 
             tag = kind.from_buff(buff)
             value[name] = tag
@@ -223,7 +224,7 @@ _kinds[10] = TagCompound
 _kinds[11] = TagIntArray
 _kinds[12] = TagLongArray
 _ids.update({v: k for k, v in _kinds.items()})
-_ids[TagUnsignedLongArray] = 12
+_ids[TagLongBitArray] = 12
 
 
 # Files -----------------------------------------------------------------------

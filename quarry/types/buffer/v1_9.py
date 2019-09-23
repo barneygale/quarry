@@ -1,3 +1,4 @@
+from bitstring import BitArray
 from quarry.types.buffer.v1_7 import Buffer1_7
 from quarry.types.chunk import BlockArray, LightArray
 
@@ -22,13 +23,16 @@ class Buffer1_9(Buffer1_7):
 
         out = cls.pack('B', blocks.bits)
         out += cls.pack_chunk_section_palette(blocks.palette)
-        out += cls.pack_varint(len(blocks.data))
-        out += cls.pack_array('Q', blocks.data)
+        out += cls.pack_chunk_section_array(blocks.data)
         out += cls.pack_array('B', block_lights.data)
         if sky_lights:
             out += cls.pack_array('B', sky_lights.data)
 
         return out
+
+    @classmethod
+    def pack_chunk_section_array(cls, array):
+        return cls.pack_varint(len(array) // 64) + array.bytes
 
     @classmethod
     def pack_chunk_section_palette(cls, palette):
@@ -45,10 +49,10 @@ class Buffer1_9(Buffer1_7):
 
         bits = self.unpack('B')
         palette = self.unpack_chunk_section_palette(bits)
+        array = self.unpack_chunk_section_array()
         blocks = BlockArray(
             self.registry,
-            self.unpack_array('Q', self.unpack_varint()),
-            bits,
+            array,
             palette,
             None)
         block_lights = LightArray(self.unpack_array('B', 2048))
@@ -61,6 +65,9 @@ class Buffer1_9(Buffer1_7):
 
     def unpack_chunk_section_palette(self, bits):
         return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+
+    def unpack_chunk_section_array(self):
+        return BitArray(bytes=self.read(self.unpack_varint() * 8))
 
 
     # Entity metadata ---------------------------------------------------------

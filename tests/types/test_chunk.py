@@ -1,10 +1,30 @@
 import os.path
 
+import bitstring
+
 from quarry.types.buffer import Buffer1_13_2 as Buffer
 from quarry.types.chunk import BlockArray
-from quarry.types.registry import OpaqueRegistry
+from quarry.types.registry import OpaqueRegistry, BitShiftRegistry
 
 chunk_path = os.path.join(os.path.dirname(__file__), "chunk.bin")
+
+
+def test_wikivg_example():
+    # Example from https://wiki.vg/Chunk_Format#Example
+    data = bitstring.BitArray(length=13*4096)
+    data[0:64]   = '0b0000000100000000000110001000000011000000000001100000000000100000'
+    data[64:128] = '0b0000001000000000110100000000011010000000000001001100000000100000'
+    blocks = BlockArray(BitShiftRegistry(13), data, [])
+    assert blocks[0] == (2, 0)  # grass
+    assert blocks[1] == (3, 0)  # dirt
+    assert blocks[2] == (3, 0)  # dirt
+    assert blocks[3] == (3, 1)  # coarse dirt
+    assert blocks[4] == (1, 0)  # stone
+    assert blocks[5] == (1, 0)  # stone
+    assert blocks[6] == (1, 3)  # diorite
+    assert blocks[7] == (13, 0) # gravel
+    assert blocks[8] == (13, 0) # gravel
+    assert blocks[9] == (1, 0)  # stone
 
 
 def test_chunk_pack_unpack():
@@ -22,7 +42,7 @@ def test_chunk_pack_unpack():
     assert chunk_data_before == chunk_data_after
 
 def test_chunk_internals():
-    blocks = BlockArray(OpaqueRegistry(13), [0]*4096, 4, [0])
+    blocks = BlockArray.empty(OpaqueRegistry(13))
 
     # Accumulate blocks
     added = []

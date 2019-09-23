@@ -1,4 +1,5 @@
 from collections import Sequence, MutableSequence
+from bitstring import BitArray
 import math
 
 
@@ -16,6 +17,19 @@ def length_to_bits(max_bits, length):
         return max_bits
     else:
         return bits
+
+
+def index_to_addresses(index, bits):
+    idx0 = (index * bits) // 64
+    idx1 = ((index + 1) * bits - 1) // 64
+    len0 = 64 - (index * bits) % 64
+    len1 = bits - len0
+
+    if idx0 == idx1:
+        yield 0, 64 * idx0 - len1, bits
+    else:
+        yield 0, 64 * (idx1 + 1) - len1, len1
+        yield len1, 64 * idx0, len0
 
 
 class _NBTPaletteProxy(MutableSequence):
@@ -66,11 +80,11 @@ class _Array(Sequence):
 
 
 class BlockArray(_Array):
-    def __init__(self, registry, data, bits, palette=None, non_air=-1):
+    def __init__(self, registry, data, palette, non_air=-1):
         self.registry = registry
         self.data = data
-        self.bits = bits
-        self.palette = palette or [0]
+        self.bits = len(data) // 4096
+        self.palette = palette
         self.non_air = non_air
         if self.non_air == -1:
             self.non_air = [
@@ -84,9 +98,8 @@ class BlockArray(_Array):
 
         return cls(
             registry=registry,
-            data=[0] * 256,
-            bits=4,
-            palette=None,
+            data=BitArray(length=4*4096),
+            palette=[0],
             non_air=-1 if count_non_air else None)
 
     @classmethod
@@ -110,7 +123,6 @@ class BlockArray(_Array):
         return cls(
             registry,
             section.value["BlockStates"].value,
-            length_to_bits(registry.max_bits, len(proxy)),
             proxy.palette)
 
     def is_empty(self):
@@ -121,7 +133,7 @@ class BlockArray(_Array):
         if self.palette:
             return self.palette == [0]
         else:
-            return not any(self.data)
+            return not self.data.any()
 
     def repack(self, reserve=None):
         """
@@ -158,9 +170,10 @@ class BlockArray(_Array):
         values = self[:]
 
         # Update internals
-        self.data[:] = [0] * (64 * bits)
         self.bits = bits
-        del self.palette[:]
+        self.data.clear()
+        self.data.append(bits * 4096)
+        self.palette.clear()
         self.palette.extend(palette)
 
         # Load contents
@@ -169,24 +182,16 @@ class BlockArray(_Array):
     def __getitem__(self, n):
         if isinstance(n, slice):
             return [self[o] for o in xrange(*n.indices(4096))]
+        if n >= 4096:
+            raise IndexError(n)
 
-        idx0 = (self.bits * n) // 64
-        idx1 = (self.bits * (n + 1) - 1) // 64
-
-        off0 = (self.bits * n) % 64
-        off1 = 64 - off0
-
-        if idx0 == idx1:
-            val = self.data[idx0] >> off0
-        else:
-            val = (self.data[idx0] >> off0) | (self.data[idx1] << off1)
-
-        val &= (1 << self.bits) - 1
+        val = sum(self.data[pos:pos+length]
+                  for _, pos, length in index_to_addresses(n, self.bits)).uint
 
         if self.palette:
             val = self.palette[val]
 
-        return self.registry.decode_block(int(val))
+        return self.registry.decode_block(val)
 
     def __setitem__(self, n, val):
         if isinstance(n, slice):
@@ -210,21 +215,9 @@ class BlockArray(_Array):
                     self.palette.append(val)
                     val = len(self.palette) - 1
 
-        idx0 = (self.bits * n) // 64
-        idx1 = (self.bits * (n + 1) - 1) // 64
-
-        off0 = (self.bits * n) % 64
-        off1 = 64 - off0
-
-        mask0 = ((1 << self.bits) - 1) << off0
-        mask1 = ((1 << self.bits) - 1) >> off1
-
-        self.data[idx0] &= (2 ** 64 - 1) & ~mask0
-        self.data[idx0] |= (2 ** 64 - 1) & mask0 & (val << off0)
-
-        if idx0 != idx1:
-            self.data[idx1] &= ~mask1
-            self.data[idx1] |= mask1 & (val >> off1)
+        val = BitArray(uint=val, length=self.bits)
+        for inpos, outpos, length in index_to_addresses(n, self.bits):
+            self.data.overwrite(val[inpos:inpos+length], outpos)
 
 
 class LightArray(_Array):
