@@ -2,11 +2,16 @@ import os.path
 
 import bitstring
 
-from quarry.types.buffer import Buffer1_13_2 as Buffer
+from quarry.types.buffer import Buffer1_13_2, Buffer1_14
 from quarry.types.chunk import BlockArray
 from quarry.types.registry import OpaqueRegistry, BitShiftRegistry
+from quarry.types.nbt import TagCompound
 
-chunk_path = os.path.join(os.path.dirname(__file__), "chunk.bin")
+TagCompound.preserve_order = True # for testing purposes.
+
+root_path = os.path.dirname(__file__)
+chunk_path = os.path.join(root_path, "chunk.bin")
+packet_path = os.path.join(root_path, "packet.bin")
 
 
 def test_wikivg_example():
@@ -27,19 +32,53 @@ def test_wikivg_example():
     assert blocks[9] == (1, 0)  # stone
 
 
+# See https://github.com/barneygale/quarry/issues/66
 def test_chunk_pack_unpack():
+    bt = Buffer1_13_2
+
     with open(chunk_path, "rb") as fd:
         chunk_data_before = fd.read()
 
-    buff = Buffer(chunk_data_before)
+    # Unpack
+    buff = bt(chunk_data_before)
     blocks, block_lights, sky_lights = buff.unpack_chunk_section()
-    chunk_data_after = Buffer.pack_chunk_section(blocks, block_lights, sky_lights)
 
     assert len(buff) == 0
     assert blocks      [1400:1410] == [32, 32, 32, 288, 275, 288, 288, 497, 497, 0]
     assert block_lights[1400:1410] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     assert sky_lights  [1400:1410] == [0, 0, 0, 13, 0, 12, 11, 10, 14, 15]
+
+    # Pack
+    chunk_data_after = bt.pack_chunk_section(blocks, block_lights, sky_lights)
     assert chunk_data_before == chunk_data_after
+
+def test_packet_pack_unpack():
+    bt = Buffer1_14
+
+    with open(packet_path, "rb") as f:
+        packet_data_before = f.read()
+
+    # Unpack
+    buff = bt(packet_data_before)
+    bitmask = buff.unpack_varint()
+    heightmap = buff.unpack_nbt()
+    sections, biomes = buff.unpack_chunk(bitmask)
+    block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
+    assert len(buff) == 0
+    assert bitmask == 0b1111
+    assert heightmap.body.value.keys() == set(['WORLD_SURFACE', 'MOTION_BLOCKING'])
+    assert sections[0][0] == 33
+    assert biomes[0] == 16
+    assert len(block_entities) == 0
+
+    # Pack
+    packet_data_after = \
+        bt.pack_chunk_bitmask(sections) + \
+        bt.pack_nbt(heightmap) + \
+        bt.pack_chunk(sections, biomes) + \
+        bt.pack_varint(len(block_entities)) + \
+        b"".join(bt.pack_nbt(tag) for tag in block_entities)
+    assert packet_data_before == packet_data_after
 
 def test_chunk_internals():
     blocks = BlockArray.empty(OpaqueRegistry(13))

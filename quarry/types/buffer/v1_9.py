@@ -15,11 +15,14 @@ class Buffer1_9(Buffer1_7):
     # Chunk section -----------------------------------------------------------
 
     @classmethod
-    def pack_chunk(cls, sections):
+    def pack_chunk(cls, sections, biomes=None):
         data = b""
         for section in sections:
             if not section[0].is_empty():
                 data += cls.pack_chunk_section(*section)
+        if biomes:
+            data += cls.pack_array('I', biomes)
+        data = cls.pack_varint(len(data)) + data
         return data
 
     @classmethod
@@ -55,7 +58,8 @@ class Buffer1_9(Buffer1_7):
     def pack_chunk_section_array(cls, array):
         return cls.pack_varint(len(array) // 64) + array.bytes
 
-    def unpack_chunk(self, bitmask, overworld=True):
+    def unpack_chunk(self, bitmask, full=True, overworld=True):
+        size = self.unpack_varint()
         sections = []
         for idx in range(16):
             if bitmask & (1 << idx):
@@ -66,7 +70,11 @@ class Buffer1_9(Buffer1_7):
                     LightArray.empty(),
                     LightArray.empty() if overworld else None)
             sections.append(section)
-        return sections
+        if full:
+            biomes = self.unpack('I' * 256)
+        else:
+            biomes = None
+        return sections, biomes
 
     def unpack_chunk_section(self, overworld=True):
         """

@@ -11,6 +11,25 @@ class Buffer1_14(Buffer1_13_2):
     # Chunk section -----------------------------------------------------------
 
     @classmethod
+    def pack_chunk(cls, sections, biomes=None):
+        data = b""
+        for section in sections:
+            if not section.is_empty():
+                data += cls.pack_chunk_section(section)
+        if biomes:
+            data += cls.pack_array('I', biomes)
+        data = cls.pack_varint(len(data)) + data
+        return data
+
+    @classmethod
+    def pack_chunk_bitmask(cls, sections):
+        bitmask = 0
+        for i, section in enumerate(sections):
+            if not section.is_empty():
+                bitmask |= 1 << i
+        return cls.pack_varint(bitmask)
+
+    @classmethod
     def pack_chunk_section(cls, blocks):
         """
         Packs a chunk section. The supplied argument should be an instance of
@@ -36,7 +55,8 @@ class Buffer1_14(Buffer1_13_2):
             palette,
             non_air)
 
-    def unpack_chunk(self, bitmask):
+    def unpack_chunk(self, bitmask, full=True):
+        size = self.unpack_varint()
         sections = []
         for idx in range(16):
             if bitmask & (1 << idx):
@@ -44,8 +64,11 @@ class Buffer1_14(Buffer1_13_2):
             else:
                 section = BlockArray.empty(self.registry, count_non_air=True)
             sections.append(section)
-        return sections
-
+        if full:
+            biomes = self.unpack('I' * 256)
+        else:
+            biomes = None
+        return sections, biomes
 
     # Position ----------------------------------------------------------------
 
