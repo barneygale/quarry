@@ -36,6 +36,16 @@ class Buffer1_14(Buffer1_13_2):
             palette,
             non_air)
 
+    def unpack_chunk(self, bitmask):
+        sections = []
+        for idx in range(16):
+            if bitmask & (1 << idx):
+                section = self.unpack_chunk_section()
+            else:
+                section = BlockArray.empty(self.registry, count_non_air=True)
+            sections.append(section)
+        return sections
+
 
     # Position ----------------------------------------------------------------
 

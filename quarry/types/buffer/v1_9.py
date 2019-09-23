@@ -15,6 +15,22 @@ class Buffer1_9(Buffer1_7):
     # Chunk section -----------------------------------------------------------
 
     @classmethod
+    def pack_chunk(cls, sections):
+        data = b""
+        for section in sections:
+            if not section[0].is_empty():
+                data += cls.pack_chunk_section(*section)
+        return data
+
+    @classmethod
+    def pack_chunk_bitmask(cls, sections):
+        bitmask = 0
+        for i, section in enumerate(sections):
+            if not section[0].is_empty():
+                bitmask |= 1 << i
+        return cls.pack_varint(bitmask)
+
+    @classmethod
     def pack_chunk_section(cls, blocks, block_lights, sky_lights=None):
         """
         Packs a chunk section. The supplied arguments should be instances of
@@ -31,13 +47,26 @@ class Buffer1_9(Buffer1_7):
         return out
 
     @classmethod
-    def pack_chunk_section_array(cls, array):
-        return cls.pack_varint(len(array) // 64) + array.bytes
-
-    @classmethod
     def pack_chunk_section_palette(cls, palette):
         return cls.pack_varint(len(palette)) + b"".join(
             cls.pack_varint(x) for x in palette)
+
+    @classmethod
+    def pack_chunk_section_array(cls, array):
+        return cls.pack_varint(len(array) // 64) + array.bytes
+
+    def unpack_chunk(self, bitmask, overworld=True):
+        sections = []
+        for idx in range(16):
+            if bitmask & (1 << idx):
+                section = self.unpack_chunk_section(overworld)
+            else:
+                section = (
+                    BlockArray.empty(self.registry, count_non_air=False),
+                    LightArray.empty(),
+                    LightArray.empty() if overworld else None)
+            sections.append(section)
+        return sections
 
     def unpack_chunk_section(self, overworld=True):
         """
@@ -68,7 +97,6 @@ class Buffer1_9(Buffer1_7):
 
     def unpack_chunk_section_array(self):
         return BitArray(bytes=self.read(self.unpack_varint() * 8))
-
 
     # Entity metadata ---------------------------------------------------------
 
