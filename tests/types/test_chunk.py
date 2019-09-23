@@ -3,7 +3,7 @@ import os.path
 import bitstring
 
 from quarry.types.buffer import Buffer1_13_2, Buffer1_14
-from quarry.types.chunk import BlockArray
+from quarry.types.chunk import BlockArray, HeightArray
 from quarry.types.registry import OpaqueRegistry, BitShiftRegistry
 from quarry.types.nbt import TagCompound
 
@@ -63,11 +63,14 @@ def test_packet_pack_unpack():
     buff = bt(packet_data_before)
     bitmask = buff.unpack_varint()
     heightmap = buff.unpack_nbt()
+    motion_blocking = heightmap.body.value['MOTION_BLOCKING'].value
+    motion_blocking = HeightArray(motion_blocking)
     sections, biomes = buff.unpack_chunk(bitmask)
     block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
     assert len(buff) == 0
     assert bitmask == 0b1111
-    assert heightmap.body.value.keys() == set(['WORLD_SURFACE', 'MOTION_BLOCKING'])
+    assert motion_blocking[0] == 63
+    assert motion_blocking[255] == 64
     assert sections[0][0] == 33
     assert biomes[0] == 16
     assert len(block_entities) == 0
