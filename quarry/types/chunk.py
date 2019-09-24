@@ -1,5 +1,5 @@
 from collections import Sequence, MutableSequence
-from bitstring import Bits, BitArray
+from bitstring import BitArray
 import math
 
 
@@ -14,25 +14,25 @@ class _NBTPaletteProxy(MutableSequence):
         self.registry = registry
         self.palette = []
 
-    def insert(self, n, val):
+    def insert(self, idx, value):
         # FIXME: NBT chunk sections are *always* paletted, and so the format
         # diverges for palettes longer than 255 entries.
         if len(self.palette) >= 255:
             raise ValueError("Can't add more than 255 entries to NBT palette "
                              "proxy.")
-        self.palette.insert(n, None)
-        self[n] = val
+        self.palette.insert(idx, None)
+        self[idx] = value
 
     def __len__(self):
         return len(self.palette)
 
-    def __delitem__(self, n):
-        del self.palette[n]
+    def __delitem__(self, idx):
+        del self.palette[idx]
 
-    def __getitem__(self, n):
+    def __getitem__(self, idx):
         from quarry.types import nbt
 
-        block = self.registry.decode_block(self.palette[n])
+        block = self.registry.decode_block(self.palette[idx])
         entry = nbt.TagCompound({'Name': nbt.TagString(block['name'])})
         if len(block) > 1:
             entry.value['Properties'] = nbt.TagCompound({
@@ -42,13 +42,13 @@ class _NBTPaletteProxy(MutableSequence):
 
         return entry
 
-    def __setitem__(self, n, tag):
+    def __setitem__(self, idx, tag):
         block = {'name': tag.value['Name'].value}
         properties = tag.value.get('Properties')
         if properties:
             block.update(properties.to_obj())
 
-        self.palette[n] = self.registry.encode_block(block)
+        self.palette[idx] = self.registry.encode_block(block)
 
 
 class LongArray(Sequence):
@@ -74,42 +74,47 @@ class LongArray(Sequence):
     def __len__(self):
         return len(self.data) // self.bits
 
+    def __iter__(self):
+        for value in self.data.cut(self.bits):
+            value._reverse()
+            yield value.uint
+
     def __getitem__(self, item):
         bits = self.bits
         if isinstance(item, slice):
             start, stop, step = item.indices(len(self))
-            vals = []
+            values = []
             if step == 1:
-                for val in self.data.cut(bits, bits*start, bits*stop):
-                    val._reverse()
-                    vals.append(val.uint)
+                for value in self.data.cut(bits, bits*start, bits*stop):
+                    value._reverse()
+                    values.append(value.uint)
             else:
                 for idx in xrange(start, stop, step):
-                    val = self.data[bits*idx:bits*(idx+1)]
-                    val._reverse()
-                    vals.append(val.uint)
-            return vals
+                    value = self.data[bits*idx:bits*(idx+1)]
+                    value._reverse()
+                    values.append(value.uint)
+            return values
         else:
             idx = item
             if not 0 <= idx < len(self):
                 raise IndexError(idx)
-            val = self.data[bits*idx:bits*(idx+1)]
-            val._reverse()
-            return val.uint
+            value = self.data[bits*idx:bits*(idx+1)]
+            value._reverse()
+            return value.uint
 
-    def __setitem__(self, item, val):
+    def __setitem__(self, item, value):
         bits = self.bits
         if isinstance(item, slice):
             start, stop, step = item.indices(len(self))
             for idx in xrange(start, stop, step):
-                val = BitArray(uint=val[idx], length=bits)
-                val._reverse()
-                self.data.overwrite(val, idx*bits)
+                value = BitArray(uint=value[idx], length=bits)
+                value._reverse()
+                self.data.overwrite(value, idx * bits)
         else:
             idx = item
-            val = BitArray(uint=val, length=bits)
-            val._reverse()
-            self.data.overwrite(val, idx*bits)
+            value = BitArray(uint=value, length=bits)
+            value._reverse()
+            self.data.overwrite(value, idx * bits)
 
     # Other methods -----------------------------------------------------------
 
@@ -184,44 +189,66 @@ class BlockArray(Sequence):
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            vals = []
-            for val in self.data[item.start:item.stop:item.step]:
+            values = []
+            for value in self.data[item.start:item.stop:item.step]:
                 if self.palette:
-                    val = self.palette[val]
-                val = self.registry.decode_block(val)
-                vals.append(val)
-            return vals
+                    value = self.palette[value]
+                value = self.registry.decode_block(value)
+                values.append(value)
+            return values
         else:
-            val = self.data[item]
+            value = self.data[item]
             if self.palette:
-                val = self.palette[val]
-            val = self.registry.decode_block(val)
-            return val
+                value = self.palette[value]
+            value = self.registry.decode_block(value)
+            return value
 
-    def __setitem__(self, item, val):
+    def __setitem__(self, item, value):
         # FIXME: improve performance of slice sets.
         if isinstance(item, slice):
             for idx in xrange(*item.indices(4096)):
-                self[idx] = val[idx]
+                self[idx] = value[idx]
             return
 
         if self.non_air is not None:
             self.non_air += int(self.registry.is_air_block(self[item])) - \
-                            int(self.registry.is_air_block(val))
+                            int(self.registry.is_air_block(value))
 
-        val = self.registry.encode_block(val)
+        value = self.registry.encode_block(value)
 
         if self.palette:
             try:
-                val = self.palette.index(val)
+                value = self.palette.index(value)
             except ValueError:
                 self.repack(reserve=1)
 
                 if self.palette:
-                    self.palette.append(val)
-                    val = len(self.palette) - 1
+                    self.palette.append(value)
+                    value = len(self.palette) - 1
 
-        self.data[item] = val
+        self.data[item] = value
+
+    def __iter__(self):
+        for value in self.data:
+            if self.palette:
+                value = self.palette[value]
+            value = self.registry.decode_block(value)
+            yield value
+
+    def __contains__(self, value):
+        if self.palette and self.registry.encode_block(value) not in self.palette:
+            return False
+        return super(BlockArray, self).__contains__(value)
+
+    def index(self, value, start=0, stop=None):
+        if self.palette and self.registry.encode_block(value) not in self.palette:
+            raise ValueError
+        return super(BlockArray, self).index(value, start, stop)
+
+    def count(self, value):
+        if self.palette and self.registry.encode_block(value) not in self.palette:
+            return 0
+        return super(BlockArray, self).count(value)
 
     # Other methods -----------------------------------------------------------
 
@@ -319,20 +346,20 @@ class LightArray(Sequence):
             return [self[idx] for idx in xrange(*item.indices(4096))]
         assert isinstance(item, int)
         idx, off = divmod(item, 2)
-        val = self.data[idx]
+        value = self.data[idx]
         if off == 0:
-            return val & 0x0F
+            return value & 0x0F
         else:
-            return val >> 4
+            return value >> 4
 
-    def __setitem__(self, item, val):
+    def __setitem__(self, item, value):
         if isinstance(item, slice):
             for idx in xrange(*item.indices(4096)):
-                self[idx] = val[idx]
+                self[idx] = value[idx]
             return
         assert isinstance(item, int)
         idx, off = divmod(item, 2)
         if off == 0:
-            self.data[idx] = (self.data[idx] & 0xF0) | val
+            self.data[idx] = (self.data[idx] & 0xF0) | value
         else:
-            self.data[idx] = (self.data[idx] & 0x0F) | (val << 4)
+            self.data[idx] = (self.data[idx] & 0x0F) | (value << 4)
