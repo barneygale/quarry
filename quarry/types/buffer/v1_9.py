@@ -18,7 +18,7 @@ class Buffer1_9(Buffer1_7):
     def pack_chunk(cls, sections, biomes=None):
         data = b""
         for section in sections:
-            if not section[0].is_empty():
+            if section and not section[0].is_empty():
                 data += cls.pack_chunk_section(*section)
         if biomes:
             data += cls.pack_array('I', biomes)
@@ -29,7 +29,7 @@ class Buffer1_9(Buffer1_7):
     def pack_chunk_bitmask(cls, sections):
         bitmask = 0
         for i, section in enumerate(sections):
-            if not section[0].is_empty():
+            if section and not section[0].is_empty():
                 bitmask |= 1 << i
         return cls.pack_varint(bitmask)
 
@@ -66,10 +66,7 @@ class Buffer1_9(Buffer1_7):
             if bitmask & (1 << idx):
                 section = self.unpack_chunk_section(overworld)
             else:
-                section = (
-                    BlockArray.empty(self.registry, count_non_air=False),
-                    LightArray.empty(),
-                    LightArray.empty() if overworld else None)
+                section = None
             sections.append(section)
         if full:
             biomes = self.unpack('I' * 256)

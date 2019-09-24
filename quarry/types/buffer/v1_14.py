@@ -11,26 +11,7 @@ class Buffer1_14(Buffer1_13_2):
     # Chunk section -----------------------------------------------------------
 
     @classmethod
-    def pack_chunk(cls, sections, biomes=None):
-        data = b""
-        for section in sections:
-            if not section.is_empty():
-                data += cls.pack_chunk_section(section)
-        if biomes:
-            data += cls.pack_array('I', biomes)
-        data = cls.pack_varint(len(data)) + data
-        return data
-
-    @classmethod
-    def pack_chunk_bitmask(cls, sections):
-        bitmask = 0
-        for i, section in enumerate(sections):
-            if not section.is_empty():
-                bitmask |= 1 << i
-        return cls.pack_varint(bitmask)
-
-    @classmethod
-    def pack_chunk_section(cls, blocks):
+    def pack_chunk_section(cls, blocks, block_lights=None, sky_lights=None):
         """
         Packs a chunk section. The supplied argument should be an instance of
         ``quarry.types.chunk.BlockArray``.
@@ -41,7 +22,7 @@ class Buffer1_14(Buffer1_13_2):
         out += cls.pack_chunk_section_array(blocks.data)
         return out
 
-    def unpack_chunk_section(self):
+    def unpack_chunk_section(self, overworld=True):
         """
         Unpacks a chunk section. Returns a sequence of length 4096 (16x16x16).
         """
@@ -53,22 +34,7 @@ class Buffer1_14(Buffer1_13_2):
             array,
             self.registry,
             palette,
-            non_air)
-
-    def unpack_chunk(self, bitmask, full=True):
-        size = self.unpack_varint()
-        sections = []
-        for idx in range(16):
-            if bitmask & (1 << idx):
-                section = self.unpack_chunk_section()
-            else:
-                section = BlockArray.empty(self.registry, count_non_air=True)
-            sections.append(section)
-        if full:
-            biomes = self.unpack('I' * 256)
-        else:
-            biomes = None
-        return sections, biomes
+            non_air), None, None
 
     # Position ----------------------------------------------------------------
 

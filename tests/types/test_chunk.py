@@ -73,7 +73,7 @@ def test_packet_pack_unpack():
     assert bitmask == 0b1111
     assert motion_blocking[0] == 63
     assert motion_blocking[255] == 64
-    assert sections[0][0] == 33
+    assert sections[0][0][0] == 33
     assert biomes[0] == 16
     assert len(block_entities) == 0
 
