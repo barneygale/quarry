@@ -74,25 +74,42 @@ class LongArray(Sequence):
     def __len__(self):
         return len(self.data) // self.bits
 
-    def __getitem__(self, n):
-        if isinstance(n, slice):
-            return [self[o] for o in range(*n.indices(4096))]
-        if not 0 <= n < len(self):
-            raise IndexError(n)
-        val = self.data[self.bits*n:self.bits*(n+1)]
-        val._reverse()
-        return val.uint
+    def __getitem__(self, item):
+        bits = self.bits
+        if isinstance(item, slice):
+            start, stop, step = item.indices(len(self))
+            vals = []
+            if step == 1:
+                for val in self.data.cut(bits, bits*start, bits*stop):
+                    val._reverse()
+                    vals.append(val.uint)
+            else:
+                for idx in xrange(start, stop, step):
+                    val = self.data[bits*idx:bits*(idx+1)]
+                    val._reverse()
+                    vals.append(val.uint)
+            return vals
+        else:
+            idx = item
+            if not 0 <= idx < len(self):
+                raise IndexError(idx)
+            val = self.data[bits*idx:bits*(idx+1)]
+            val._reverse()
+            return val.uint
 
-    def __setitem__(self, n, val):
-        if isinstance(n, slice):
-            for o in xrange(*n.indices(4096)):
-                self[o] = val[o]
-            return
-        if not 0 <= n < len(self):
-            raise IndexError(n)
-        val = BitArray(uint=val, length=self.bits)
-        val._reverse()
-        self.data.overwrite(val, n * self.bits)
+    def __setitem__(self, item, val):
+        bits = self.bits
+        if isinstance(item, slice):
+            start, stop, step = item.indices(len(self))
+            for idx in xrange(start, stop, step):
+                val = BitArray(uint=val[idx], length=bits)
+                val._reverse()
+                self.data.overwrite(val, idx*bits)
+        else:
+            idx = item
+            val = BitArray(uint=val, length=bits)
+            val._reverse()
+            self.data.overwrite(val, idx*bits)
 
     # Other methods -----------------------------------------------------------
 
@@ -165,24 +182,31 @@ class BlockArray(Sequence):
     def __len__(self):
         return 4096
 
-    def __getitem__(self, n):
-        if isinstance(n, slice):
-            return [self[o] for o in range(*n.indices(4096))]
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            vals = []
+            for val in self.data[item.start:item.stop:item.step]:
+                if self.palette:
+                    val = self.palette[val]
+                val = self.registry.decode_block(val)
+                vals.append(val)
+            return vals
+        else:
+            val = self.data[item]
+            if self.palette:
+                val = self.palette[val]
+            val = self.registry.decode_block(val)
+            return val
 
-        val = self.data[n]
-        if self.palette:
-            val = self.palette[val]
-        val = self.registry.decode_block(val)
-        return val
-
-    def __setitem__(self, n, val):
-        if isinstance(n, slice):
-            for o in xrange(*n.indices(4096)):
-                self[o] = val[o]
+    def __setitem__(self, item, val):
+        # FIXME: improve performance of slice sets.
+        if isinstance(item, slice):
+            for idx in xrange(*item.indices(4096)):
+                self[idx] = val[idx]
             return
 
         if self.non_air is not None:
-            self.non_air += int(self.registry.is_air_block(self[n])) - \
+            self.non_air += int(self.registry.is_air_block(self[item])) - \
                             int(self.registry.is_air_block(val))
 
         val = self.registry.encode_block(val)
@@ -197,7 +221,7 @@ class BlockArray(Sequence):
                     self.palette.append(val)
                     val = len(self.palette) - 1
 
-        self.data[n] = val
+        self.data[item] = val
 
     # Other methods -----------------------------------------------------------
 
@@ -290,20 +314,24 @@ class LightArray(Sequence):
     def __len__(self):
         return 4096
 
-    def __getitem__(self, n):
-        if isinstance(n, slice):
-            return [self[o] for o in xrange(*n.indices(4096))]
-        assert isinstance(n, int)
-        idx, off = divmod(n, 2)
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return [self[idx] for idx in xrange(*item.indices(4096))]
+        assert isinstance(item, int)
+        idx, off = divmod(item, 2)
         val = self.data[idx]
         if off == 0:
             return val & 0x0F
         else:
             return val >> 4
 
-    def __setitem__(self, n, val):
-        assert isinstance(n, int)
-        idx, off = divmod(n, 2)
+    def __setitem__(self, item, val):
+        if isinstance(item, slice):
+            for idx in xrange(*item.indices(4096)):
+                self[idx] = val[idx]
+            return
+        assert isinstance(item, int)
+        idx, off = divmod(item, 2)
         if off == 0:
             self.data[idx] = (self.data[idx] & 0xF0) | val
         else:
