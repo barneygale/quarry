@@ -298,8 +298,7 @@ class BlockArray(Sequence):
 
         # Update internals
         self.data.resize(bits)
-        self.palette.clear()
-        self.palette.extend(palette)
+        self.palette[:] = palette
 
         # Load contents
         self[:] = values
