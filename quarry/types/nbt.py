@@ -6,6 +6,7 @@ import time
 import zlib
 
 from quarry.types.buffer import Buffer
+from quarry.types.chunk import LongArray
 
 _kinds = {}
 _ids = {}
@@ -116,10 +117,11 @@ class TagIntArray(_ArrayTag):
 class TagLongArray(_Tag):
     @classmethod
     def from_buff(cls, buff):
-        return cls(bitstring.BitArray(bytes=buff.read(buff.unpack('i')*8)))
+        return cls(LongArray.from_bytes(buff.read(buff.unpack('i') * 8)))
 
     def to_bytes(self):
-        return Buffer.pack('i', len(self.value)//64) + self.value.bytes
+        data = self.value.to_bytes()
+        return Buffer.pack('i', len(data) // 8) + data
 
 
 class TagList(_Tag):

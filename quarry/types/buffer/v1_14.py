@@ -36,7 +36,7 @@ class Buffer1_14(Buffer1_13_2):
         ``quarry.types.chunk.BlockArray``.
         """
 
-        out = cls.pack('HB', blocks.non_air, blocks.bits)
+        out = cls.pack('HB', blocks.non_air, blocks.data.bits)
         out += cls.pack_chunk_section_palette(blocks.palette)
         out += cls.pack_chunk_section_array(blocks.data)
         return out
@@ -48,10 +48,10 @@ class Buffer1_14(Buffer1_13_2):
 
         non_air, bits = self.unpack('HB')
         palette = self.unpack_chunk_section_palette(bits)
-        array = self.unpack_chunk_section_array()
+        array = self.unpack_chunk_section_array(bits)
         return BlockArray(
-            self.registry,
             array,
+            self.registry,
             palette,
             non_air)
 

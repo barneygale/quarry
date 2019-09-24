@@ -1,5 +1,5 @@
 from collections import Sequence, MutableSequence
-from bitstring import BitArray
+from bitstring import Bits, BitArray
 import math
 
 
@@ -51,62 +51,79 @@ class _NBTPaletteProxy(MutableSequence):
         self.palette[n] = self.registry.encode_block(block)
 
 
-class _LongArray(Sequence):
-    def __init__(self, data):
+class LongArray(Sequence):
+
+    # Constructors ------------------------------------------------------------
+    def __init__(self, data, bits=None):
         self.data = data
-        self.bits = len(self.data) // len(self)
+        self.bits = bits or len(data) // (4096 if len(data) >= 16384 else 256)
+
+    @classmethod
+    def empty(cls, length, bits):
+        return cls(BitArray(length=length*bits), bits)
+
+    @classmethod
+    def from_bytes(cls, data, bits=None):
+        bs = BitArray(bytes=data)
+        for idx in xrange(0, len(bs), 64):
+            bs.reverse(idx, idx + 64)
+        return cls(bs, bits)
+
+    # Sequence methods --------------------------------------------------------
+
+    def __len__(self):
+        return len(self.data) // self.bits
 
     def __getitem__(self, n):
+        if isinstance(n, slice):
+            return [self[o] for o in range(*n.indices(4096))]
         if not 0 <= n < len(self):
             raise IndexError(n)
-
-        return sum(
-            self.data[pos:pos+length]
-            for _, pos, length in self.calc_address(n)).uint
+        val = self.data[self.bits*n:self.bits*(n+1)]
+        val._reverse()
+        return val.uint
 
     def __setitem__(self, n, val):
+        if isinstance(n, slice):
+            for o in xrange(*n.indices(4096)):
+                self[o] = val[o]
+            return
         if not 0 <= n < len(self):
             raise IndexError(n)
         val = BitArray(uint=val, length=self.bits)
-        for inpos, outpos, length in self.calc_address(n):
-            self.data.overwrite(val[inpos:inpos+length], outpos)
+        val._reverse()
+        self.data.overwrite(val, n * self.bits)
 
-    def calc_address(self, index):
-        idx0 = (index * self.bits) // 64
-        idx1 = ((index + 1) * self.bits - 1) // 64
-        len0 = 64 - (index * self.bits) % 64
-        len1 = self.bits - len0
+    # Other methods -----------------------------------------------------------
 
-        if idx0 == idx1:
-            yield 0, 64 * idx0 - len1, self.bits
-        else:
-            yield 0, 64 * (idx1 + 1) - len1, len1
-            yield len1, 64 * idx0, len0
+    def is_empty(self):
+        return self.data.any()
+
+    def resize(self, bits):
+        # Danger!
+        self.bits = bits
+        self.data.clear()
+        self.data.append(bits * 4096)
+
+    def to_bytes(self):
+        bs = self.data[:]
+        for idx in xrange(0, len(bs), 64):
+            bs.reverse(idx, idx + 64)
+        return bs.bytes
 
 
-class HeightArray(_LongArray):
-    def __len__(self):
-        return 256
+class BlockArray(Sequence):
 
+    # Constructors ------------------------------------------------------------
 
-class BlockArray(_LongArray):
-    def __init__(self, registry, data, palette, non_air=-1):
-        super(BlockArray, self).__init__(data)
+    def __init__(self, data, registry, palette, non_air=-1):
+        self.data = data
         self.registry = registry
         self.palette = palette
         self.non_air = non_air
         if self.non_air == -1:
             self.non_air = [
                 registry.is_air_block(obj) for obj in self].count(True)
-
-    def calc_bits(self, length):
-        bits = int(math.ceil(math.log(length, 2)))
-        if bits < 4:
-            return 4
-        elif bits > 8:
-            return self.registry.max_bits
-        else:
-            return bits
 
     @classmethod
     def empty(cls, registry, count_non_air=True):
@@ -115,10 +132,10 @@ class BlockArray(_LongArray):
         """
 
         return cls(
-            registry=registry,
-            data=BitArray(length=4*4096),
-            palette=[0],
-            non_air=0 if count_non_air else None)
+            LongArray.empty(4096, 4),
+            registry,
+            [0],
+            0 if count_non_air else None)
 
     @classmethod
     def from_nbt(cls, section, registry):
@@ -139,9 +156,50 @@ class BlockArray(_LongArray):
 
         # Load block data
         return cls(
-            registry,
             section.value["BlockStates"].value,
+            registry,
             proxy.palette)
+
+    # Sequence methods --------------------------------------------------------
+
+    def __len__(self):
+        return 4096
+
+    def __getitem__(self, n):
+        if isinstance(n, slice):
+            return [self[o] for o in range(*n.indices(4096))]
+
+        val = self.data[n]
+        if self.palette:
+            val = self.palette[val]
+        val = self.registry.decode_block(val)
+        return val
+
+    def __setitem__(self, n, val):
+        if isinstance(n, slice):
+            for o in xrange(*n.indices(4096)):
+                self[o] = val[o]
+            return
+
+        if self.non_air is not None:
+            self.non_air += int(self.registry.is_air_block(self[n])) - \
+                            int(self.registry.is_air_block(val))
+
+        val = self.registry.encode_block(val)
+
+        if self.palette:
+            try:
+                val = self.palette.index(val)
+            except ValueError:
+                self.repack(reserve=1)
+
+                if self.palette:
+                    self.palette.append(val)
+                    val = len(self.palette) - 1
+
+        self.data[n] = val
+
+    # Other methods -----------------------------------------------------------
 
     def is_empty(self):
         """
@@ -180,7 +238,7 @@ class BlockArray(_LongArray):
         if bits > 8:
             palette = []
 
-        if self.bits == bits:
+        if self.data.bits == bits:
             # Nothing to do.
             return
 
@@ -188,54 +246,27 @@ class BlockArray(_LongArray):
         values = self[:]
 
         # Update internals
-        self.bits = bits
-        self.data.clear()
-        self.data.append(bits * 4096)
+        self.data.resize(bits)
         self.palette.clear()
         self.palette.extend(palette)
 
         # Load contents
         self[:] = values
 
-    def __len__(self):
-        return 4096
-
-    def __getitem__(self, n):
-        if isinstance(n, slice):
-            return [self[o] for o in range(*n.indices(4096))]
-
-        val = super(BlockArray, self).__getitem__(n)
-        if self.palette:
-            val = self.palette[val]
-        val = self.registry.decode_block(val)
-        return val
-
-    def __setitem__(self, n, val):
-        if isinstance(n, slice):
-            for o in xrange(*n.indices(4096)):
-                self[o] = val[o]
-            return
-
-        if self.non_air is not None:
-            self.non_air += int(self.registry.is_air_block(self[n])) - \
-                            int(self.registry.is_air_block(val))
-
-        val = self.registry.encode_block(val)
-
-        if self.palette:
-            try:
-                val = self.palette.index(val)
-            except ValueError:
-                self.repack(reserve=1)
-
-                if self.palette:
-                    self.palette.append(val)
-                    val = len(self.palette) - 1
-
-        super(BlockArray, self).__setitem__(n, val)
+    def calc_bits(self, length):
+        bits = int(math.ceil(math.log(length, 2)))
+        if bits < 4:
+            return 4
+        elif bits > 8:
+            return self.registry.max_bits
+        else:
+            return bits
 
 
 class LightArray(Sequence):
+
+    # Constructors ------------------------------------------------------------
+
     def __init__(self, data):
         self.data = data
 
@@ -253,6 +284,8 @@ class LightArray(Sequence):
         for light data. Minecraft 1.13+ only.
         """
         return cls(section.value['SkyLight' if sky else 'BlockLight'].value)
+
+    # Sequence methods --------------------------------------------------------
 
     def __len__(self):
         return 4096
