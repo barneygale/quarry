@@ -254,13 +254,12 @@ class BlockArray(Sequence):
 
     def is_empty(self):
         """
-        Checks if this block array is entirely air. You may wish to call
-        ``repack()`` before this method to avoid false negatives.
+        Checks if this block array is entirely air.
         """
-        if self.palette:
-            return self.palette == [0]
+        if self.palette == [0]:
+            return True
         else:
-            return not self.data.any()
+            return not any(self.data)
 
     def repack(self, reserve=None):
         """
