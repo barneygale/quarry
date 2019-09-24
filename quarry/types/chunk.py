@@ -106,8 +106,8 @@ class LongArray(Sequence):
         bits = self.bits
         if isinstance(item, slice):
             start, stop, step = item.indices(len(self))
-            for idx in xrange(start, stop, step):
-                value = BitArray(uint=value[idx], length=bits)
+            for idx, value in zip(xrange(start, stop, step), value):
+                value = BitArray(uint=value, length=bits)
                 value._reverse()
                 self.data.overwrite(value, idx * bits)
         else:
