@@ -36,48 +36,59 @@ def get_width(length, full_width):
 
 class PackedArray(Sequence):
     """
-    An array where entries are packed into an arbitrary number of bits.
+    This class provides support for an array where values are tightly packed
+    into a number of bits (such as 4 bits for light or 9 bits for height).
+
+    All operations associated with fixed-size mutable sequences are supported,
+    such as slicing.
+
+    Internally data is stored as a bit array with contiguous values, starting
+    at the leftmost bits. Serializing to/from bytes is achieved by performing
+    bitwise reversals of values and sectors; these reversals are deferred until
+    access to packed values is needed.
+
+    Several constructors are available for specific uses of packed arrays:
+
+    - Light data used 4-bit values and 8-bit sectors
+    - Height data uses 9-bit values and 64-bit sectors
+    - Block data uses 64-bit sectors
     """
 
-    #: The `bitstring.BitArray()` object used for storage.
+    #: The ``bitstring.BitArray`` object used for storage.
     storage = None
 
-    #: The width in bits of chunks. Used in (de)serialization.
-    chunk_width = None
+    #: True when the storage is ready for reading/writing
+    storage_ready = None
+
+    #: The width in bits of sectors. Used in (de)serialization.
+    sector_width = None
 
     #: The width in bits of values.
     value_width = None
 
-    #: The most recent result of `to_bytes`
-    cache_bytes = None
-
-    #: True when `to_bytes` will perform a fresh serialization
-    cache_dirty = None
-
     def __repr__(self):
-        return "<PackedArray length=%d chunk=%d value=%d %s>" % (
+        return "<PackedArray length=%d sector=%d value=%d %s>" % (
             len(self),
-            self.chunk_width,
+            self.sector_width,
             self.value_width,
-            "dirty" if self.cache_dirty else "clean")
+            "ready" if self.storage_ready else "unready")
 
     # Constructors ------------------------------------------------------------
 
-    def __init__(self, storage, chunk_width, value_width, bytes=None):
+    def __init__(self, storage, storage_ready, sector_width, value_width):
         self.storage = storage
-        self.chunk_width = chunk_width
+        self.storage_ready = storage_ready
+        self.sector_width = sector_width
         self.value_width = value_width
-        self.cache_bytes = bytes
-        self.cache_dirty = bytes is None
 
     @classmethod
-    def empty(cls, length, chunk_width, value_width):
+    def empty(cls, length, sector_width, value_width):
         """
         Creates an empty array.
         """
 
         storage = BitArray(length=length*value_width)
-        return cls(storage, chunk_width, value_width)
+        return cls(storage, True, sector_width, value_width)
 
     @classmethod
     def empty_light(cls):
@@ -104,7 +115,7 @@ class PackedArray(Sequence):
         return cls.empty(256, 64, 9)
 
     @classmethod
-    def from_bytes(cls, bytes, chunk_width, value_width=None):
+    def from_bytes(cls, bytes, sector_width, value_width=None):
         """
         Deserialize a packed array from the given bytes.
         """
@@ -114,19 +125,15 @@ class PackedArray(Sequence):
         if value_width is None:
             length = len(storage)
             if length < 2048:
-                value_width = chunk_width
+                value_width = sector_width
             elif length < 16384 and length % 256 == 0:
                 value_width = length // 256
             elif length < 65536 and length % 4096 == 0:
                 value_width = length // 4096
             else:
-                value_width = chunk_width
-
-        if chunk_width != value_width:
-            twiddle(storage, chunk_width)
-            twiddle(storage, value_width)
-
-        return cls(storage, chunk_width, value_width, bytes)
+                value_width = sector_width
+        storage_ready = sector_width == value_width
+        return cls(storage, storage_ready, sector_width, value_width)
 
     @classmethod
     def from_light_bytes(cls, bytes):
@@ -154,19 +161,43 @@ class PackedArray(Sequence):
 
     # Instance methods --------------------------------------------------------
 
+    def init_storage(self):
+        """
+        Initializes the storage by performing bitwise reversals.
+
+        You should not need to call this method.
+        """
+
+        if not self.storage_ready:
+            twiddle(self.storage, self.sector_width)
+            twiddle(self.storage, self.value_width)
+            self.storage_ready = True
+
+    def purge(self, value_width):
+        """
+        Re-initialize the storage to use a different value width,
+        **destroying stored data in the process**.
+
+        You should not need to call this method.
+        """
+
+        length = len(self)
+        self.storage.clear()
+        self.storage.append(value_width * length)
+        self.storage_ready = True
+        self.value_width = value_width
+
     def to_bytes(self):
         """
         Serialize this packed array to bytes.
         """
 
-        if self.cache_dirty:
+        if self.storage_ready and self.sector_width != self.value_width:
             storage = self.storage[:]
-            if self.chunk_width != self.value_width:
-                twiddle(storage, self.value_width)
-                twiddle(storage, self.chunk_width)
-            self.cache_bytes = storage.bytes
-            self.cache_dirty = False
-        return self.cache_bytes
+            twiddle(storage, self.value_width)
+            twiddle(storage, self.sector_width)
+            return storage.bytes
+        return self.storage.bytes
 
     def is_empty(self):
         """
@@ -175,29 +206,19 @@ class PackedArray(Sequence):
 
         return not self.storage.any(True)
 
-    def purge(self, value_width):
-        """
-        Re-initialize the packed array to use a different value width,
-        **destroying stored data in the process**.
-        """
-
-        length = len(self)
-        self.storage.clear()
-        self.storage.append(value_width * length)
-        self.value_width = value_width
-        self.cache_dirty = True
-
     # Sequence methods --------------------------------------------------------
 
     def __len__(self):
         return len(self.storage) // self.value_width
 
     def __iter__(self):
+        self.init_storage()
         w = self.value_width
         for idx in xrange(len(self)):
             yield self.storage._slice(w*idx, w*(idx+1)).uint
 
     def __getitem__(self, item):
+        self.init_storage()
         w = self.value_width
         if isinstance(item, slice):
             return [self.storage._slice(w*idx, w*(idx+1)).uint
@@ -208,6 +229,7 @@ class PackedArray(Sequence):
             return self.storage._slice(w*item, w*(item+1)).uint
 
     def __setitem__(self, item, value):
+        self.init_storage()
         w = self.value_width
         if isinstance(item, slice):
             for idx, value in zip(xrange(*item.indices(len(self))), value):
@@ -218,22 +240,28 @@ class PackedArray(Sequence):
             self.storage._overwrite(
                 bs=Bits(uint=value, length=w),
                 pos=item*w)
-        self.cache_dirty = True
 
 
 class BlockArray(Sequence):
     """
-    An array where entries are packed into an arbitrary number of bits.
+    This class provides support for block arrays. It wraps a
+    :class:`PackedArray` object and implements block encoding/decoding,
+    palettes, and counting of non-air blocks for lighting purposes. It stores
+    precisely 4096 (16x16x16) values.
+
+    All operations associated with fixed-size mutable sequences are supported,
+    such as slicing.
 
     A palette is used when there are fewer than 256 unique values; the value
-    width varies from 4 to 8 bits depending on the sice of the palette. When
-    more than 256 unique values are present, the palette is unused and values
-    are stored directly.
+    width varies from 4 to 8 bits depending on the size of the palette, and is
+    automatically adjusted upwards as necessary. Use :meth:`~BlockArray.repack`
+    to reclaim space by eliminating unused entries.
 
-    The number of non-air blocks is recorded for lighting purposes.
+    When 256 or more unique values are present, the palette is unused and
+    values are stored directly.
     """
 
-    #: The `PackedArray` object used for storage.
+    #: The :class:`PackedArray` object used for storage.
     storage = None
 
     #: List of encoded block values. Empty when palette is not used.
@@ -255,10 +283,7 @@ class BlockArray(Sequence):
         self.storage = storage
         self.palette = palette
         self.registry = registry
-        self.non_air = non_air
-        if non_air == -1:
-            self.non_air = [
-                registry.is_air_block(obj) for obj in self].count(False)
+        self._non_air = non_air
 
     @classmethod
     def empty(cls, registry, non_air=-1):
@@ -312,11 +337,17 @@ class BlockArray(Sequence):
         """
         Returns true if this block array is entirely air.
         """
-
         if self.palette == [0]:
             return True
         else:
-            return self.storage.is_empty()
+            return self.non_air == 0
+
+    @property
+    def non_air(self):
+        if self._non_air == -1:
+            self._non_air = [
+                self.registry.is_air_block(obj) for obj in self].count(False)
+        return self._non_air
 
     def repack(self, reserve=None):
         """
@@ -387,9 +418,9 @@ class BlockArray(Sequence):
                 self[idx] = value[idx]
             return
 
-        if self.non_air is not None:
-            self.non_air += int(self.registry.is_air_block(self[item])) - \
-                            int(self.registry.is_air_block(value))
+        if self._non_air != -1:
+            self._non_air += int(self.registry.is_air_block(self[item])) - \
+                             int(self.registry.is_air_block(value))
 
         value = self.registry.encode_block(value)
 

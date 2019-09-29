@@ -60,7 +60,7 @@ class _ArrayTag(_Tag):
     def from_buff(cls, buff):
         return cls(PackedArray.from_bytes(
             bytes=buff.read(buff.unpack('i') * (cls.width // 8)),
-            chunk_width=cls.width))
+            sector_width=cls.width))
 
     def to_bytes(self):
         data = self.value.to_bytes()
