@@ -22,8 +22,8 @@ class Buffer1_13(Buffer1_9):
             return cls.pack_varint(len(palette)) + b"".join(
                 cls.pack_varint(x) for x in palette)
 
-    def unpack_chunk_section_palette(self, bits):
-        if bits > 8:
+    def unpack_chunk_section_palette(self, value_width):
+        if value_width > 8:
             return []
         else:
             return [self.unpack_varint() for _ in xrange(self.unpack_varint())]

@@ -27,14 +27,15 @@ class Buffer1_14(Buffer1_13_2):
         Unpacks a chunk section. Returns a sequence of length 4096 (16x16x16).
         """
 
-        non_air, bits = self.unpack('HB')
-        palette = self.unpack_chunk_section_palette(bits)
-        array = self.unpack_chunk_section_array(bits)
+        non_air, value_width = self.unpack('HB')
+        palette = self.unpack_chunk_section_palette(value_width)
+        array = self.unpack_chunk_section_array(value_width)
         return BlockArray.from_bytes(
             bytes=array,
             palette=palette,
             registry=self.registry,
-            non_air=non_air), None, None
+            non_air=non_air,
+            value_width=value_width), None, None
 
     # Position ----------------------------------------------------------------
 

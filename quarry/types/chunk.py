@@ -144,12 +144,12 @@ class PackedArray(Sequence):
         return cls.from_bytes(bytes, 8, 4)
 
     @classmethod
-    def from_block_bytes(cls, bytes):
+    def from_block_bytes(cls, bytes, value_width=None):
         """
         Deserialize a packed array from the given block data bytes.
         """
 
-        return cls.from_bytes(bytes, 64)
+        return cls.from_bytes(bytes, 64, value_width)
 
     @classmethod
     def from_height_bytes(cls, bytes):
@@ -296,12 +296,12 @@ class BlockArray(Sequence):
         return cls(storage, palette, registry, non_air)
 
     @classmethod
-    def from_bytes(cls, bytes, palette, registry, non_air=-1):
+    def from_bytes(cls, bytes, palette, registry, non_air=-1, value_width=None):
         """
         Deserialize a block array from the given bytes.
         """
 
-        storage = PackedArray.from_block_bytes(bytes)
+        storage = PackedArray.from_block_bytes(bytes, value_width)
         return cls(storage, palette, registry, non_air)
 
     @classmethod

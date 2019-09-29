@@ -79,14 +79,15 @@ class Buffer1_9(Buffer1_7):
         length 4096 (16x16x16).
         """
 
-        bits = self.unpack('B')
-        palette = self.unpack_chunk_section_palette(bits)
-        array = self.unpack_chunk_section_array(bits)
+        value_width = self.unpack('B')
+        palette = self.unpack_chunk_section_palette(value_width)
+        array = self.unpack_chunk_section_array(value_width)
         blocks = BlockArray.from_bytes(
             bytes=array,
             palette=palette,
             registry=self.registry,
-            non_air=None)
+            non_air=None,
+            value_width=value_width)
         block_lights = PackedArray.from_light_bytes(self.read(2048))
         if overworld:
             sky_lights = PackedArray.from_light_bytes(self.read(2048))
@@ -95,10 +96,10 @@ class Buffer1_9(Buffer1_7):
 
         return blocks, block_lights, sky_lights
 
-    def unpack_chunk_section_palette(self, bits):
+    def unpack_chunk_section_palette(self, value_width):
         return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
 
-    def unpack_chunk_section_array(self, bits):
+    def unpack_chunk_section_array(self, value_width):
         return self.read(self.unpack_varint() * 8)
 
     # Entity metadata ---------------------------------------------------------
