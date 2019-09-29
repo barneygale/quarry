@@ -161,6 +161,18 @@ class PackedArray(Sequence):
 
     # Instance methods --------------------------------------------------------
 
+    def to_bytes(self):
+        """
+        Serialize this packed array to bytes.
+        """
+
+        if self.storage_ready and self.sector_width != self.value_width:
+            storage = self.storage[:]
+            twiddle(storage, self.value_width)
+            twiddle(storage, self.sector_width)
+            return storage.bytes
+        return self.storage.bytes
+
     def init_storage(self):
         """
         Initializes the storage by performing bitwise reversals.
@@ -186,18 +198,6 @@ class PackedArray(Sequence):
         self.storage.append(value_width * length)
         self.storage_ready = True
         self.value_width = value_width
-
-    def to_bytes(self):
-        """
-        Serialize this packed array to bytes.
-        """
-
-        if self.storage_ready and self.sector_width != self.value_width:
-            storage = self.storage[:]
-            twiddle(storage, self.value_width)
-            twiddle(storage, self.sector_width)
-            return storage.bytes
-        return self.storage.bytes
 
     def is_empty(self):
         """
