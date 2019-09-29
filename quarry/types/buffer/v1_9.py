@@ -1,6 +1,5 @@
-from bitstring import BitArray
 from quarry.types.buffer.v1_7 import Buffer1_7
-from quarry.types.chunk import BlockArray, LightArray, LongArray
+from quarry.types.chunk import PackedArray, BlockArray
 
 
 # Python 3 compat
@@ -40,13 +39,12 @@ class Buffer1_9(Buffer1_7):
         ``BlockArray`` and ``LightArray`` from ``quarry.types.chunk``.
         """
 
-        out = cls.pack('B', blocks.data.bits)
+        out = cls.pack('B', blocks.storage.value_width)
         out += cls.pack_chunk_section_palette(blocks.palette)
-        out += cls.pack_chunk_section_array(blocks.data)
-        out += cls.pack_array('B', block_lights.data)
+        out += cls.pack_chunk_section_array(blocks.to_bytes())
+        out += block_lights.to_bytes()
         if sky_lights:
-            out += cls.pack_array('B', sky_lights.data)
-
+            out += sky_lights.to_bytes()
         return out
 
     @classmethod
@@ -55,8 +53,7 @@ class Buffer1_9(Buffer1_7):
             cls.pack_varint(x) for x in palette)
 
     @classmethod
-    def pack_chunk_section_array(cls, array):
-        data = array.to_bytes()
+    def pack_chunk_section_array(cls, data):
         return cls.pack_varint(len(data) // 8) + data
 
     def unpack_chunk(self, bitmask, full=True, overworld=True):
@@ -85,14 +82,14 @@ class Buffer1_9(Buffer1_7):
         bits = self.unpack('B')
         palette = self.unpack_chunk_section_palette(bits)
         array = self.unpack_chunk_section_array(bits)
-        blocks = BlockArray(
-            array,
-            self.registry,
-            palette,
-            None)
-        block_lights = LightArray(self.unpack_array('B', 2048))
+        blocks = BlockArray.from_bytes(
+            bytes=array,
+            palette=palette,
+            registry=self.registry,
+            non_air=None)
+        block_lights = PackedArray.from_light_bytes(self.read(2048))
         if overworld:
-            sky_lights = LightArray(self.unpack_array('B', 2048))
+            sky_lights = PackedArray.from_light_bytes(self.read(2048))
         else:
             sky_lights = None
 
@@ -102,7 +99,7 @@ class Buffer1_9(Buffer1_7):
         return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
 
     def unpack_chunk_section_array(self, bits):
-        return LongArray.from_bytes(self.read(self.unpack_varint() * 8), bits)
+        return self.read(self.unpack_varint() * 8)
 
     # Entity metadata ---------------------------------------------------------
 

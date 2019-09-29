@@ -3,7 +3,7 @@ import os.path
 import bitstring
 
 from quarry.types.buffer import Buffer1_13_2, Buffer1_14
-from quarry.types.chunk import BlockArray, LongArray
+from quarry.types.chunk import PackedArray, BlockArray
 from quarry.types.registry import OpaqueRegistry, BitShiftRegistry
 from quarry.types.nbt import TagCompound
 
@@ -21,8 +21,7 @@ def test_wikivg_example():
     data[64:128] = '0b0000001000000000110100000000011010000000000001001100000000100000'
     data = data.bytes
 
-    storage = LongArray.from_bytes(data)
-    blocks = BlockArray(storage, BitShiftRegistry(13), [], 10)
+    blocks = BlockArray.from_bytes(data, [], BitShiftRegistry(13), 10)
     assert blocks[0] == (2, 0)  # grass
     assert blocks[1] == (3, 0)  # dirt
     assert blocks[2] == (3, 0)  # dirt
@@ -77,7 +76,6 @@ def test_packet_pack_unpack():
     assert biomes[0] == 16
     assert len(block_entities) == 0
 
-    # Pack
     packet_data_after = \
         bt.pack_chunk_bitmask(sections) + \
         bt.pack_nbt(heightmap) + \
@@ -88,7 +86,7 @@ def test_packet_pack_unpack():
 
 def test_chunk_internals():
     blocks = BlockArray.empty(OpaqueRegistry(13))
-    storage = blocks.data
+    storage = blocks.storage
 
     # Accumulate blocks
     added = []
@@ -101,39 +99,39 @@ def test_chunk_internals():
         if i < 256:
             assert len(blocks.palette) == i + 1
             if i < 16:
-                assert storage.bits == 4
+                assert storage.value_width == 4
             elif i < 32:
-                assert storage.bits == 5
+                assert storage.value_width == 5
             elif i < 64:
-                assert storage.bits == 6
+                assert storage.value_width == 6
             elif i < 128:
-                assert storage.bits == 7
+                assert storage.value_width == 7
             else:
-                assert storage.bits == 8
+                assert storage.value_width == 8
         else:
             assert blocks.palette == []
-            assert storage.bits == 13
+            assert storage.value_width == 13
 
     # Zero the first 100 blocks
     for i in range(100):
         blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 201
-    assert storage.bits == 8
+    assert storage.value_width == 8
 
     # Zero blocks 100-199
     for i in range(100, 200):
         blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 101
-    assert storage.bits == 7
+    assert storage.value_width == 7
 
     # Zero blocks 205 - 300
     for i in range (205, 300):
         blocks[i] = 0
     blocks.repack()
     assert len(blocks.palette) == 6
-    assert storage.bits == 4
+    assert storage.value_width == 4
 
     # Check value
     for i in range(4096):

@@ -82,7 +82,7 @@ def test_bigtest_alt_repr():
 
 def test_bigtest_to_obj():
     bigtest = NBTFile.load(bigtest_path).root_tag
-    assert bigtest.to_obj() == bigtest_to_obj
+    assert bigtest_to_obj == bigtest.to_obj()
 
 def test_bigtest_unpack_pack():
     with gzip.open(bigtest_path) as fd:

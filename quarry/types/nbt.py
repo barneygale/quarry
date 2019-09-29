@@ -1,4 +1,3 @@
-import bitstring
 import collections
 import functools
 import gzip
@@ -6,7 +5,7 @@ import time
 import zlib
 
 from quarry.types.buffer import Buffer
-from quarry.types.chunk import LongArray
+from quarry.types.chunk import PackedArray
 
 _kinds = {}
 _ids = {}
@@ -55,17 +54,21 @@ class _DataTag(_Tag):
 
 
 class _ArrayTag(_Tag):
-    fmt = None
+    width = None
 
     @classmethod
     def from_buff(cls, buff):
-        array_length = buff.unpack('i')
-        return cls(list(buff.unpack_array(cls.fmt, array_length)))
+        return cls(PackedArray.from_bytes(
+            bytes=buff.read(buff.unpack('i') * (cls.width // 8)),
+            chunk_width=cls.width))
 
     def to_bytes(self):
-        return (
-            Buffer.pack('i', len(self.value)) +
-            Buffer.pack_array(self.fmt, self.value))
+        data = self.value.to_bytes()
+        data = Buffer.pack('i', len(data) // (self.width // 8)) + data
+        return data
+
+    def to_obj(self):
+        return list(self.value)
 
 
 # NBT tags --------------------------------------------------------------------
@@ -107,21 +110,15 @@ class TagString(_Tag):
 
 
 class TagByteArray(_ArrayTag):
-    fmt = 'b'
+    width = 8
 
 
 class TagIntArray(_ArrayTag):
-    fmt = 'i'
+    width = 32
 
 
-class TagLongArray(_Tag):
-    @classmethod
-    def from_buff(cls, buff):
-        return cls(LongArray.from_bytes(buff.read(buff.unpack('i') * 8)))
-
-    def to_bytes(self):
-        data = self.value.to_bytes()
-        return Buffer.pack('i', len(data) // 8) + data
+class TagLongArray(_ArrayTag):
+    width = 64
 
 
 class TagList(_Tag):
