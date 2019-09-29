@@ -1,5 +1,5 @@
 from collections import Sequence, MutableSequence
-from bitstring import BitArray
+from bitstring import BitArray, Bits
 import math
 
 
@@ -193,34 +193,30 @@ class PackedArray(Sequence):
         return len(self.storage) // self.value_width
 
     def __iter__(self):
-        for value in self.storage.cut(self.value_width):
-            yield value.uint
+        w = self.value_width
+        for idx in xrange(len(self)):
+            yield self.storage._slice(w*idx, w*(idx+1)).uint
 
     def __getitem__(self, item):
         w = self.value_width
         if isinstance(item, slice):
-            start, stop, step = item.indices(len(self))
-            if step == 1:
-                return [value.uint
-                        for value in self.storage.cut(w, w*start, w*stop)]
-            else:
-                return [self.storage[w*idx:w*(idx+1)].uint
-                        for idx in xrange(start, stop, step)]
+            return [self.storage._slice(w*idx, w*(idx+1)).uint
+                    for idx in xrange(*item.indices(len(self)))]
         else:
             if not 0 <= item < len(self):
                 raise IndexError(item)
-            return self.storage[w*item:w*(item+1)].uint
+            return self.storage._slice(w*item, w*(item+1)).uint
 
     def __setitem__(self, item, value):
         w = self.value_width
         if isinstance(item, slice):
             for idx, value in zip(xrange(*item.indices(len(self))), value):
-                self.storage.overwrite(
-                    bs=BitArray(uint=value, length=w),
+                self.storage._overwrite(
+                    bs=Bits(uint=value, length=w),
                     pos=idx*w)
         else:
-            self.storage.overwrite(
-                bs=BitArray(uint=value, length=w),
+            self.storage._overwrite(
+                bs=Bits(uint=value, length=w),
                 pos=item*w)
         self.cache_dirty = True
 
