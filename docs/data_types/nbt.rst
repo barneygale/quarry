@@ -23,14 +23,14 @@ are available from the :mod:`quarry.types.nbt` module:
       * ``float``
     - * ``TagDouble``
       * ``float``
+    - * ``TagByteArray``
+      * :class:`~quarry.types.chunk.PackedArray` with 8-bit sectors
+    - * ``TagIntArray``
+      * :class:`~quarry.types.chunk.PackedArray` with 32-bit sectors
+    - * ``TagLongArray``
+      * :class:`~quarry.types.chunk.PackedArray` with 64-bit sectors
     - * ``TagString``
       * ``str`` (py3) or ``unicode`` (py2)
-    - * ``TagByteArray``
-      * ``list`` of ``int``
-    - * ``TagIntArray``
-      * ``list`` of ``int``
-    - * ``TagLongArray``
-      * ``list`` of ``int``
     - * ``TagList``
       * ``list`` of tags.
     - * ``TagCompound``
@@ -92,7 +92,7 @@ Files
 You can open an NBT file using the ``NBTFile`` class.
 
 .. autoclass:: NBTFile
-    :members: __init__, load, save, root_tag
+    :members:
     :undoc-members:
 
 You can open Minecraft 1.13+ world files (``.mca``) using the ``RegionFile``
@@ -100,7 +100,7 @@ class, which can also function as a context manager. See :doc:`chunks` for
 information on loading block and light data.
 
 .. autoclass:: RegionFile
-    :members: __init__, close, load_chunk, save_chunk
+    :members:
 
 Debugging
 ---------

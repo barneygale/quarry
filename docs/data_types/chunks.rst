@@ -1,60 +1,83 @@
-Chunks and Regions
-==================
-
-Chunks
-------
-
-.. module:: quarry.types.chunk
-
-Quarry implements the `Chunk Section`_ data type used in `Chunk Data`_ packets.
-This format consists of:
-
-* A tightly-packed array of blocks using either:
-
-  - 4-8 bits per block, with a palette
-  - 13 (Minecraft 1.9 - 1.12) or 14 (1.13+) bits per block, without a palette.
-
-* A tightly-packed array of light using 4 bits per block.
-
-.. _Chunk Section: http://wiki.vg/SMP_Map_Format
-.. _Chunk Data: http://wiki.vg/Protocol#Chunk_Data
-
-These types are implemented through the :class:`BlockArray` and
-:class:`LightArray` classes. Each is a sequence containing exactly 4096 values
-(16x16x16) and supporting the usual sequence operations (iteration, get/set
-values, etc).
-
-.. currentmodule:: quarry.types.buffer
-
-On the client side, call :meth:`Buffer.unpack_chunk_section()` to retrieve a
-tuple of block data, block light and (if *overworld* is ``True``) sky light.
-
-On the server side, call :meth:`Buffer.pack_chunk_section()`, passing in block
-data, block light and either sky light or ``None``.
+Blocks and Chunks
+=================
 
 .. currentmodule:: quarry.types.chunk
 
+Minecraft uses tightly-packed arrays to store data like light levels,
+heightmaps and block data. Quarry can read and write these formats in both
+`Chunk Data`_  packets and ``.mca`` files. Two classes are available for
+working with this data:
+
+.. autoclass:: PackedArray
+    :members:
+
 .. autoclass:: BlockArray
-    :undoc-members:
     :members:
 
 
-.. autoclass:: LightArray
-    :undoc-members:
-    :members:
+Packets
+-------
+
+On the client side, you can unpack a `Chunk Data`_ packet as follows::
+
+    def packet_chunk_data(self, buff):
+        x, z, full = buff.unpack('ii?')
+        bitmask = buff.unpack_varint()
+        heightmap = buff.unpack_nbt()  # added in 1.14
+        sections, biomes = buff.unpack_chunk(bitmask, full)
+        block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
+
+On the server side::
+
+    def send_chunk(self, x, z, full, heightmap, sections, biomes, block_entities):
+        self.send_packet(
+            'chunk_data',
+            self.bt.pack('ii?', x, z, full),
+            self.bt.pack_chunk_bitmask(sections),
+            self.bt.pack_nbt(heightmap),  # added in 1.14
+            self.bt.pack_chunk(sections, biomes),
+            self.bt.pack_varint(len(block_entities)),
+            b"".join(self.bt.pack_nbt(entity) for entity in block_entities))
+
+The variables used in these examples are as follows:
+
+
+.. list-table::
+    :header-rows: 1
+
+    - * Variable
+      * Value type
+    - * ``x``
+      * ``int``
+    - * ``z``
+      * ``int``
+    - * ``full``
+      * ``bool``
+    - * ``bitmask``
+      * ``int``
+    - * ``heightmap``
+      * ``TagRoot[TagCompound[TagLongArray[PackedArray]]]``
+    - * ``sections``
+      * ``List[Optional[BlockArray]]``
+    - * ``biomes``
+      * ``List[int]``
+    - * ``block_entities``
+      * ``List[TagRoot]``
+
+
 
 Regions
 -------
 
-Quarry can load and save block and light data from the ``.mca`` format used in
-Minecraft 1.13+. This requires the use of a
-:class:`~quarry.types.nbt.RegionFile`.
+Quarry can load and save data from the ``.mca`` format via the
+:class:`~quarry.types.nbt.RegionFile` class. NBT tags such as ``"BlockStates"``,
+``"BlockLight"``, ``"SkyLight"`` and heightmaps such as ``"MOTION_BLOCKING"``
+make their values available as :class:`PackedArray` objects.
 
 Use :meth:`BlockArray.from_nbt` with a
-:class:`~quarry.types.block.LookupRegistry` to create a block array backed by
-NBT data. Modifications to the block array will automatically be reflected in
-the NBT data, and vice versa. Use :meth:`LightArray.from_nbt()` for equivalent
-functionality for light arrays.
+:class:`~quarry.types.registry.LookupRegistry` to create a block array backed
+by NBT data. Modifications to the block array will automatically be reflected
+in the NBT data, and vice versa.
 
 Putting these pieces together, the following function could be used to set a
 block in an existing region file::
@@ -85,3 +108,5 @@ block in an existing region file::
 
 
     set_block("/path/to/server", 10, 80, 40, {'name': 'minecraft:bedrock'})
+
+.. _Chunk Data: http://wiki.vg/Protocol#Chunk_Data
