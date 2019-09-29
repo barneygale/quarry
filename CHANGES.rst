@@ -4,6 +4,26 @@ Changelog
 master
 ------
 
+- Dropped support for Python 3.4
+- Added ``TagRoot.from_body()`` constructor.
+- Revised implementation of chunk data
+
+  - Added dependency on ``bitstring``
+  - Added a new ``PackedArray`` class for working with tightly-packed arrays.
+    This replaces the ``LightArray`` class, and additionally supports
+    heightmaps and raw block data. This particular implementation ensures
+    values are contiguous in memory, which speeds up gets/sets at the expense
+    of a de/serialization process that involves two passes of bitwise
+    reversals.
+  - Reworked ``BlockArray`` to use ``PackedArray`` internally.
+  - Changed the value type of NBT arrays from a ``list`` of ``int`` to a
+    ``PackedArray``. A heuristic is used to determine the value width.
+  - Revised ``Buffer1_14.un/pack_chunk_section()`` to include arguments for
+    block/skylight data, for consistency with earlier ``Buffer`` classes.
+  - Added ``Buffer1_9.un/pack_chunk()`` methods.
+  - Added ``Buffer1_9.un/pack_chunk_section_array()`` methods.
+  - Added ``Buffer1_9.pack_chunk_bitmask()`` method.
+
 v1.4
 ----
 
@@ -14,6 +34,7 @@ v1.3
 ----
 
 - Added support for Minecraft 1.14 - 1.14.2
+
   - BREAKING CHANGE! `BlockMap` objects are replaced by `Registry` objects with
     greater responsibilities, reflecting the increase in information generated
     by the official server when run with `--reports`. Villager and particle
