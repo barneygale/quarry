@@ -6,6 +6,9 @@ master
 
 - Dropped support for Python 3.4
 - Added ``TagRoot.from_body()`` constructor.
+- Added ``Buffer.un/pack_blob()`` and ``Buffer.un/pack_varint_blob()`` methods,
+  which pack/unpack a length-prefixed byte string.
+- Added ``Message.__repr__()`` method.
 - Revised implementation of chunk data
 
   - Added dependency on ``bitstring``
