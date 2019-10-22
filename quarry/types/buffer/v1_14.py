@@ -53,7 +53,7 @@ class Buffer1_14(Buffer1_13_2):
         return cls.pack('Q', sum((
             pack_twos_comp(26, x) << 38,
             pack_twos_comp(26, z) << 12,
-            pack_twos_comp(12, z))))
+            pack_twos_comp(12, y))))
 
     def unpack_position(self):
         """
