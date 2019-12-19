@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- Added support for Minecraft 1.15 and 1.15.1
 - Dropped support for Python 3.4
 - Added ``TagRoot.from_body()`` constructor.
 - Added ``Message.__repr__()`` method.

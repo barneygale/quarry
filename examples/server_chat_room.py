@@ -5,7 +5,7 @@ This server authenticates players, then spawns them in an empty world and does
 the bare minimum to keep them in-game. Players can speak to eachother using
 chat.
 
-Supports Minecraft 1.14. Earlier versions will not work as the packet formats
+Supports Minecraft 1.15. Earlier versions will not work as the packet formats
 differ.
 """
 
@@ -21,14 +21,17 @@ class ChatRoomProtocol(ServerProtocol):
 
         # Send "Join Game" packet
         self.send_packet("join_game",
-            self.buff_type.pack("iBiB",
+            self.buff_type.pack("iBqiB",
                 0,                              # entity id
                 3,                              # game mode
                 0,                              # dimension
+                0,                              # hashed seed
                 0),                             # max players
             self.buff_type.pack_string("flat"), # level type
             self.buff_type.pack_varint(1),      # view distance
-            self.buff_type.pack("?", False))    # reduced debug info
+            self.buff_type.pack("??",
+                False,                          # reduced debug info
+                True))                          # show respawn screen
 
         # Send "Player Position and Look" packet
         self.send_packet("player_position_and_look",
