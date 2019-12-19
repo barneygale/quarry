@@ -66,7 +66,9 @@ def test_packet_pack_unpack():
     bitmask = buff.unpack_varint()
     heightmap = buff.unpack_nbt()
     motion_blocking = heightmap.body.value['MOTION_BLOCKING'].value
-    sections, biomes = buff.unpack_chunk(bitmask)
+    sections_length = buff.unpack_varint()
+    sections = buff.unpack_chunk(bitmask)
+    biomes = buff.unpack('I' * 256)
     block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
     assert len(buff) == 0
     assert bitmask == 0b1111
@@ -76,10 +78,13 @@ def test_packet_pack_unpack():
     assert biomes[0] == 16
     assert len(block_entities) == 0
 
+    sections_data_after = bt.pack_chunk(sections) + bt.pack_array('I', biomes)
+
     packet_data_after = \
         bt.pack_chunk_bitmask(sections) + \
         bt.pack_nbt(heightmap) + \
-        bt.pack_chunk(sections, biomes) + \
+        bt.pack_varint(len(sections_data_after)) + \
+        sections_data_after + \
         bt.pack_varint(len(block_entities)) + \
         b"".join(bt.pack_nbt(tag) for tag in block_entities)
     assert packet_data_before == packet_data_after

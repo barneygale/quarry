@@ -24,20 +24,25 @@ On the client side, you can unpack a `Chunk Data`_ packet as follows::
         x, z, full = buff.unpack('ii?')
         bitmask = buff.unpack_varint()
         heightmap = buff.unpack_nbt()  # added in 1.14
-        sections, biomes = buff.unpack_chunk(bitmask, full)
+        biomes = buff.unpack_array('I', 1024) if full else None  # changed in 1.15
+        sections_length = buff.unpack_varint()
+        sections = buff.unpack_chunk(bitmask)
         block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
 
 On the server side::
 
     def send_chunk(self, x, z, full, heightmap, sections, biomes, block_entities):
+        sections_data = self.bt.pack_chunk(sections)
         self.send_packet(
             'chunk_data',
             self.bt.pack('ii?', x, z, full),
             self.bt.pack_chunk_bitmask(sections),
             self.bt.pack_nbt(heightmap),  # added in 1.14
-            self.bt.pack_chunk(sections, biomes),
+            self.bt.pack_array('I', biomes) if full else b'',  # changed in 1.15
+            self.bt.pack_varint(len(sections_data)),
+            sections_data,
             self.bt.pack_varint(len(block_entities)),
-            b"".join(self.bt.pack_nbt(entity) for entity in block_entities))
+            b''.join(self.bt.pack_nbt(entity) for entity in block_entities))
 
 The variables used in these examples are as follows:
 
