@@ -21,7 +21,7 @@ class ChatRoomProtocol(ServerProtocol):
 
         # Send "Join Game" packet
         self.send_packet("join_game",
-            self.buff_type.pack("iBqiB",
+            self.buff_type.pack("iBiqB",
                 0,                              # entity id
                 3,                              # game mode
                 0,                              # dimension
