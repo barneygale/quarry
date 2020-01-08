@@ -20,10 +20,11 @@ Skeleton Server
 
 By default quarry takes clients through the authentication process and then
 switches into the "play" protocol mode. Normally at this point you would
-implement :meth:`~ServerProtocol.player_joined` to either disconnect the client
-or start the process of spawning the player. In the skeleton server below we
-don't do either, which leaves the client on the "Logging in..." screen. Please
-see the :doc:`/examples` for less pointless servers.
+implement :meth:`~quarry.net.protocol.Protocol.player_joined` to either
+disconnect the client or start the process of spawning the player. In the
+skeleton server below we don't do either, which leaves the client on the
+"Logging in..." screen. Please see the :doc:`/examples` for less pointless
+servers.
 
 .. code-block:: python
 

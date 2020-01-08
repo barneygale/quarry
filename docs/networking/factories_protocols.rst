@@ -9,11 +9,11 @@ only one factory is created.
 
 .. module:: quarry.net.client
 
-Client factories require a :class:`~quarry.auth.Profile` object to be supplied
-to the initializer. Use the :meth:`ClientFactory.connect` method to connect.
-If ``force_protocol_version`` is not defined, this method will make two
-connections to the server; the first is used to establish the server's protocol
-version.
+Client factories require a :class:`~quarry.net.auth.Profile` object to be
+supplied to the initializer. Use the :meth:`ClientFactory.connect` method to
+connect. If ``force_protocol_version`` is not defined, this method will make
+two connections to the server; the first is used to establish the server's
+protocol version.
 
 .. autoclass:: ClientFactory
     :undoc-members:
@@ -43,7 +43,7 @@ most common usages, clients have only one protocol active at any given time. In
 protocols you can define packet handlers or override methods in order to
 respond to events.
 
-.. class:: quarry.net.protocol.Protocol
+.. class:: Protocol
 
     Minecraft protocol implementation common to both clients and servers. You
     should not subclass from this class, but rather subclass from one of the
@@ -163,7 +163,5 @@ Ticking
 To register delayed or repeating callbacks, call methods on the
 :class:`~Ticker` object available as ``self.ticker``.
 
-.. automethod:: Ticker.add_loop
-.. automethod:: Ticker.add_delay
-.. automethod:: Ticker.remove
-.. automethod:: Ticker.remove_all
+.. autoclass:: Ticker
+    :members:

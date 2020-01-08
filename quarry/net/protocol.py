@@ -33,14 +33,15 @@ class PacketDispatcher(object):
 class Protocol(protocol.Protocol, PacketDispatcher, object):
     """Shared logic between the client and server"""
 
-    #: Usually a reference to a :class:`Buffer` class. This is useful when
-    #: constructing a packet payload for use in :meth:`send_packet`
+    #: Usually a reference to a :class:`~quarry.types.buffer.Buffer` class.
+    #: This is useful when constructing a packet payload for use in
+    #: :meth:`send_packet`
     buff_type = None
 
     #: The logger for this protocol.
     logger = None
 
-    #: A reference to a :class:`Ticker` instance.
+    #: A reference to a :class:`~quarry.net.ticker.Ticker` instance.
     ticker = None
 
     #: A reference to the factory

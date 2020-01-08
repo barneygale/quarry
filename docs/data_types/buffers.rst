@@ -20,6 +20,12 @@ from :class:`~quarry.net.protocol.Protocol` objects as ``self.buff_type``.
 
 
 .. autoclass:: Buffer
+    :members:
+    :inherited-members:
+
+    .. autoattribute:: registry
+
+        An object that encodes/decodes IDs, such as blocks and items.
 
 
 Protocol Versions
@@ -32,12 +38,12 @@ class when the protocol version becomes known.
 Minecraft 1.7
 ~~~~~~~~~~~~~
 
-Support for Minecraft 1.7+ is implemented in the :class:`Buffer1_7` class.
+Support for Minecraft 1.7+ is implemented in the ``Buffer1_7`` class.
 
 Minecraft 1.9
 ~~~~~~~~~~~~~
 
-Support for Minecraft 1.9+ is implemented in the :class:`Buffer1_9` class.
+Support for Minecraft 1.9+ is implemented in the ``Buffer1_9`` class.
 
 Changes from 1.7:
 
@@ -47,7 +53,7 @@ Changes from 1.7:
 Minecraft 1.13
 ~~~~~~~~~~~~~~
 
-Support for Minecraft 1.13+ is implemented in the :class:`Buffer1_13` class.
+Support for Minecraft 1.13+ is implemented in the ``Buffer1_13`` class.
 
 Changes from 1.9:
 
@@ -62,7 +68,7 @@ Changes from 1.9:
 Minecraft 1.13.2
 ~~~~~~~~~~~~~~~~
 
-Support for Minecraft 1.13.2+ is implemented in the :class:`Buffer1_13_2`
+Support for Minecraft 1.13.2+ is implemented in the ``Buffer1_13_2``
 class.
 
 Changes from 1.13:
@@ -72,7 +78,7 @@ Changes from 1.13:
 Minecraft 1.14
 ~~~~~~~~~~~~~~
 
-Support for Minecraft 1.14+ is implemented in the :class:`Buffer1_14` class.
+Support for Minecraft 1.14+ is implemented in the ``Buffer1_14`` class.
 
 Changes from 1.13.2:
 
