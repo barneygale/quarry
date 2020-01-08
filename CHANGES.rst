@@ -4,6 +4,11 @@ Changelog
 master
 ------
 
+No changes yet.
+
+v1.5
+----
+
 - Added support for Minecraft 1.15 and 1.15.1
 - Dropped support for Python 3.4
 - Added ``TagRoot.from_body()`` constructor.
