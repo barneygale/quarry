@@ -6,8 +6,9 @@ Writing a Client
 
 A client is generally made up of three parts:
 
-- A :class:`~quarry.auth.Profile` or :class:`~quarry.auth.OfflineProfile`
-  object, representing the Minecraft account to use.
+- A :class:`~quarry.net.auth.Profile` or
+  :class:`~quarry.net.auth.OfflineProfile` object, representing the Minecraft
+  account to use.
 - A subclass of :class:`ClientFactory`. Client factories don't do a lot;
   simply pass a profile to its initializer and then call
   :meth:`~ClientFactory.connect`. You may also want to subclass from twisted's

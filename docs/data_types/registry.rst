@@ -4,9 +4,10 @@ Registry
 .. currentmodule:: quarry.types.buffer
 
 Quarry can be told to encode/decode block, item and other information by
-setting the :attr:`Buffer.registry` attribute on the in-use buffer. This can be
+setting the :attr:`~Buffer.registry` attribute on the in-use buffer. This can be
 set directly or by deriving a subclass and customizing
-:meth:`Factory.get_buff_type()`. The registry affects the following methods:
+:meth:`~quarry.net.client.ClientFactory.get_buff_type()`. The registry
+affects the following methods:
 
 - :meth:`~Buffer.unpack_slot()` and :meth:`~Buffer.pack_slot()`
 - :meth:`~Buffer.unpack_block()` and :meth:`~Buffer.pack_block()`

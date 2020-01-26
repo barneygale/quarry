@@ -10,5 +10,6 @@ notes
 .coverage
 .idea
 .pytest_cache
+.tox
 quarry.egg-info
 docs/networking/packet_names.rst

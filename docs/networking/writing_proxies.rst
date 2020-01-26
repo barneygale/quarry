@@ -14,17 +14,17 @@ A quarry proxy has five main parts:
 
     - * :class:`DownstreamFactory`
       * :class:`~quarry.net.server.ServerFactory`
-      * Spawns :class:`Downstream` objects for connecting clients
-    - * :class:`Downstream`
+      * Spawns ``Downstream`` objects for connecting clients
+    - * ``Downstream``
       * :class:`~quarry.net.server.ServerProtocol`
       * Connection with an external client
     - * :class:`Bridge`
-      * :class:`PacketDispatcher`
+      * ``PacketDispatcher``
       * Forwards packets between the up/downstream
-    - * :class:`UpstreamFactory`
+    - * ``UpstreamFactory``
       * :class:`~quarry.net.client.ClientFactory`
-      * Spawns an :class:`Upstream`
-    - * :class:`Upstream`
+      * Spawns an ``Upstream``
+    - * ``Upstream``
       * :class:`~quarry.net.client.ClientProtocol`
       * Connection with an external server
 
@@ -39,11 +39,11 @@ Typically the :class:`Bridge` and :class:`DownstreamFactory` are
 customized.
 
 When the user connects, the :class:`DownstreamFactory` creates a
-:class:`Downstream` object to communicate with the external client. If we're
-running in online-mode, we go through server-side auth with mojang.
+``Downstream`` object to communicate with the external client. If we're running
+in online-mode, we go through server-side auth with mojang.
 
-Once the user is authed, we spawn a :class:`UpstreamFactory`, which makes a
-connection to the external server and spawns an :class:`Upstream` to handle it.
+Once the user is authed, we spawn a ``UpstreamFactory``, which makes a
+connection to the external server and spawns an ``Upstream`` to handle it.
 If requested we go through client-side auth.
 
 At this point both endpoints of the proxy are authenticated and switched to
