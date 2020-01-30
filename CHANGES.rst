@@ -4,7 +4,7 @@ Changelog
 master
 ------
 
-No changes yet.
+- Added support for Minecraft 1.15.2
 
 v1.5
 ----
