@@ -168,12 +168,16 @@ class Profile(object):
 
     @classmethod
     def _get_profiles_path(cls):
+        dot_minecraft = ".minecraft"
         if sys.platform == 'win32':
             app_data = os.environ['APPDATA']
+        if sys.platform == 'darwin':
+            app_data = os.path.expanduser("~/Library/Application Support")
+            dot_minecraft = "minecraft"
         else:
             app_data = os.path.expanduser("~")
         return os.path.join(
-            app_data, ".minecraft", "launcher_profiles.json")
+            app_data, dot_minecraft, "launcher_profiles.json")
 
 
 class ProfileCLI(object):
