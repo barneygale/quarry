@@ -54,7 +54,7 @@ class ServerProtocol(Protocol):
             # Send login success
             self.send_packet(
                 "login_success",
-                self.buff_type.pack_string(self.uuid.to_hex()) +
+                self.buff_type.pack_string(self.uuid if self.protocol_version >= 701 else self.uuid.to_hex()) +
                 self.buff_type.pack_string(self.display_name))
 
             if self.protocol_version <= 5:
