@@ -6,6 +6,12 @@ master
 
 Nothing yet.
 
+v1.６
+------
+
+- Added support for Minecraft 1.16
+- Add support for fetching profiles in macOS
+
 v1.5.1
 ------
 
