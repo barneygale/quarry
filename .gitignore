@@ -4,6 +4,7 @@ docs/_build
 MANIFEST
 dist
 venv
+.venv
 build
 notes
 .cache

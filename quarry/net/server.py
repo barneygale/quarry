@@ -52,10 +52,16 @@ class ServerProtocol(Protocol):
                 self.set_compression(self.factory.compression_threshold)
 
             # Send login success
-            self.send_packet(
-                "login_success",
-                self.buff_type.pack_string(self.uuid.to_hex()) +
-                self.buff_type.pack_string(self.display_name))
+            if self.protocol_version > 578:
+                self.send_packet(
+                    "login_success",
+                    self.buff_type.pack_uuid(self.uuid) +
+                    self.buff_type.pack_string(self.display_name))
+            else:
+                self.send_packet(
+                    "login_success",
+                    self.buff_type.pack_string(self.uuid.to_hex()) +
+                    self.buff_type.pack_string(self.display_name))
 
             if self.protocol_version <= 5:
                 def make_safe():
