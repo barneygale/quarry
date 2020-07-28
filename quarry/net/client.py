@@ -167,7 +167,12 @@ class ClientProtocol(Protocol):
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_login_success(self, buff):
-        p_uuid = buff.unpack_string()
+        # 1.16.x
+        if self.protocol_version >= 735:
+            p_uuid = buff.unpack_uuid()
+        # 1.15.x
+        else:
+            p_uuid = buff.unpack_string()
         p_display_name = buff.unpack_string()
 
         self.switch_protocol_mode("play")
