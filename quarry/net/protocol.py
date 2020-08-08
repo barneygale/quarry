@@ -6,8 +6,6 @@ from quarry.types.buffer import BufferUnderrun, buff_types
 from quarry.net.crypto import Cipher
 from quarry.net.ticker import Ticker
 
-logging.basicConfig(format="%(name)s | %(levelname)s | %(message)s")
-
 protocol_modes = {
     0: 'init',
     1: 'status',
