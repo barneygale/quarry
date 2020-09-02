@@ -20,10 +20,82 @@ class ChatRoomProtocol(ServerProtocol):
         # Call super. This switches us to "play" mode, marks the player as
         #   in-game, and does some logging.
         ServerProtocol.player_joined(self)
+        
+        dim_name = "minecraft:the_end"
 
-        if self.protocol_version > 578:  # Minecraft 1.16.1
+        if self.protocol_version > 736: # Minecraft 1.16.2
             # Send "Join Game" packet
-            dim_name = "minecraft:the_end"
+            biome_codec = TagCompound({
+                "type" : TagString("minecraft:worldgen/biome"),
+                "value": TagList([
+                    TagCompound({
+                        'name'   : TagString("minecraft:plains"), # Client crashes if you do not define plains
+                        'id'     : TagInt(1),
+                        'element': TagCompound({
+                            'precipitation': TagString("none"),
+                            'effects'      : TagCompound({
+                                'sky_color'      : TagInt(0),
+                                'water_fog_color': TagInt(0),
+                                'fog_color'      : TagInt(0),
+                                'water_color'    : TagInt(0),
+                            }),
+                            'depth'      : TagFloat(0.1),
+                            'temperature': TagFloat(0.5),
+                            'scale'      : TagFloat(0.2),
+                            'downfall'   : TagFloat(0.5),
+                            'category'   : TagString("plains")
+                        }),
+                    })
+                ])
+            })
+            dim_settings = TagCompound({
+                "natural"             : TagByte(1),
+                "ambient_light"       : TagFloat(0.0),
+                "has_ceiling"         : TagByte(0),
+                "has_skylight"        : TagByte(0),
+                "fixed_time"          : TagLong(6000),
+                "ultrawarm"           : TagByte(0),
+                "has_raids"           : TagByte(0),
+                "respawn_anchor_works": TagByte(0),
+                "bed_works"           : TagByte(0),
+                "piglin_safe"         : TagByte(0),
+                "logical_height"      : TagInt(256),
+                "infiniburn"          : TagString("minecraft:infiniburn_end"),
+                "coordinate_scale"    : TagFloat(1.0)
+            })
+            dim_codec = TagRoot({
+                '': TagCompound({
+                    "minecraft:dimension_type": TagCompound({
+                        "type" : TagString("minecraft:dimension_type"),
+                        "value": TagList([
+                            TagCompound({
+                                "name"   : TagString(dim_name),
+                                "id"     : TagInt(0),
+                                "element": dim_settings
+                            }),
+                        ]),
+                    }),
+                    "minecraft:worldgen/biome": biome_codec
+                })
+            })
+            current_dim = TagRoot({
+                '': dim_settings,
+            })
+
+            self.send_packet("join_game",
+                             self.buff_type.pack("i?BB", 0, False, 3, 3),           # entity id, hardcore, game mode, previous game mode
+                             self.buff_type.pack_varint(1),                         # world count
+                             self.buff_type.pack_string(dim_name),                  # world name(s)
+                             self.buff_type.pack_nbt(dim_codec),                    # dimension registry
+                             self.buff_type.pack_nbt(current_dim),                  # current dimension
+                             self.buff_type.pack_string(dim_name),                  # world name
+                             self.buff_type.pack("q", 42),                          # hashed seed
+                             self.buff_type.pack_varint(0),                         # max players (unused)
+                             self.buff_type.pack_varint(2),                         # view distance
+                             self.buff_type.pack("????", True, True, False, True))  # respawn screen, debug world, flat world
+
+        elif self.protocol_version > 578:  # Minecraft 1.16.1
+            # Send "Join Game" packet
             dim_codec = TagRoot({
                 '': TagCompound({
                     "dimension": TagList([
