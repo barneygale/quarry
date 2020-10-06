@@ -15,6 +15,8 @@ _ids = {}
 
 @functools.total_ordering
 class _Tag(object):
+    __slots__ = ('value',)
+
     def __init__(self, value):
         self.value = value
 
@@ -43,6 +45,7 @@ class _Tag(object):
 
 
 class _DataTag(_Tag):
+    __slots__ = ()
     fmt = None
 
     @classmethod
@@ -54,6 +57,7 @@ class _DataTag(_Tag):
 
 
 class _ArrayTag(_Tag):
+    __slots__ = ()
     width = None
 
     @classmethod
@@ -74,30 +78,37 @@ class _ArrayTag(_Tag):
 # NBT tags --------------------------------------------------------------------
 
 class TagByte(_DataTag):
+    __slots__ = ()
     fmt = 'b'
 
 
 class TagShort(_DataTag):
+    __slots__ = ()
     fmt = 'h'
 
 
 class TagInt(_DataTag):
+    __slots__ = ()
     fmt = 'i'
 
 
 class TagLong(_DataTag):
+    __slots__ = ()
     fmt = 'q'
 
 
 class TagFloat(_DataTag):
+    __slots__ = ()
     fmt = 'f'
 
 
 class TagDouble(_DataTag):
+    __slots__ = ()
     fmt = 'd'
 
 
 class TagString(_Tag):
+    __slots__ = ()
 
     @classmethod
     def from_buff(cls, buff):
@@ -110,18 +121,23 @@ class TagString(_Tag):
 
 
 class TagByteArray(_ArrayTag):
+    __slots__ = ()
     width = 8
 
 
 class TagIntArray(_ArrayTag):
+    __slots__ = ()
     width = 32
 
 
 class TagLongArray(_ArrayTag):
+    __slots__ = ()
     width = 64
 
 
 class TagList(_Tag):
+    __slots__ = ()
+
     @classmethod
     def from_buff(cls, buff):
         inner_kind_id, array_length = buff.unpack('bi')
@@ -142,6 +158,8 @@ class TagList(_Tag):
 
 
 class TagCompound(_Tag):
+    __slots__ = ()
+
     root = False
     preserve_order = False
 
@@ -192,6 +210,7 @@ class TagCompound(_Tag):
 
 
 class TagRoot(TagCompound):
+    __slots__ = ()
     root = True
 
     @classmethod
