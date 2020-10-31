@@ -34,7 +34,7 @@ servers.
     class ExampleServerProtocol(ServerProtocol):
         pass
 
-    class ExampleServerFactory(ClientFactory):
+    class ExampleServerFactory(ServerFactory):
         protocol = ExampleServerProtocol
 
 
