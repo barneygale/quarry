@@ -135,20 +135,22 @@ class Profile(object):
         with open(profiles_path) as fd:
             data = json.load(fd)
 
-        if uuid is not None:
-            profile_data = data["authenticationDatabase"][uuid]
-        elif display_name is not None:
-            profile_data = next(
-                p for p in data["authenticationDatabase"].values()
-                if p["displayName"] == display_name)
-        else:
-            profile_data = data["authenticationDatabase"][data["selectedUser"]]
+        client_token = data["clientToken"]
 
-        return cls.from_token(
-            data["clientToken"],
-            profile_data["accessToken"],
-            profile_data["displayName"],
-            profile_data["uuid"])
+        if display_name is None and uuid is None:
+            uuid = data["selectedUser"]["profile"]
+
+        for store in data["authenticationDatabase"].values():
+            access_token = store["accessToken"]
+
+            for p_uuid, p_data in store["profiles"].items():
+                p_display_name = p_data["displayName"]
+                if uuid and uuid != p_uuid:
+                    continue
+                if display_name and display_name != p_display_name:
+                    continue
+                return cls.from_token(client_token, access_token,
+                                      p_display_name, p_uuid)
 
     @classmethod
     def _from_response(cls, response):
