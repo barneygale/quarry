@@ -62,9 +62,9 @@ class _ArrayTag(_Tag):
 
     @classmethod
     def from_buff(cls, buff):
-        return cls(PackedArray.from_bytes(
-            bytes=buff.read(buff.unpack('i') * (cls.width // 8)),
-            sector_width=cls.width))
+        length = buff.unpack('i')
+        data = buff.read(length * (cls.width // 8))
+        return cls(PackedArray.from_bytes(data, length, cls.width, cls.width))
 
     def to_bytes(self):
         data = self.value.to_bytes()

@@ -17,21 +17,14 @@ packet_path = os.path.join(root_path, "packet.bin")
 def test_wikivg_example():
     # Example from https://wiki.vg/Chunk_Format#Example
     data = bitstring.BitArray(length=13*4096)
-    data[0:64]   = '0b0000000100000000000110001000000011000000000001100000000000100000'
-    data[64:128] = '0b0000001000000000110100000000011010000000000001001100000000100000'
+    data[0:64]   = '0b0000000000100000100001100011000101001000010000011000100001000001'
+    data[64:128] = '0b0000000100000001100010100111001001100000111101101000110010000111'
     data = data.bytes
 
-    blocks = BlockArray.from_bytes(data, [], BitShiftRegistry(13), 10)
-    assert blocks[0] == (2, 0)  # grass
-    assert blocks[1] == (3, 0)  # dirt
-    assert blocks[2] == (3, 0)  # dirt
-    assert blocks[3] == (3, 1)  # coarse dirt
-    assert blocks[4] == (1, 0)  # stone
-    assert blocks[5] == (1, 0)  # stone
-    assert blocks[6] == (1, 3)  # diorite
-    assert blocks[7] == (13, 0) # gravel
-    assert blocks[8] == (13, 0) # gravel
-    assert blocks[9] == (1, 0)  # stone
+    blocks = BlockArray.from_bytes(data, 5, OpaqueRegistry(13), [])
+    assert blocks[:24] == [
+        1, 2, 2, 3, 4, 4, 5, 6, 6, 4, 8, 0, 7,
+        4, 3, 13, 15, 16, 9, 14, 10, 12, 0, 2]
 
 
 def test_chunk_pack_unpack():
@@ -66,23 +59,27 @@ def test_packet_pack_unpack():
     bitmask = buff.unpack_varint()
     heightmap = buff.unpack_nbt()
     motion_blocking = heightmap.body.value['MOTION_BLOCKING'].value
+    motion_blocking.value_width = 9
+    motion_blocking.length = 256
+    biomes = [buff.unpack_varint() for _ in range(buff.unpack_varint())]
     sections_length = buff.unpack_varint()
     sections = buff.unpack_chunk(bitmask)
-    biomes = buff.unpack('I' * 256)
     block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
     assert len(buff) == 0
-    assert bitmask == 0b1111
-    assert motion_blocking[0] == 63
-    assert motion_blocking[255] == 64
+    assert bitmask == 0b11111
+    assert motion_blocking[0] == 68
+    assert motion_blocking[255] == 73
     assert sections[0][0][0] == 33
-    assert biomes[0] == 16
+    assert biomes[0] == 29
     assert len(block_entities) == 0
 
-    sections_data_after = bt.pack_chunk(sections) + bt.pack_array('I', biomes)
+    sections_data_after = bt.pack_chunk(sections)
 
     packet_data_after = \
         bt.pack_chunk_bitmask(sections) + \
         bt.pack_nbt(heightmap) + \
+        bt.pack_varint(len(biomes)) + \
+        b"".join(bt.pack_varint(biome) for biome in biomes) + \
         bt.pack_varint(len(sections_data_after)) + \
         sections_data_after + \
         bt.pack_varint(len(block_entities)) + \
