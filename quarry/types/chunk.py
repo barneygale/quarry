@@ -9,7 +9,7 @@ except NameError:
     xrange = range
 
 
-def index_width(length, full_width):
+def get_width(length, full_width):
     """
     Returns the number of bits used by Minecraft to represent indices into a
     list of the given length.
@@ -22,10 +22,6 @@ def index_width(length, full_width):
         return full_width
     else:
         return width
-
-
-def array_width(length, sector_width, value_width=None):
-    return sector_width * ((length - 1) // (sector_width // value_width) + 1)
 
 
 class PackedArray(Sequence):
@@ -79,8 +75,9 @@ class PackedArray(Sequence):
         Creates an empty array.
         """
 
-        storage = BitArray(array_width(length, sector_width, value_width))
-        return cls(storage, length, sector_width, value_width)
+        obj = cls(BitArray(), length, sector_width, value_width)
+        obj.purge()
+        return obj
 
     @classmethod
     def empty_light(cls):
@@ -156,11 +153,10 @@ class PackedArray(Sequence):
         You should not need to call this method.
         """
 
+        values_per_sector = self.sector_width // self.value_width
+        sector_count = 1 + (self.length - 1) // values_per_sector
         self.storage.clear()
-        self.storage.append(array_width(
-            self.length,
-            self.sector_width,
-            self.value_width))
+        self.storage.append(self.sector_width * sector_count)
 
     def pos(self, idx):
         """
@@ -291,7 +287,7 @@ class BlockArray(Sequence):
         storage = section.value["BlockStates"].value
         palette = proxy.palette
         storage.length = 4096
-        storage.value_width = index_width(len(proxy), registry.max_bits)
+        storage.value_width = get_width(len(proxy), registry.max_bits)
         return cls(storage, palette, registry, non_air)
 
     # Instance methods --------------------------------------------------------
@@ -342,7 +338,7 @@ class BlockArray(Sequence):
             return
 
         # Compute new value width
-        value_width = index_width(palette_len, self.registry.max_bits)
+        value_width = get_width(palette_len, self.registry.max_bits)
 
         # Exit if there's no change in value width needed
         if value_width == self.storage.value_width:

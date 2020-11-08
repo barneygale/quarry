@@ -27,27 +27,8 @@ def test_wikivg_example():
         4, 3, 13, 15, 16, 9, 14, 10, 12, 0, 2]
 
 
-def test_chunk_pack_unpack():
-    bt = Buffer1_13_2
-
-    with open(chunk_path, "rb") as fd:
-        chunk_data_before = fd.read()
-
-    # Unpack
-    buff = bt(chunk_data_before)
-    blocks, block_lights, sky_lights = buff.unpack_chunk_section()
-
-    assert len(buff) == 0
-    assert blocks      [1400:1410] == [32, 32, 32, 288, 275, 288, 288, 497, 497, 0]
-    assert block_lights[1400:1410] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    assert sky_lights  [1400:1410] == [0, 0, 0, 13, 0, 12, 11, 10, 14, 15]
-
-    # Pack
-    chunk_data_after = bt.pack_chunk_section(blocks, block_lights, sky_lights)
-    assert chunk_data_before == chunk_data_after
-
-
 # See https://github.com/barneygale/quarry/issues/66
+# See https://github.com/barneygale/quarry/issues/100
 def test_packet_pack_unpack():
     bt = Buffer1_14
 
@@ -58,19 +39,30 @@ def test_packet_pack_unpack():
     buff = bt(packet_data_before)
     bitmask = buff.unpack_varint()
     heightmap = buff.unpack_nbt()
-    motion_blocking = heightmap.body.value['MOTION_BLOCKING'].value
-    motion_blocking.value_width = 9
-    motion_blocking.length = 256
     biomes = [buff.unpack_varint() for _ in range(buff.unpack_varint())]
     sections_length = buff.unpack_varint()
     sections = buff.unpack_chunk(bitmask)
     block_entities = [buff.unpack_nbt() for _ in range(buff.unpack_varint())]
+
+    # Basics
     assert len(buff) == 0
     assert bitmask == 0b11111
+
+    # Height data
+    motion_blocking = heightmap.body.value['MOTION_BLOCKING'].value
+    motion_blocking.value_width = 9
+    motion_blocking.length = 256
     assert motion_blocking[0] == 68
     assert motion_blocking[255] == 73
-    assert sections[0][0][0] == 33
+
+    # Block data
+    blocks = sections[0][0]
+    assert blocks[::512] == [33, 33, 10, 10, 1, 1, 0, 2]
+
+    # Biomes
     assert biomes[0] == 29
+
+    # Block entities
     assert len(block_entities) == 0
 
     sections_data_after = bt.pack_chunk(sections)
