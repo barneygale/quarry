@@ -18,6 +18,8 @@ master
   representation in memory.
 - Added support for a newer ``launcher_profiles.json`` schema
 - Removed call to ``logging.basicConfig()`` (thanks @tazz4843)
+- Fixed ``chat_message`` packet packing/unpacking in ``client_chat_logger``,
+  ``client_messenger`` and ``proxy_hide_chat`` examples.
 - Fixed incorrect usage of ``ClientFactory`` in *Writing Servers* document
   (thanks @vcokltfre)
 

@@ -5,6 +5,7 @@ Allows a client to turn on "quiet mode" which hides chat messages
 """
 
 from twisted.internet import reactor
+from quarry.types.uuid import UUID
 from quarry.net.proxy import DownstreamFactory, Bridge
 
 
@@ -56,14 +57,16 @@ class QuietBridge(Bridge):
             return p_text
         elif direction == "downstream":
             p_text = str(buff.unpack_chat())
+            p_position = 0
+            p_sender = None
 
-            # 1.7.x
-            if self.upstream.protocol_version <= 5:
-                p_position = 0
-
-            # 1.8.x
-            else:
+            # 1.8.x+
+            if self.upstream.protocol_version >= 47:
                 p_position = buff.unpack('B')
+
+            # 1.16.x+
+            if self.upstream.protocol_version >= 736:
+                p_sender = buff.unpack_uuid()
 
             if p_position in (0, 1):
                 return p_text
@@ -74,13 +77,13 @@ class QuietBridge(Bridge):
         elif direction == "downstream":
             data = self.buff_type.pack_chat(text)
 
-            # 1.7.x
-            if self.downstream.protocol_version <= 5:
-                pass
-
-            # 1.8.x
-            else:
+            # 1.8.x+
+            if self.downstream.protocol_version >= 47:
                 data += self.buff_type.pack('B', 0)
+
+            # 1.16.x+
+            if self.downstream.protocol_version >= 736:
+                data += self.buff_type.pack_uuid(UUID(int=0))
 
             return data
 

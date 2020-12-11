@@ -30,13 +30,16 @@ class MinecraftProtocol(SpawningClientProtocol):
 
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat().to_string()
+        p_position = 0
+        p_sender = None
 
-        # 1.7.x
-        if self.protocol_version <= 5:
-            p_position = 0
-        # 1.8.x
-        else:
+        # 1.8.x+
+        if self.protocol_version >= 47:
             p_position = buff.unpack('B')
+
+        # 1.16.x+
+        if self.protocol_version >= 736:
+            p_sender = buff.unpack_uuid()
 
         if p_position in (0, 1) and p_text.strip():
             self.stdio_protocol.send_line(p_text)

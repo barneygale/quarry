@@ -183,18 +183,29 @@ class ChatRoomProtocol(ServerProtocol):
         # When we receive a chat message from the player, ask the factory
         # to relay it to all connected players
         p_text = buff.unpack_string()
-        self.factory.send_chat("<%s> %s" % (self.display_name, p_text), sender=self.uuid)
+        self.factory.send_chat("<%s> %s" % (self.display_name, p_text),
+                               sender=self.uuid)
 
 
 class ChatRoomFactory(ServerFactory):
     protocol = ChatRoomProtocol
     motd = "Chat Room Server"
 
-    def send_chat(self, message, sender=UUID(int=0)):
+    def send_chat(self, message, sender=None):
+        if sender is None:
+            sender = UUID(int=0)
+
         for player in self.players:
-            data = player.buff_type.pack_chat(message) + player.buff_type.pack('B', 0)
-            if player.protocol_version > 578:
+            data = player.buff_type.pack_chat(message)
+
+            # 1.8.x+
+            if player.protocol_version >= 47:
+                data += player.buff_type.pack('B', 0)
+
+            # 1.16.x+
+            if player.protocol_version >= 736:
                 data += player.buff_type.pack_uuid(sender)
+
             player.send_packet("chat_message", data)
 
 
