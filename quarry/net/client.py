@@ -1,6 +1,7 @@
 from twisted.internet import reactor, protocol, defer
 from twisted.python import failure
 
+from quarry.types.chat import Message
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes_inv
 from quarry.net import auth, crypto
@@ -298,9 +299,12 @@ class PingClientProtocol(ClientProtocol):
         if detected_version in self.factory.minecraft_versions:
             self.factory.detected_protocol_version.callback(detected_version)
         else:
+            message = "Unsupported protocol version (%d)" % detected_version
+            if 'description' in data:
+                motd = Message(data['description'])
+                message = "%s: %s" % (message, motd.to_string())
             self.factory.detected_protocol_version.errback(
-                failure.Failure(ProtocolError(
-                    "Unsupported protocol version: %d" % detected_version)))
+                failure.Failure(ProtocolError(message)))
 
 
 class PingClientFactory(ClientFactory):
