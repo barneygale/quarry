@@ -9,12 +9,12 @@ def _load():
     minecraft_versions = {}
     packet_names = {}
     packet_idents = {}
-    csvpaths = os.path.abspath(os.path.join(
+    csv_paths = os.path.abspath(os.path.join(
         os.path.dirname(__file__),
         "packets",
         "*.csv"))
-    for csvpath in glob.glob(csvpaths):
-        match = re.match('(\d{4})_(.+)\.csv', os.path.basename(csvpath))
+    for csv_path in glob.glob(csv_paths):
+        match = re.match('(\d{4})_(.+)\.csv', os.path.basename(csv_path))
         if not match:
             continue
 
@@ -23,8 +23,8 @@ def _load():
 
         packet_ident = None
         last_section = None
-        with open(csvpath) as csvfile:
-            reader = csv.reader(csvfile)
+        with open(csv_path) as csv_file:
+            reader = csv.reader(csv_file)
             for i, record in enumerate(reader):
                 # Skip header
                 if i == 0:

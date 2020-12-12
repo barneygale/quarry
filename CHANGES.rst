@@ -14,6 +14,11 @@ master
     ``BlockArray.from_bytes()`` no longer guess the value width; it must be
     supplied. The parameters of these methods have been re-ordered accordingly
 
+- Added ``quarry.data.data_packs`` module, which provides a subset of vanilla
+  data packs as conveyed by the ``join_game`` packet. Adjusted the
+  ``server_chat_room`` example to make use of this data.
+- Added ``client_data_pack_dumper`` example, which can be used to dump a subset
+  of a server's data pack.
 - Added ``__slots__`` entries to NBT classes for a faster/more compact
   representation in memory.
 - Added support for a newer ``launcher_profiles.json`` schema

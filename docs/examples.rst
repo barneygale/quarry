@@ -38,6 +38,11 @@ Messenger
 
 .. literalinclude:: ../examples/client_messenger.py
 
+Data Pack Dumper
+''''''''''''''''
+
+.. literalinclude:: ../examples/client_data_pack_dumper.py
+
 Servers
 -------
 
