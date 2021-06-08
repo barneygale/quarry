@@ -61,8 +61,8 @@ class ChatRoomProtocol(ServerProtocol):
                 0,                         # yaw
                 0,                         # pitch
                 0b00000),                  # flags
-            self.buff_type.pack_varint(0)) # teleport id
-
+            self.buff_type.pack_varint(0), # teleport id
+            self.buff_type.pack("?", True)) # Leave vehicle,
         # Start sending "Keep Alive" packets
         self.ticker.add_loop(20, self.update_keep_alive)
 
