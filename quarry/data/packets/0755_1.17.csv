@@ -48,6 +48,7 @@ play,downstream,vehicle_move
 play,downstream,open_book
 play,downstream,open_window
 play,downstream,open_sign_editor
+play,downstream,ping
 play,downstream,craft_recipe_response
 play,downstream,player_abilities
 play,downstream,end_combat_event
@@ -109,7 +110,7 @@ play,upstream,chat_message
 play,upstream,client_status
 play,upstream,client_settings
 play,upstream,tab_complete
-play,upstream,enchant_item
+play,upstream,confirm_transaction
 play,upstream,click_window
 play,upstream,close_window
 play,upstream,plugin_message
@@ -131,6 +132,7 @@ play,upstream,player_abilities
 play,upstream,player_digging
 play,upstream,entity_action
 play,upstream,steer_vehicle
+play,upstream,pong
 play,upstream,set_displayed_recipe
 play,upstream,set_recipe_book_state
 play,upstream,name_item
