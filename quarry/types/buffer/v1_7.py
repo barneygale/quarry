@@ -72,7 +72,7 @@ class Buffer1_7(object):
             self.pos = len(self.buff)
         else:
             if self.pos + length > len(self.buff):
-                length += len(self.buff) - self.pos
+                raise BufferUnderrun()
 
             data = self.buff[self.pos:self.pos+length]
             self.pos += length
