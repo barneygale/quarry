@@ -6,6 +6,13 @@ from twisted.internet import defer
 from quarry.net import http
 from quarry.types.uuid import UUID
 
+if sys.version_info[0] == 2:
+    from urllib import urlencode
+else:
+    from urllib.parse import urlencode
+
+SESSION_SERVER = b"https://sessionserver.mojang.com/session/minecraft/"
+
 
 class ProfileException(http.HTTPException):
     pass
@@ -38,13 +45,12 @@ class Profile(object):
 
     def join(self, digest, refresh=True):
         d1 = http.request(
-            url=b"https://sessionserver.mojang.com/session/minecraft/join",
+            url=SESSION_SERVER + b"join",
             timeout=self.timeout,
             err_type=AuthException,
-            data={
-                "accessToken": self.access_token,
-                "selectedProfile": self.uuid.to_hex(with_dashes=False),
-                "serverId": digest})
+            data={"accessToken": self.access_token,
+                  "selectedProfile": self.uuid.to_hex(with_dashes=False),
+                  "serverId": digest})
 
         if not refresh:
             return d1
@@ -163,7 +169,7 @@ class Profile(object):
     @classmethod
     def _request(cls, endpoint, **data):
         return http.request(
-            url=b"https://authserver.mojang.com/"+endpoint,
+            url=b"https://authserver.mojang.com/" + endpoint,
             timeout=cls.timeout,
             err_type=ProfileException,
             data=data)
@@ -173,7 +179,7 @@ class Profile(object):
         dot_minecraft = ".minecraft"
         if sys.platform == 'win32':
             app_data = os.environ['APPDATA']
-        if sys.platform == 'darwin':
+        elif sys.platform == 'darwin':
             app_data = os.path.expanduser("~/Library/Application Support")
             dot_minecraft = "minecraft"
         else:
@@ -220,13 +226,12 @@ class ProfileCLI(object):
 
 
 def has_joined(timeout, digest, display_name, remote_host=None):
-    url = b"https://sessionserver.mojang.com/session/minecraft/hasJoined" + \
-          b"?username=" + display_name.encode('ascii') + \
-          b"&serverId=" + digest.encode('ascii')
-    if remote_host is not None:
-        url += b"&ip=" + remote_host.encode('ascii')
+    data = {"username": display_name, "serverId": digest}
+    if remote_host:
+        data["ip"] = remote_host
+
     return http.request(
-        url=url,
+        url=SESSION_SERVER + b"hasJoined?" + urlencode(data).encode('ascii'),
         timeout=timeout,
         err_type=AuthException,
         expect_content=True)
