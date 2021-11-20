@@ -25,6 +25,7 @@ class ChatRoomProtocol(ServerProtocol):
         max_players = 0
         hashed_seed = 42
         view_distance = 2
+        simulation_distance = 2
         game_mode = 3
         prev_game_mode = 3
         is_hardcore = False
@@ -37,9 +38,7 @@ class ChatRoomProtocol(ServerProtocol):
         dimension_type = dimension_types[self.protocol_version, "minecraft:overworld"]
         data_pack = data_packs[self.protocol_version]
 
-        # Send "Join Game" packet
-        self.send_packet(
-            "join_game",
+        join_game = [
             self.buff_type.pack("i?BB", entity_id, is_hardcore, game_mode, prev_game_mode),
             self.buff_type.pack_varint(dimension_count),
             self.buff_type.pack_string(dimension_name),
@@ -49,6 +48,15 @@ class ChatRoomProtocol(ServerProtocol):
             self.buff_type.pack("q", hashed_seed),
             self.buff_type.pack_varint(max_players),
             self.buff_type.pack_varint(view_distance),
+        ]
+
+        if self.protocol_version >= 757:  # 1.18
+            join_game.append(self.buff_type.pack_varint(simulation_distance))
+
+        # Send "Join Game" packet
+        self.send_packet(
+            "join_game",
+            *join_game,
             self.buff_type.pack("????", is_reduced_debug, is_respawn_screen, is_debug, is_flat))
 
         # Send "Player Position and Look" packet
@@ -99,7 +107,7 @@ class ChatRoomFactory(ServerFactory):
             player.send_packet(
                 "chat_message",
                 player.buff_type.pack_chat(message),
-                player.buff_type.pack('B', 0),
+                player.buff_type.pack('b', 0),
                 player.buff_type.pack_uuid(sender))
 
 
