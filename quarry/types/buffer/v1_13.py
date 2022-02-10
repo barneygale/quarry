@@ -1,18 +1,11 @@
 from quarry.types.buffer.v1_9 import Buffer1_9
 from quarry.types.registry import OpaqueRegistry
 
-# Python 3 compat
-try:
-    xrange
-except NameError:
-    xrange = range
-
 
 class Buffer1_13(Buffer1_9):
     registry = OpaqueRegistry(14)
 
     # Chunk section -----------------------------------------------------------
-
 
     @classmethod
     def pack_chunk_section_palette(cls, palette):
@@ -26,7 +19,7 @@ class Buffer1_13(Buffer1_9):
         if value_width > 8:
             return []
         else:
-            return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+            return [self.unpack_varint() for _ in range(self.unpack_varint())]
 
     # Slot --------------------------------------------------------------------
 

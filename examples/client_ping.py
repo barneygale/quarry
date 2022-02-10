@@ -2,7 +2,7 @@
 Pinger example client
 
 This example client connects to a server in "status" mode to retrieve some
-information about the server. The information returned is what you'd normally
+information about the server. The information returned is what yo'd normally
 see in the "Multiplayer" menu of the official client.
 """
 

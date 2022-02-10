@@ -53,11 +53,11 @@ slot_vectors = [
         b'\x00'),   # NBT
 
     # Sharpness 4 diamond sword
-    ({'item': 276, 'count': 1, 'tag': TagRoot({u'': TagCompound({
-        u'ench': TagList([
+    ({'item': 276, 'count': 1, 'tag': TagRoot({'': TagCompound({
+        'ench': TagList([
              TagCompound(OrderedDict((
-                 (u'id', TagShort(16)),
-                 (u'lvl', TagShort(4)))))])})})},  # hmm
+                 ('id', TagShort(16)),
+                 ('lvl', TagShort(4)))))])})})},  # hmm
 
         b'\x01'     # Present
         b'\x94\x02' # ID
@@ -72,9 +72,9 @@ entity_metadata_vectors = [
         ((0, 0), 0),
         ((1, 1), 1),
         ((2, 2), 2.0),
-        ((3, 3), u'three'),
-        ((4, 4), Message({'text': u'four'})),
-        ((5, 5), Message({'text': u'five'})),
+        ((3, 3), 'three'),
+        ((4, 4), Message({'text': 'four'})),
+        ((5, 5), Message({'text': 'five'})),
         ((6, 6), {'count': 1, 'item': 267, 'tag': TagRoot({})}),
         ((7, 7), True),
         ((8, 8), (8, 8, 8)),
@@ -83,7 +83,7 @@ entity_metadata_vectors = [
         ((11, 11), 'north'),
         ((12, 12), UUID.from_bytes(uuid_vector)),
         ((13, 13), 13),
-        ((14, 14), TagRoot({u'foo': TagString(u'bar')})))),
+        ((14, 14), TagRoot({'foo': TagString('bar')})))),
 
         b'\x00\x00\x00'
         b'\x01\x01\x01'

@@ -21,7 +21,7 @@ class ProtocolError(Exception):
 
 class PacketDispatcher(object):
     def dispatch(self, lookup_args, buff):
-        handler = getattr(self, "packet_%s" % "_".join(lookup_args), None)
+        handler = getattr(self, f"packet_{'_'.join(lookup_args)}", None)
         if handler is not None:
             handler(buff)
             return True

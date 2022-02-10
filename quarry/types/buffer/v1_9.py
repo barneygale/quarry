@@ -2,13 +2,6 @@ from quarry.types.buffer.v1_7 import Buffer1_7
 from quarry.types.chunk import PackedArray, BlockArray
 
 
-# Python 3 compat
-try:
-    xrange
-except NameError:
-    xrange = range
-
-
 class Buffer1_9(Buffer1_7):
 
     # Chunk section -----------------------------------------------------------
@@ -89,7 +82,7 @@ class Buffer1_9(Buffer1_7):
         return blocks, block_lights, sky_lights
 
     def unpack_chunk_section_palette(self, value_width):
-        return [self.unpack_varint() for _ in xrange(self.unpack_varint())]
+        return [self.unpack_varint() for _ in range(self.unpack_varint())]
 
     def unpack_chunk_section_array(self, value_width):
         return self.read(self.unpack_varint() * 8)

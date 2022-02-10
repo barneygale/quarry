@@ -1,20 +1,12 @@
 import json
 import string
 import struct
-import sys
 import zlib
 
 from quarry.types.buffer import BufferUnderrun
-from quarry.types.uuid import UUID
 from quarry.types.registry import OpaqueRegistry
+from quarry.types.uuid import UUID
 
-PY3 = sys.version_info > (3,)
-
-# Python 3 compat
-try:
-    xrange
-except NameError:
-    xrange = range
 
 directions = ("down", "up", "north", "south", "west", "east")
 
@@ -80,7 +72,6 @@ class Buffer1_7(object):
         return data
 
     def hexdump(self):
-        printable = string.letters + string.digits + string.punctuation
         data = self.buff[self.pos:]
         lines = ['']
         bytes_read = 0
@@ -90,26 +81,18 @@ class Buffer1_7(object):
             l_hex = []
             l_str = []
             for i, c in enumerate(data_line):
-                if PY3:
-                    l_hex.append("%02x" % c)
-                    c_str = data_line[i:i + 1]
-                    l_str.append(
-                        c_str if c_str in printable else ".")
-                else:
-                    l_hex.append("%02x" % ord(c))
-                    l_str.append(c if c in printable else ".")
+                l_hex.append(f"{c:02x}")
+                c_str = data_line[i:i + 1]
+                l_str.append(c_str if c_str in string.printable else ".")
 
             l_hex.extend(['  '] * (16 - len(l_hex)))
             l_hex.insert(8, '')
 
-            lines.append("%08x  %s  |%s|" % (
-                bytes_read,
-                " ".join(l_hex),
-                "".join(l_str)))
+            lines.append(f"{bytes_read:08x}  {' '.join(l_hex)}  |{''.join(l_str)}|")
 
             bytes_read += len(data_line)
 
-        return "\n    ".join(lines + ["%08x" % bytes_read])
+        return "\n    ".join(lines + [f"{bytes_read:08x}"])
 
     # Basic data types --------------------------------------------------------
 
@@ -187,14 +170,13 @@ class Buffer1_7(object):
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ValueError("varint does not fit in range: %d <= %d < %d"
-                             % (number_min, number, number_max))
+            raise ValueError(f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}")
 
         if number < 0:
             number += 1 << 32
 
         out = b""
-        for i in xrange(10):
+        for i in range(10):
             b = number & 0x7F
             number >>= 7
             out += cls.pack("B", b | (0x80 if number > 0 else 0))
@@ -208,7 +190,7 @@ class Buffer1_7(object):
         """
 
         number = 0
-        for i in xrange(10):
+        for i in range(10):
             b = self.unpack("B")
             number |= (b & 0x7F) << 7*i
             if not b & 0x80:
@@ -220,8 +202,7 @@ class Buffer1_7(object):
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ValueError("varint does not fit in range: %d <= %d < %d"
-                             % (number_min, number, number_max))
+            raise ValueError(f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}")
 
         return number
 
@@ -460,7 +441,7 @@ class Buffer1_7(object):
             elif ty == 5: out += cls.pack_slot(**val)
             elif ty == 6: out += cls.pack('iii', *val)
             elif ty == 7: out += cls.pack_rotation(*val)
-            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+            else: raise ValueError(f"Unknown entity metadata type: {ty:d}")
         out += cls.pack('B', 127)
         return out
 
@@ -474,15 +455,24 @@ class Buffer1_7(object):
             if b == 127:
                 return metadata
             ty, key = b >> 5, b & 0x1F
-            if   ty == 0: val = self.unpack('b')
-            elif ty == 1: val = self.unpack('h')
-            elif ty == 2: val = self.unpack('i')
-            elif ty == 3: val = self.unpack('f')
-            elif ty == 4: val = self.unpack_string()
-            elif ty == 5: val = self.unpack_slot()
-            elif ty == 6: val = self.unpack('iii')
-            elif ty == 7: val = self.unpack_rotation()
-            else: raise ValueError("Unknown entity metadata type: %d" % ty)
+            if ty == 0:
+                val = self.unpack('b')
+            elif ty == 1:
+                val = self.unpack('h')
+            elif ty == 2:
+                val = self.unpack('i')
+            elif ty == 3:
+                val = self.unpack('f')
+            elif ty == 4:
+                val = self.unpack_string()
+            elif ty == 5:
+                val = self.unpack_slot()
+            elif ty == 6:
+                val = self.unpack('iii')
+            elif ty == 7:
+                val = self.unpack_rotation()
+            else:
+                raise ValueError(f"Unknown entity metadata type: {ty:d}")
             metadata[ty, key] = val
 
     # Direction ---------------------------------------------------------------
@@ -501,7 +491,6 @@ class Buffer1_7(object):
         """
 
         return directions[self.unpack_varint()]
-
 
     # Rotation ----------------------------------------------------------------
 

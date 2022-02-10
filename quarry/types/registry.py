@@ -85,7 +85,7 @@ class LookupRegistry(Registry):
     """
     Registry implementing a dictionary lookup, recommended for 1.13+.
 
-    Blocks decode to a ``dict`` where the only guaranteed key is ``u'name'``.
+    Blocks decode to a ``dict`` where the only guaranteed key is ``'name'``.
     Items decode to a ``str`` name.
 
     Use the ``from_jar()`` or ``from_json()`` class methods to load data from
@@ -173,7 +173,7 @@ class LookupRegistry(Registry):
             for name, obj in json.load(fd).items():
                 for state in obj['states']:
                     properties = state.get("properties", {})
-                    properties[u'name'] = name
+                    properties['name'] = name
                     blocks[state['id']] = properties
 
         if os.path.exists(items_path):

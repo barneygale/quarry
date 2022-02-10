@@ -1,10 +1,12 @@
 import json
 
-from twisted.internet import defer
-from twisted.web import client, error
+from twisted.internet import defer, reactor
+from twisted.internet.defer import succeed
 from twisted.python import failure
-
-client.HTTPClientFactory.noisy = False
+from twisted.web.client import Agent, error, Response, readBody
+from twisted.web.http_headers import Headers
+from twisted.web.iweb import IBodyProducer
+from zope.interface import implementer
 
 
 class HTTPException(Exception):
@@ -16,11 +18,32 @@ class HTTPException(Exception):
         return "%s: %s" % (self.error_type, self.error_message)
 
 
+@implementer(IBodyProducer)
+class BytesProducer:
+    def __init__(self, body):
+        self.body = body
+        self.length = len(body)
+
+    def startProducing(self, consumer):
+        consumer.write(self.body)
+        return succeed(None)
+
+    def pauseProducing(self):
+        pass
+
+    def stopProducing(self):
+        pass
+
+
 def request(url, timeout, err_type=Exception, expect_content=False, data=None):
     d0 = defer.Deferred()
 
-    def _callback(data):
-        d0.callback(json.loads(data.decode('ascii')))
+    def _callback(response):
+        def _callback2(body):
+            d0.callback(json.loads(body.decode('ascii')))
+        d = readBody(response)
+        d.addCallback(_callback2)
+        return d
 
     def _errback(err):
         if isinstance(err.value, error.Error):
@@ -39,14 +62,18 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
                     data['errorMessage']))
         d0.errback(err)
 
+    agent = Agent(reactor)
+
     if data:
-        d1 = client.getPage(
+        d1 = agent.request(
+            b'POST',
             url,
-            headers={b'Content-Type': b'application/json'},
-            method=b'POST',
-            postdata=json.dumps(data).encode('ascii'))
+            Headers({"Content-Type": ["application/json"]}),
+            BytesProducer(json.dumps(data).encode('ascii')),
+        )
     else:
-        d1 = client.getPage(url)
+        d1 = agent.request(b'GET', url)
+
     d1.addCallbacks(_callback, _errback)
 
     return d0

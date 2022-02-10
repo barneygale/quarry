@@ -3,11 +3,6 @@ import re
 
 from quarry.types.buffer import Buffer
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
 
 def _load_styles():
     data = {
@@ -48,6 +43,7 @@ def _load_styles():
 
     return code_by_name, code_by_prop
 
+
 code_by_name, code_by_prop = _load_styles()
 
 
@@ -78,7 +74,7 @@ class Message(object):
         """
 
         def parse(obj):
-            if isinstance(obj, basestring):
+            if isinstance(obj, str):
                 return obj
             if isinstance(obj, list):
                 return "".join((parse(e) for e in obj))
@@ -86,14 +82,14 @@ class Message(object):
                 text = ""
                 for prop, code in code_by_prop.items():
                     if obj.get(prop):
-                        text += u"\u00a7" + code
+                        text += "\u00a7" + code
                 if "color" in obj:
-                    text += u"\u00a7" + code_by_name[obj["color"]]
+                    text += "\u00a7" + code_by_name[obj["color"]]
                 if "translate" in obj:
                     text += obj["translate"]
                     if "with" in obj:
-                        args = u", ".join((parse(e) for e in obj["with"]))
-                        text += u"{%s}" % args
+                        args = ", ".join((parse(e) for e in obj["with"]))
+                        text += "{%s}" % args
                 if "text" in obj:
                     text += obj["text"]
                 if "extra" in obj:
@@ -107,7 +103,7 @@ class Message(object):
 
     @classmethod
     def strip_chat_styles(cls, text):
-        return re.sub(u"\u00A7.", "", text)
+        return re.sub("\u00A7.", "", text)
 
     def __eq__(self, other):
         return self.value == other.value

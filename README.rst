@@ -19,7 +19,7 @@ Features
 --------
 
 - Supports Minecraft versions 1.7 through 1.18
-- Supports Python 2.7 and 3.5+
+- Supports Python 3.7+
 - Built upon ``twisted`` and ``cryptography``
 - Exposes base classes and hooks for implementing your own client, server or
   proxy
@@ -29,7 +29,7 @@ Features
   encryption, login/session, etc.
 - Implements all packets in "init", "status" and "login" modes
 - Does *not* implement most packets in "play" mode - it is left up to you to
-  hook and implement the packets you're interested in
+  hook and implement the packets yo're interested in
 
 .. _Minecraft protocol: http://wiki.vg/Protocol
 

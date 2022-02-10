@@ -6,6 +6,7 @@ poses = ('standing', 'fall_flying', 'sleeping', 'swimming', 'spin_attack',
 smelt_types = ('minecraft:smelting', 'minecraft:blasting',
                'minecraft:smoking', 'minecraft:campfire_cooking')
 
+
 class Buffer1_14(Buffer1_13_2):
 
     # Chunk section -----------------------------------------------------------

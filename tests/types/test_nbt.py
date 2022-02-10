@@ -7,7 +7,7 @@ TagCompound.preserve_order = True # for testing purposes.
 
 bigtest_path = os.path.join(os.path.dirname(__file__), "bigtest.nbt")
 
-bigtest_alt_repr = u"""
+bigtest_alt_repr = """
 TAG_Compound("Level"): 11 entries
 {
   TAG_Long("longTest"): 9223372036854775807
@@ -56,23 +56,23 @@ TAG_Compound("Level"): 11 entries
 """
 
 bigtest_to_obj = {
-    u'Level': {
-        u'nested compound test': {
-            u'egg': {u'name': u'Eggbert', u'value': 0.5},
-            u'ham': {u'name': u'Hampus', u'value': 0.75}},
-        u'intTest': 2147483647,
-        u'byteTest': 127,
-        u'stringTest': u'HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!',
-        u'listTest (long)': [11, 12, 13, 14, 15],
-        u'doubleTest': 0.4931287132182315,
-        u'floatTest': 0.4982314705848694,
-        u'longTest': 9223372036854775807,
-        u'listTest (compound)': [
-            {u'created-on': 1264099775885, u'name': u'Compound tag #0'},
-            {u'created-on': 1264099775885, u'name': u'Compound tag #1'}],
-        u'byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))': \
+    'Level': {
+        'nested compound test': {
+            'egg': {'name': 'Eggbert', 'value': 0.5},
+            'ham': {'name': 'Hampus', 'value': 0.75}},
+        'intTest': 2147483647,
+        'byteTest': 127,
+        'stringTest': 'HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!',
+        'listTest (long)': [11, 12, 13, 14, 15],
+        'doubleTest': 0.4931287132182315,
+        'floatTest': 0.4982314705848694,
+        'longTest': 9223372036854775807,
+        'listTest (compound)': [
+            {'created-on': 1264099775885, 'name': 'Compound tag #0'},
+            {'created-on': 1264099775885, 'name': 'Compound tag #1'}],
+        'byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))': \
             [(n*n*255+n*7)%100 for n in range(1000)],
-        u'shortTest': 32767}}
+        'shortTest': 32767}}
 
 
 def test_bigtest_alt_repr():
@@ -94,26 +94,26 @@ def test_bigtest_unpack_pack():
     assert bigtest_data_before == bigtest_data_after
 
 def test_manual_bigtest_to_obj():
-    bigtest = TagRoot({u"Level": TagCompound({
-        u"byteTest": TagByte(127),
-        u"shortTest": TagShort(32767),
-        u"intTest": TagInt(2147483647),
-        u"longTest": TagLong(9223372036854775807),
-        u"floatTest": TagFloat(0.4982314705848694),
-        u"doubleTest": TagDouble(0.4931287132182315),
-        u"stringTest": TagString(u'HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!'),
-        u"byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting "
-        u"with n=0 (0, 62, 34, 16, 8, ...))": \
+    bigtest = TagRoot({"Level": TagCompound({
+        "byteTest": TagByte(127),
+        "shortTest": TagShort(32767),
+        "intTest": TagInt(2147483647),
+        "longTest": TagLong(9223372036854775807),
+        "floatTest": TagFloat(0.4982314705848694),
+        "doubleTest": TagDouble(0.4931287132182315),
+        "stringTest": TagString('HELLO WORLD THIS IS A TEST STRING \xc5\xc4\xd6!'),
+        "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting "
+        "with n=0 (0, 62, 34, 16, 8, ...))": \
             TagByteArray([(n*n*255+n*7)%100 for n in range(1000)]),
-        u"listTest (long)": TagList([TagLong(n) for n in range(11, 16)]),
-        u"listTest (compound)": TagList([
-            TagCompound({u"name": TagString(u"Compound tag #0"), u"created-on": TagLong(1264099775885)}),
-            TagCompound({u"name": TagString(u"Compound tag #1"), u"created-on": TagLong(1264099775885)})]),
-        u"nested compound test": TagCompound({
-            u"ham": TagCompound({
-                u"name": TagString(u"Hampus"),
-                u"value": TagFloat(0.75)}),
-            u"egg": TagCompound({
-                u"name": TagString(u"Eggbert"),
-                u"value": TagFloat(0.5)})})})})
+        "listTest (long)": TagList([TagLong(n) for n in range(11, 16)]),
+        "listTest (compound)": TagList([
+            TagCompound({"name": TagString("Compound tag #0"), "created-on": TagLong(1264099775885)}),
+            TagCompound({"name": TagString("Compound tag #1"), "created-on": TagLong(1264099775885)})]),
+        "nested compound test": TagCompound({
+            "ham": TagCompound({
+                "name": TagString("Hampus"),
+                "value": TagFloat(0.75)}),
+            "egg": TagCompound({
+                "name": TagString("Eggbert"),
+                "value": TagFloat(0.5)})})})})
     assert bigtest.to_obj() == bigtest_to_obj

@@ -75,13 +75,13 @@ class ChatRoomProtocol(ServerProtocol):
         self.ticker.add_loop(20, self.update_keep_alive)
 
         # Announce player joined
-        self.factory.send_chat(u"\u00a7e%s has joined." % self.display_name)
+        self.factory.send_chat("\u00a7e%s has joined." % self.display_name)
 
     def player_left(self):
         ServerProtocol.player_left(self)
 
         # Announce player left
-        self.factory.send_chat(u"\u00a7e%s has left." % self.display_name)
+        self.factory.send_chat("\u00a7e%s has left." % self.display_name)
 
     def update_keep_alive(self):
         # Send a "Keep Alive" packet

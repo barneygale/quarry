@@ -1,12 +1,6 @@
-from collections import Sequence, MutableSequence
+from collections.abc import Sequence, MutableSequence
 from bitstring import BitArray, Bits
 import math
-
-
-try:
-    xrange
-except NameError:
-    xrange = range
 
 
 def get_width(length, full_width):
@@ -189,7 +183,7 @@ class PackedArray(Sequence):
     def __getitem__(self, item):
         if isinstance(item, slice):
             return [self.storage._slice(*self.pos(idx)).uint
-                    for idx in xrange(*item.indices(len(self)))]
+                    for idx in range(*item.indices(len(self)))]
         else:
             if not 0 <= item < len(self):
                 raise IndexError(item)
@@ -197,7 +191,7 @@ class PackedArray(Sequence):
 
     def __setitem__(self, item, value):
         if isinstance(item, slice):
-            for idx, value in zip(xrange(*item.indices(len(self))), value):
+            for idx, value in zip(range(*item.indices(len(self))), value):
                 self.storage._overwrite(
                     bs=Bits(uint=value, length=self.value_width),
                     pos=self.pos(idx)[0])
@@ -382,7 +376,7 @@ class BlockArray(Sequence):
 
     def __setitem__(self, item, value):
         if isinstance(item, slice):
-            for idx in xrange(*item.indices(4096)):
+            for idx in range(*item.indices(4096)):
                 self[idx] = value[idx]
             return
 
