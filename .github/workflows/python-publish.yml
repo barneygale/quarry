@@ -22,11 +22,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine pytest
-    - name: Test, Build, and Publish
+    - name: Run tests
+      run: |
+        pip install .
+        pytest tests
+    - name: Build and Publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist
-        pytest tests
         twine upload dist/*

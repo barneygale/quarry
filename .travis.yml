@@ -1,7 +1,0 @@
-language: python
-python:
-    - "3.7"
-install: source ./ci/travis_install.sh
-script: py.test
-cache: apt
-sudo: false
