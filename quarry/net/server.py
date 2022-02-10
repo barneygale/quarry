@@ -43,7 +43,7 @@ class ServerProtocol(Protocol):
         self.check_protocol_mode_switch(mode)
 
         if mode == "play":
-            if self.factory.compression_threshold and self.protocol_version > 47:
+            if self.factory.compression_threshold and self.protocol_version >= 47:
                 # Send set compression
                 self.send_packet(
                     "login_set_compression",
