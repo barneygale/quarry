@@ -29,7 +29,7 @@ Features
   encryption, login/session, etc.
 - Implements all packets in "init", "status" and "login" modes
 - Does *not* implement most packets in "play" mode - it is left up to you to
-  hook and implement the packets yo're interested in
+  hook and implement the packets you're interested in
 
 .. _Minecraft protocol: http://wiki.vg/Protocol
 
