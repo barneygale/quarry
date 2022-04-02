@@ -40,8 +40,9 @@ class ClientProtocol(Protocol):
 
         elif mode == "login":
             # Send login start
-            self.send_packet("login_start", self.buff_type.pack_string(
-                self.factory.profile.display_name))
+            self.send_packet(
+                "login_start",
+                self.buff_type.pack_string(self.factory.profile.display_name))
 
     # Callbacks ---------------------------------------------------------------
 
@@ -70,12 +71,10 @@ class ClientProtocol(Protocol):
         """
 
         # Send encryption response
-        p_shared_secret = crypto.encrypt_secret(
-            self.public_key,
-            self.shared_secret)
-        p_verify_token = crypto.encrypt_secret(
-            self.public_key,
-            self.verify_token)
+        p_shared_secret = crypto.encrypt_secret(self.public_key,
+                                                self.shared_secret)
+        p_verify_token = crypto.encrypt_secret(self.public_key,
+                                               self.verify_token)
 
         # 1.7.x
         if self.protocol_version <= 5:
@@ -83,13 +82,12 @@ class ClientProtocol(Protocol):
 
         # 1.8.x
         else:
-            pack_array = lambda d: self.buff_type.pack_varint(
-                len(d), max_bits=16) + d
+            pack_array = lambda d: self.buff_type.pack_varint(len(d),
+                                                              max_bits=16) + d
 
         self.send_packet(
             "login_encryption_response",
-            pack_array(p_shared_secret) +
-            pack_array(p_verify_token))
+            pack_array(p_shared_secret) + pack_array(p_verify_token))
 
         # Enable encryption
         self.cipher.enable(self.shared_secret)
@@ -126,10 +124,9 @@ class ClientProtocol(Protocol):
         p_channel = buff.unpack_string()
         p_payload = buff.read()
 
-        self.send_packet(
-            "login_plugin_response",
-            self.buff_type.pack_varint(p_message_id),
-            self.buff_type.pack('?', False))
+        self.send_packet("login_plugin_response",
+                         self.buff_type.pack_varint(p_message_id),
+                         self.buff_type.pack('?', False))
 
     def packet_login_disconnect(self, buff):
         p_data = buff.unpack_chat()
@@ -158,10 +155,8 @@ class ClientProtocol(Protocol):
         self.verify_token = p_verify_token
 
         # make digest
-        digest = crypto.make_digest(
-            p_server_id.encode('ascii'),
-            self.shared_secret,
-            p_public_key)
+        digest = crypto.make_digest(p_server_id.encode('ascii'),
+                                    self.shared_secret, p_public_key)
 
         # do auth
         deferred = self.factory.profile.join(digest)
@@ -205,14 +200,9 @@ class SpawningClientProtocol(ClientProtocol):
     def update_player_full(self):
         self.send_packet(
             "player_position_and_look",
-            self.buff_type.pack(
-                'dddff?',
-                self.pos_look[0],
-                self.pos_look[1],
-                self.pos_look[2],
-                self.pos_look[3],
-                self.pos_look[4],
-                True))
+            self.buff_type.pack('dddff?', self.pos_look[0], self.pos_look[1],
+                                self.pos_look[2], self.pos_look[3],
+                                self.pos_look[4], True))
 
     def packet_player_position_and_look(self, buff):
         p_pos_look = buff.unpack('dddff')
@@ -243,31 +233,25 @@ class SpawningClientProtocol(ClientProtocol):
 
         # 1.7.x
         if self.protocol_version <= 5:
-            self.send_packet("player_position_and_look", self.buff_type.pack(
-                'ddddff?',
-                self.pos_look[0],
-                self.pos_look[1] - 1.62,
-                self.pos_look[1],
-                self.pos_look[2],
-                self.pos_look[3],
-                self.pos_look[4],
-                True))
+            self.send_packet(
+                "player_position_and_look",
+                self.buff_type.pack('ddddff?', self.pos_look[0],
+                                    self.pos_look[1] - 1.62, self.pos_look[1],
+                                    self.pos_look[2], self.pos_look[3],
+                                    self.pos_look[4], True))
 
         # 1.8.x
         elif self.protocol_version <= 47:
-            self.send_packet("player_position_and_look", self.buff_type.pack(
-                'dddff?',
-                self.pos_look[0],
-                self.pos_look[1],
-                self.pos_look[2],
-                self.pos_look[3],
-                self.pos_look[4],
-                True))
+            self.send_packet(
+                "player_position_and_look",
+                self.buff_type.pack('dddff?', self.pos_look[0],
+                                    self.pos_look[1], self.pos_look[2],
+                                    self.pos_look[3], self.pos_look[4], True))
 
         # 1.9.x
         else:
-            self.send_packet("teleport_confirm", self.buff_type.pack_varint(
-                teleport_id))
+            self.send_packet("teleport_confirm",
+                             self.buff_type.pack_varint(teleport_id))
 
         if not self.spawned:
             self.spawn()

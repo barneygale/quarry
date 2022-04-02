@@ -9,16 +9,18 @@ from cryptography.hazmat.backends import default_backend
 
 backend = default_backend()
 
-PY3 = sys.version_info > (3,)
+PY3 = sys.version_info > (3, )
 
 
 class Cipher(object):
+
     def __init__(self):
         self.disable()
 
     def enable(self, key):
-        cipher = ciphers.Cipher(
-            algorithms.AES(key), modes.CFB8(key), backend=backend)
+        cipher = ciphers.Cipher(algorithms.AES(key),
+                                modes.CFB8(key),
+                                backend=backend)
         self.encryptor = cipher.encryptor()
         self.decryptor = cipher.decryptor()
 
@@ -40,10 +42,9 @@ class Cipher(object):
 
 
 def make_keypair():
-    return rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=1024,
-        backend=default_backend())
+    return rsa.generate_private_key(public_exponent=65537,
+                                    key_size=1024,
+                                    backend=default_backend())
 
 
 def make_server_id():
@@ -70,8 +71,8 @@ def make_digest(*data):
         sha1.update(d)
 
     digest = int(sha1.hexdigest(), 16)
-    if digest >> 39*4 & 0x8:
-        return"-%x" % ((-digest) & (2**(40*4)-1))
+    if digest >> 39 * 4 & 0x8:
+        return "-%x" % ((-digest) & (2**(40 * 4) - 1))
     else:
         return "%x" % digest
 
@@ -83,18 +84,14 @@ def export_public_key(keypair):
 
 
 def import_public_key(data):
-    return serialization.load_der_public_key(
-        data=data,
-        backend=default_backend())
+    return serialization.load_der_public_key(data=data,
+                                             backend=default_backend())
 
 
 def encrypt_secret(public_key, shared_secret):
-    return public_key.encrypt(
-        plaintext=shared_secret,
-        padding=padding.PKCS1v15())
+    return public_key.encrypt(plaintext=shared_secret,
+                              padding=padding.PKCS1v15())
 
 
 def decrypt_secret(keypair, data):
-    return keypair.decrypt(
-        ciphertext=data,
-        padding=padding.PKCS1v15())
+    return keypair.decrypt(ciphertext=data, padding=padding.PKCS1v15())

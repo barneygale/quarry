@@ -101,7 +101,6 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -186,26 +185,24 @@ pygments_style = 'sphinx'
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'quarrydoc'
 
-
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'quarry.tex', 'quarry Documentation',
-   'Barney Gale', 'manual'),
+    ('index', 'quarry.tex', 'quarry Documentation', 'Barney Gale', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -228,19 +225,14 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'quarry', 'quarry Documentation',
-     ['Barney Gale'], 1)
-]
+man_pages = [('index', 'quarry', 'quarry Documentation', ['Barney Gale'], 1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -248,9 +240,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'quarry', 'quarry Documentation',
-   'Barney Gale', 'quarry', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'quarry', 'quarry Documentation', 'Barney Gale', 'quarry',
+     'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -276,6 +267,7 @@ import textwrap
 from collections import defaultdict
 from quarry.data import packets
 
+
 def write_packet_names():
     latest_protocol = packets.default_protocol_version
     latest_minecraft = packets.minecraft_versions[latest_protocol]
@@ -290,7 +282,7 @@ def write_packet_names():
         """)
 
     title = "Minecraft %s" % latest_minecraft
-    text += "\n%s\n%s\n\n" % (title, "-"*len(title))
+    text += "\n%s\n%s\n\n" % (title, "-" * len(title))
 
     names = defaultdict(set)
     for key, name in packets.packet_names.items():
@@ -301,10 +293,8 @@ def write_packet_names():
     for name, directions in sorted(names.items()):
         text += "- ``%s`` (%s)\n" % (name, ", ".join(directions))
 
-    path = os.path.join(
-        os.path.dirname(__file__),
-        "networking",
-        "packet_names.rst")
+    path = os.path.join(os.path.dirname(__file__), "networking",
+                        "packet_names.rst")
 
     with open(path, "w") as fd:
         fd.write(text)

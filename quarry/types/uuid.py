@@ -3,6 +3,7 @@ import uuid
 
 
 class UUID(uuid.UUID):
+
     @classmethod
     def from_hex(cls, hex):
         return cls(hex=hex)
@@ -13,8 +14,10 @@ class UUID(uuid.UUID):
 
     @classmethod
     def from_offline_player(cls, display_name):
+
         class FakeNamespace(object):
             bytes = b'OfflinePlayer:'
+
         base_uuid = uuid.uuid3(FakeNamespace(), display_name)
         return cls(bytes=base_uuid.bytes)
 

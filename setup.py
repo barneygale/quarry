@@ -17,9 +17,7 @@ setup(
         'pyOpenSSL >= 0.15.1',
         'service_identity >= 14.0.0',
     ],
-    test_requires=[
-        'pytest'
-    ],
+    test_requires=['pytest'],
     packages=[
         "quarry",
         "quarry.data",
@@ -27,7 +25,5 @@ setup(
         "quarry.types",
         "quarry.types.buffer",
     ],
-    package_data={'quarry': [
-        'data/packets/*.csv',
-        'data/data_packs/*.nbt']},
+    package_data={'quarry': ['data/packets/*.csv', 'data/data_packs/*.nbt']},
 )

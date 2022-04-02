@@ -2,6 +2,7 @@ from quarry.types.buffer.v1_13 import Buffer1_13
 
 
 class Buffer1_13_2(Buffer1_13):
+
     @classmethod
     def pack_slot(cls, item=None, count=1, tag=None):
         """

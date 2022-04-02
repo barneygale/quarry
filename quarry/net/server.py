@@ -64,6 +64,7 @@ class ServerProtocol(Protocol):
                     self.buff_type.pack_string(self.display_name))
 
             if self.protocol_version <= 5:
+
                 def make_safe():
                     self.safe_kick.callback(None)
                     self.safe_kick = None
@@ -81,10 +82,10 @@ class ServerProtocol(Protocol):
         if not self.closed and reason is not None:
             # Kick the player if possible.
             if self.protocol_mode == "play":
+
                 def real_kick(*a):
-                    self.send_packet(
-                        "disconnect",
-                        self.buff_type.pack_chat(reason))
+                    self.send_packet("disconnect",
+                                     self.buff_type.pack_chat(reason))
                     super(ServerProtocol, self).close(reason)
 
                 if self.safe_kick:
@@ -93,9 +94,8 @@ class ServerProtocol(Protocol):
                     real_kick()
             else:
                 if self.protocol_mode == "login":
-                    self.send_packet(
-                        "login_disconnect",
-                        self.buff_type.pack_chat(reason))
+                    self.send_packet("login_disconnect",
+                                     self.buff_type.pack_chat(reason))
                 Protocol.close(self, reason)
         else:
             Protocol.close(self, reason)
@@ -178,11 +178,10 @@ class ServerProtocol(Protocol):
                 pack_array = lambda a: self.buff_type.pack_varint(
                     len(a), max_bits=16) + a
 
-            self.send_packet(
-                "login_encryption_request",
-                self.buff_type.pack_string(self.server_id),
-                pack_array(self.factory.public_key),
-                pack_array(self.verify_token))
+            self.send_packet("login_encryption_request",
+                             self.buff_type.pack_string(self.server_id),
+                             pack_array(self.factory.public_key),
+                             pack_array(self.verify_token))
 
         else:
             self.login_expecting = None
@@ -205,13 +204,11 @@ class ServerProtocol(Protocol):
         p_shared_secret = unpack_array(buff)
         p_verify_token = unpack_array(buff)
 
-        shared_secret = crypto.decrypt_secret(
-            self.factory.keypair,
-            p_shared_secret)
+        shared_secret = crypto.decrypt_secret(self.factory.keypair,
+                                              p_shared_secret)
 
-        verify_token = crypto.decrypt_secret(
-            self.factory.keypair,
-            p_verify_token)
+        verify_token = crypto.decrypt_secret(self.factory.keypair,
+                                             p_verify_token)
 
         self.login_expecting = None
 
@@ -223,20 +220,15 @@ class ServerProtocol(Protocol):
         self.logger.debug("Encryption enabled")
 
         # make digest
-        digest = crypto.make_digest(
-            self.server_id.encode('ascii'),
-            shared_secret,
-            self.factory.public_key)
+        digest = crypto.make_digest(self.server_id.encode('ascii'),
+                                    shared_secret, self.factory.public_key)
 
         # do auth
         remote_host = None
         if self.factory.prevent_proxy_connections:
             remote_host = self.remote_addr.host
-        deferred = auth.has_joined(
-            self.factory.auth_timeout,
-            digest,
-            self.display_name,
-            remote_host)
+        deferred = auth.has_joined(self.factory.auth_timeout, digest,
+                                   self.display_name, remote_host)
         deferred.addCallbacks(self.auth_ok, self.auth_failed)
 
     def packet_status_request(self, buff):
@@ -246,17 +238,17 @@ class ServerProtocol(Protocol):
 
         d = {
             "description": {
-                "text":     self.factory.motd
+                "text": self.factory.motd
             },
             "players": {
-                "online":   len(self.factory.players),
-                "max":      self.factory.max_players
+                "online": len(self.factory.players),
+                "max": self.factory.max_players
             },
             "version": {
-                "name":     self.factory.minecraft_versions.get(
-                                protocol_version,
-                                "???"),
-                "protocol": protocol_version
+                "name":
+                self.factory.minecraft_versions.get(protocol_version, "???"),
+                "protocol":
+                protocol_version
             }
         }
         if self.factory.icon is not None:

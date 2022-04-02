@@ -7,7 +7,6 @@ from quarry.types.buffer import BufferUnderrun
 from quarry.types.registry import OpaqueRegistry
 from quarry.types.uuid import UUID
 
-
 directions = ("down", "up", "north", "south", "west", "east")
 
 
@@ -66,7 +65,7 @@ class Buffer1_7(object):
             if self.pos + length > len(self.buff):
                 raise BufferUnderrun()
 
-            data = self.buff[self.pos:self.pos+length]
+            data = self.buff[self.pos:self.pos + length]
             self.pos += length
 
         return data
@@ -88,7 +87,8 @@ class Buffer1_7(object):
             l_hex.extend(['  '] * (16 - len(l_hex)))
             l_hex.insert(8, '')
 
-            lines.append(f"{bytes_read:08x}  {' '.join(l_hex)}  |{''.join(l_str)}|")
+            lines.append(
+                f"{bytes_read:08x}  {' '.join(l_hex)}  |{''.join(l_str)}|")
 
             bytes_read += len(data_line)
 
@@ -103,7 +103,7 @@ class Buffer1_7(object):
         ``struct.pack()``.
         """
 
-        return struct.pack(">"+fmt, *fields)
+        return struct.pack(">" + fmt, *fields)
 
     def unpack(self, fmt):
         """
@@ -170,7 +170,9 @@ class Buffer1_7(object):
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ValueError(f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}")
+            raise ValueError(
+                f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}"
+            )
 
         if number < 0:
             number += 1 << 32
@@ -192,7 +194,7 @@ class Buffer1_7(object):
         number = 0
         for i in range(10):
             b = self.unpack("B")
-            number |= (b & 0x7F) << 7*i
+            number |= (b & 0x7F) << 7 * i
             if not b & 0x80:
                 break
 
@@ -202,7 +204,9 @@ class Buffer1_7(object):
         number_min = -1 << (max_bits - 1)
         number_max = +1 << (max_bits - 1)
         if not (number_min <= number < number_max):
-            raise ValueError(f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}")
+            raise ValueError(
+                f"varint does not fit in range: {number_min:d} <= {number:d} < {number_max:d}"
+            )
 
         return number
 
@@ -326,10 +330,10 @@ class Buffer1_7(object):
                 number = number + (1 << bits)
             return number
 
-        return cls.pack('Q', sum((
-            pack_twos_comp(26, x) << 38,
-            pack_twos_comp(12, y) << 26,
-            pack_twos_comp(26, z))))
+        return cls.pack(
+            'Q',
+            sum((pack_twos_comp(26, x) << 38, pack_twos_comp(12, y) << 26,
+                 pack_twos_comp(26, z))))
 
     def unpack_position(self):
         """
@@ -421,7 +425,6 @@ class Buffer1_7(object):
         from quarry.types import nbt
         return nbt.TagRoot.from_buff(self)
 
-
     # Entity metadata ---------------------------------------------------------
 
     @classmethod
@@ -433,7 +436,7 @@ class Buffer1_7(object):
         for ty_key, val in metadata.items():
             ty, key = ty_key
             out += cls.pack('B', ty << 5 | key)
-            if   ty == 0: out += cls.pack('b', val)
+            if ty == 0: out += cls.pack('b', val)
             elif ty == 1: out += cls.pack('h', val)
             elif ty == 2: out += cls.pack('i', val)
             elif ty == 3: out += cls.pack('f', val)

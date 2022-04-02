@@ -11,11 +11,10 @@ def _enable_forwarding(endpoint):
     Patches the given endpoint's ``packet_received()`` method to pass packets
     through the bridge.
     """
+
     def packet_received(buff, name):
-        endpoint.bridge.packet_received(
-            buff,
-            endpoint.recv_direction,
-            name)
+        endpoint.bridge.packet_received(buff, endpoint.recv_direction, name)
+
     endpoint._packet_received = endpoint.packet_received
     endpoint.packet_received = packet_received
 
@@ -35,18 +34,17 @@ def _enable_fast_forwarding(endpoint1, endpoint2):
     """
     if len(endpoint1.recv_buff) > 0:
         endpoint2.transport.write(
-            endpoint2.cipher.encrypt(
-                endpoint1.recv_buff.read()))
+            endpoint2.cipher.encrypt(endpoint1.recv_buff.read()))
 
     def data_received(data):
         endpoint2.transport.write(
-            endpoint2.cipher.encrypt(
-                endpoint1.cipher.decrypt(data)))
+            endpoint2.cipher.encrypt(endpoint1.cipher.decrypt(data)))
 
     endpoint1.data_received = data_received
 
 
 class Upstream(ClientProtocol):
+
     def setup(self):
         self.bridge = self.factory.bridge
         self.bridge.upstream = self
@@ -88,9 +86,9 @@ class Bridge(PacketDispatcher):
 
         self.buff_type = self.downstream.buff_type
 
-        self.logger = logging.getLogger("%s{%s}" % (
-            self.__class__.__name__,
-            self.downstream.remote_addr.host))
+        self.logger = logging.getLogger(
+            "%s{%s}" %
+            (self.__class__.__name__, self.downstream.remote_addr.host))
         self.logger.setLevel(self.log_level)
 
     def make_profile(self):
@@ -111,9 +109,7 @@ class Bridge(PacketDispatcher):
         self.upstream_factory.bridge = self
         self.upstream_factory.force_protocol_version = \
             self.downstream.protocol_version
-        self.upstream_factory.connect(
-            self.connect_host,
-            self.connect_port)
+        self.upstream_factory.connect(self.connect_host, self.connect_port)
 
     # Connections -------------------------------------------------------------
 
@@ -191,9 +187,9 @@ class Bridge(PacketDispatcher):
                 self.upstream.compression_threshold:
             raise Exception(
                 "Cannot enable fast forwarding as compression differs. "
-                "downstream: %s, upstream: %s" % (
-                    self.downstream.compression_threshold,
-                    self.upstream.compression_threshold))
+                "downstream: %s, upstream: %s" %
+                (self.downstream.compression_threshold,
+                 self.upstream.compression_threshold))
 
         _enable_fast_forwarding(self.downstream, self.upstream)
         _enable_fast_forwarding(self.upstream, self.downstream)

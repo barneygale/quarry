@@ -3,8 +3,8 @@ from quarry.types.buffer.v1_13_2 import Buffer1_13_2
 
 poses = ('standing', 'fall_flying', 'sleeping', 'swimming', 'spin_attack',
          'sneaking', 'dying')
-smelt_types = ('minecraft:smelting', 'minecraft:blasting',
-               'minecraft:smoking', 'minecraft:campfire_cooking')
+smelt_types = ('minecraft:smelting', 'minecraft:blasting', 'minecraft:smoking',
+               'minecraft:campfire_cooking')
 
 
 class Buffer1_14(Buffer1_13_2):
@@ -31,12 +31,11 @@ class Buffer1_14(Buffer1_13_2):
         non_air, value_width = self.unpack('HB')
         palette = self.unpack_chunk_section_palette(value_width)
         array = self.unpack_chunk_section_array(value_width)
-        return BlockArray.from_bytes(
-            bytes=array,
-            palette=palette,
-            registry=self.registry,
-            non_air=non_air,
-            value_width=value_width), None, None
+        return BlockArray.from_bytes(bytes=array,
+                                     palette=palette,
+                                     registry=self.registry,
+                                     non_air=non_air,
+                                     value_width=value_width), None, None
 
     # Position ----------------------------------------------------------------
 
@@ -51,10 +50,10 @@ class Buffer1_14(Buffer1_13_2):
                 number = number + (1 << bits)
             return number
 
-        return cls.pack('Q', sum((
-            pack_twos_comp(26, x) << 38,
-            pack_twos_comp(26, z) << 12,
-            pack_twos_comp(12, y))))
+        return cls.pack(
+            'Q',
+            sum((pack_twos_comp(26, x) << 38, pack_twos_comp(26, z) << 12,
+                 pack_twos_comp(12, y))))
 
     def unpack_position(self):
         """
@@ -72,7 +71,6 @@ class Buffer1_14(Buffer1_13_2):
         y = unpack_twos_comp(12, (number & 0xFFF))
         return x, y, z
 
-
     # Entity metadata ---------------------------------------------------------
 
     @classmethod
@@ -86,16 +84,16 @@ class Buffer1_14(Buffer1_13_2):
         for ty_key, val in metadata.items():
             ty, key = ty_key
             out += cls.pack('BB', key, ty)
-            if   ty == 0:  out += cls.pack('b', val)
-            elif ty == 1:  out += cls.pack_varint(val)
-            elif ty == 2:  out += cls.pack('f', val)
-            elif ty == 3:  out += cls.pack_string(val)
-            elif ty == 4:  out += cls.pack_chat(val)
-            elif ty == 5:  out += cls.pack_optional(cls.pack_chat, val)
-            elif ty == 6:  out += cls.pack_slot(**val)
-            elif ty == 7:  out += cls.pack('?', val)
-            elif ty == 8:  out += cls.pack_rotation(*val)
-            elif ty == 9:  out += cls.pack_position(*val)
+            if ty == 0: out += cls.pack('b', val)
+            elif ty == 1: out += cls.pack_varint(val)
+            elif ty == 2: out += cls.pack('f', val)
+            elif ty == 3: out += cls.pack_string(val)
+            elif ty == 4: out += cls.pack_chat(val)
+            elif ty == 5: out += cls.pack_optional(cls.pack_chat, val)
+            elif ty == 6: out += cls.pack_slot(**val)
+            elif ty == 7: out += cls.pack('?', val)
+            elif ty == 8: out += cls.pack_rotation(*val)
+            elif ty == 9: out += cls.pack_position(*val)
             elif ty == 10: out += cls.pack_optional(pack_position, val)
             elif ty == 11: out += cls.pack_direction(val)
             elif ty == 12: out += cls.pack_optional(cls.pack_uuid, val)
@@ -120,16 +118,16 @@ class Buffer1_14(Buffer1_13_2):
             if key == 255:
                 return metadata
             ty = self.unpack('B')
-            if   ty == 0:  val = self.unpack('b')
-            elif ty == 1:  val = self.unpack_varint()
-            elif ty == 2:  val = self.unpack('f')
-            elif ty == 3:  val = self.unpack_string()
-            elif ty == 4:  val = self.unpack_chat()
-            elif ty == 5:  val = self.unpack_optional(self.unpack_chat)
-            elif ty == 6:  val = self.unpack_slot()
-            elif ty == 7:  val = self.unpack('?')
-            elif ty == 8:  val = self.unpack_rotation()
-            elif ty == 9:  val = self.unpack_position()
+            if ty == 0: val = self.unpack('b')
+            elif ty == 1: val = self.unpack_varint()
+            elif ty == 2: val = self.unpack('f')
+            elif ty == 3: val = self.unpack_string()
+            elif ty == 4: val = self.unpack_chat()
+            elif ty == 5: val = self.unpack_optional(self.unpack_chat)
+            elif ty == 6: val = self.unpack_slot()
+            elif ty == 7: val = self.unpack('?')
+            elif ty == 8: val = self.unpack_rotation()
+            elif ty == 9: val = self.unpack_position()
             elif ty == 10: val = self.unpack_optional(self.unpack_position)
             elif ty == 11: val = self.unpack_direction()
             elif ty == 12: val = self.unpack_optional(self.unpack_uuid)
@@ -153,7 +151,6 @@ class Buffer1_14(Buffer1_13_2):
         id = cls.registry.encode('minecraft:particle_type', kind)
         return super(Buffer1_14, cls).pack_particle(id, data)
 
-
     def unpack_particle(self):
         """
         Unpacks a particle. Returns an ``(kind, data)`` pair.
@@ -162,7 +159,6 @@ class Buffer1_14(Buffer1_13_2):
         id, data = super(Buffer1_14, self).unpack_particle()
         kind = self.registry.decode('minecraft:particle_type', id)
         return kind, data
-
 
     # Villager data -----------------------------------------------------------
 
@@ -173,7 +169,8 @@ class Buffer1_14(Buffer1_13_2):
         """
 
         kind = cls.registry.encode('minecraft:villager_type', kind)
-        profession = cls.registry.encode('minecraft:villager_profession', profession)
+        profession = cls.registry.encode('minecraft:villager_profession',
+                                         profession)
         return cls.pack_varint(kind) + \
                cls.pack_varint(profession) + \
                cls.pack_varint(level)
@@ -182,13 +179,12 @@ class Buffer1_14(Buffer1_13_2):
         """
         Unpacks villager data.
         """
-        kind = self.registry.decode(
-            'minecraft:villager_type', self.unpack_varint())
-        profession = self.registry.decode(
-            'minecraft:villager_profession', self.unpack_varint())
+        kind = self.registry.decode('minecraft:villager_type',
+                                    self.unpack_varint())
+        profession = self.registry.decode('minecraft:villager_profession',
+                                          self.unpack_varint())
         level = self.unpack_varint()
         return kind, profession, level
-
 
     # Optional varint ---------------------------------------------------------
 
@@ -210,7 +206,6 @@ class Buffer1_14(Buffer1_13_2):
             return None
         else:
             return val - 1
-
 
     # Pose --------------------------------------------------------------------
 
@@ -242,7 +237,8 @@ class Buffer1_14(Buffer1_13_2):
         if recipe['type'] == 'minecraft:crafting_shapeless':
             recipe['group'] = self.unpack_string()
             recipe['ingredients'] = [
-                self.unpack_ingredient() for _ in range(self.unpack_varint())]
+                self.unpack_ingredient() for _ in range(self.unpack_varint())
+            ]
             recipe['result'] = self.unpack_slot()
 
         elif recipe['type'] == 'minecraft:crafting_shaped':
@@ -250,8 +246,9 @@ class Buffer1_14(Buffer1_13_2):
             recipe['height'] = self.unpack_varint()
             recipe['group'] = self.unpack_string()
             recipe['ingredients'] = [
-                self.unpack_ingredient() for _ in range(recipe['width'] *
-                                                    recipe['height'])]
+                self.unpack_ingredient()
+                for _ in range(recipe['width'] * recipe['height'])
+            ]
             recipe['result'] = self.unpack_slot()
         elif recipe['type'] in smelt_types:
             recipe['group'] = self.unpack_string()

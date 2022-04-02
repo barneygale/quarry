@@ -2,8 +2,8 @@
 import gzip
 import os.path
 from quarry.types.nbt import *
-TagCompound.preserve_order = True # for testing purposes.
 
+TagCompound.preserve_order = True  # for testing purposes.
 
 bigtest_path = os.path.join(os.path.dirname(__file__), "bigtest.nbt")
 
@@ -84,6 +84,7 @@ def test_bigtest_to_obj():
     bigtest = NBTFile.load(bigtest_path).root_tag
     assert bigtest_to_obj == bigtest.to_obj()
 
+
 def test_bigtest_unpack_pack():
     with gzip.open(bigtest_path) as fd:
         bigtest_data_before = fd.read()
@@ -92,6 +93,7 @@ def test_bigtest_unpack_pack():
     bigtest_data_after = bigtest.to_bytes()
 
     assert bigtest_data_before == bigtest_data_after
+
 
 def test_manual_bigtest_to_obj():
     bigtest = TagRoot({"Level": TagCompound({

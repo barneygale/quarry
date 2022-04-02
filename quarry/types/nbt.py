@@ -10,12 +10,12 @@ from quarry.types.chunk import PackedArray
 _kinds = {}
 _ids = {}
 
-
 # Base types ------------------------------------------------------------------
+
 
 @functools.total_ordering
 class _Tag(object):
-    __slots__ = ('value',)
+    __slots__ = ('value', )
 
     def __init__(self, value):
         self.value = value
@@ -76,6 +76,7 @@ class _ArrayTag(_Tag):
 
 
 # NBT tags --------------------------------------------------------------------
+
 
 class TagByte(_DataTag):
     __slots__ = ()
@@ -239,8 +240,8 @@ _kinds[11] = TagIntArray
 _kinds[12] = TagLongArray
 _ids.update({v: k for k, v in _kinds.items()})
 
-
 # Files -----------------------------------------------------------------------
+
 
 class NBTFile(object):
     root_tag = None
@@ -262,6 +263,7 @@ class RegionFile(object):
     """
     Experimental support for the Minecraft world storage format (``.mca``).
     """
+
     def __init__(self, path):
         self.fd = open(path, "r+b")
 
@@ -306,16 +308,16 @@ class RegionFile(object):
         # Compute new extent
         for idx in range(len(extents) - 1):
             start = extents[idx][0] + extents[idx][1]
-            end = extents[idx+1][0]
+            end = extents[idx + 1][0]
             if (end - start) >= chunk_length:
                 chunk_offset = start
-                extents.insert(idx+1, (chunk_offset, chunk_length))
+                extents.insert(idx + 1, (chunk_offset, chunk_length))
                 break
 
         # Write extent header
         self.fd.seek(4 * (32 * chunk_z + chunk_x))
-        self.fd.write(Buffer.pack(
-            'I', (chunk_offset << 8) | (chunk_length & 0xFF)))
+        self.fd.write(
+            Buffer.pack('I', (chunk_offset << 8) | (chunk_length & 0xFF)))
 
         # Write timestamp header
         self.fd.seek(4096 + 4 * (32 * chunk_z + chunk_x))
@@ -370,6 +372,7 @@ class RegionFile(object):
 
 # Debug -----------------------------------------------------------------------
 
+
 def alt_repr(tag, level=0):
     """
     Returns a human-readable representation of a tag using the same format as
@@ -378,44 +381,26 @@ def alt_repr(tag, level=0):
     name = lambda kind: type(kind).__name__.replace("Tag", "TAG_")
 
     if isinstance(tag, _ArrayTag):
-        return "%s%s: %d entries" % (
-            "  " * level,
-            name(tag),
-            len(tag.value))
+        return "%s%s: %d entries" % ("  " * level, name(tag), len(tag.value))
 
     elif isinstance(tag, TagList):
         return "%s%s: %d entries\n%s{\n%s\n%s}" % (
-            "  " * level,
-            name(tag),
-            len(tag.value),
-            "  " * level,
-            "\n".join(alt_repr(tag, level+1) for tag in tag.value),
-            "  " * level)
+            "  " * level, name(tag), len(tag.value), "  " * level, "\n".join(
+                alt_repr(tag, level + 1) for tag in tag.value), "  " * level)
 
     elif isinstance(tag, TagRoot):
         return "\n".join(
-                alt_repr(tag, level).replace(': ', '("%s"): ' % name, 1)
-                for name, tag in tag.value.items())
+            alt_repr(tag, level).replace(': ', '("%s"): ' % name, 1)
+            for name, tag in tag.value.items())
 
     elif isinstance(tag, TagCompound):
         return "%s%s: %d entries\n%s{\n%s\n%s}" % (
-            "  " * level,
-            name(tag),
-            len(tag.value),
-            "  " * level,
-            "\n".join(
-                alt_repr(tag, level+1).replace(': ', '("%s"): ' % name, 1)
-                for name, tag in tag.value.items()),
-            "  " * level)
+            "  " * level, name(tag), len(tag.value), "  " * level, "\n".join(
+                alt_repr(tag, level + 1).replace(': ', '("%s"): ' % name, 1)
+                for name, tag in tag.value.items()), "  " * level)
 
     elif isinstance(tag, TagString):
-        return '%s%s: "%s"' % (
-            "  " * level,
-            name(tag),
-            tag.value)
+        return '%s%s: "%s"' % ("  " * level, name(tag), tag.value)
 
     else:
-        return "%s%s: %r" % (
-            "  " * level,
-            name(tag),
-            tag.value)
+        return "%s%s: %r" % ("  " * level, name(tag), tag.value)

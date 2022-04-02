@@ -15,6 +15,7 @@ from quarry.data.data_packs import data_packs, dimension_types
 
 
 class ChatRoomProtocol(ServerProtocol):
+
     def player_joined(self):
         # Call super. This switches us to "play" mode, marks the player as
         #   in-game, and does some logging.
@@ -35,11 +36,13 @@ class ChatRoomProtocol(ServerProtocol):
         is_flat = False
         dimension_count = 1
         dimension_name = "chat"
-        dimension_type = dimension_types[self.protocol_version, "minecraft:overworld"]
+        dimension_type = dimension_types[self.protocol_version,
+                                         "minecraft:overworld"]
         data_pack = data_packs[self.protocol_version]
 
         join_game = [
-            self.buff_type.pack("i?BB", entity_id, is_hardcore, game_mode, prev_game_mode),
+            self.buff_type.pack("i?BB", entity_id, is_hardcore, game_mode,
+                                prev_game_mode),
             self.buff_type.pack_varint(dimension_count),
             self.buff_type.pack_string(dimension_name),
             self.buff_type.pack_nbt(data_pack),
@@ -55,22 +58,23 @@ class ChatRoomProtocol(ServerProtocol):
 
         # Send "Join Game" packet
         self.send_packet(
-            "join_game",
-            *join_game,
-            self.buff_type.pack("????", is_reduced_debug, is_respawn_screen, is_debug, is_flat))
+            "join_game", *join_game,
+            self.buff_type.pack("????", is_reduced_debug, is_respawn_screen,
+                                is_debug, is_flat))
 
         # Send "Player Position and Look" packet
         self.send_packet(
             "player_position_and_look",
-            self.buff_type.pack("dddff?",
-                0,                         # x
-                255,                       # y
-                0,                         # z
-                0,                         # yaw
-                0,                         # pitch
-                0b00000),                  # flags
-            self.buff_type.pack_varint(0), # teleport id
-            self.buff_type.pack("?", True)) # Leave vehicle,
+            self.buff_type.pack(
+                "dddff?",
+                0,  # x
+                255,  # y
+                0,  # z
+                0,  # yaw
+                0,  # pitch
+                0b00000),  # flags
+            self.buff_type.pack_varint(0),  # teleport id
+            self.buff_type.pack("?", True))  # Leave vehicle,
         # Start sending "Keep Alive" packets
         self.ticker.add_loop(20, self.update_keep_alive)
 
@@ -104,20 +108,28 @@ class ChatRoomFactory(ServerFactory):
             sender = UUID(int=0)
 
         for player in self.players:
-            player.send_packet(
-                "chat_message",
-                player.buff_type.pack_chat(message),
-                player.buff_type.pack('b', 0),
-                player.buff_type.pack_uuid(sender))
+            player.send_packet("chat_message",
+                               player.buff_type.pack_chat(message),
+                               player.buff_type.pack('b', 0),
+                               player.buff_type.pack_uuid(sender))
 
 
 def main(argv):
     # Parse options
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--host", default="", help="address to listen on")
-    parser.add_argument("-p", "--port", default=25565, type=int, help="port to listen on")
-    parser.add_argument("--offline", action="store_true", help="offline server")
+    parser.add_argument("-a",
+                        "--host",
+                        default="",
+                        help="address to listen on")
+    parser.add_argument("-p",
+                        "--port",
+                        default=25565,
+                        type=int,
+                        help="port to listen on")
+    parser.add_argument("--offline",
+                        action="store_true",
+                        help="offline server")
     args = parser.parse_args(argv)
 
     # Create factory

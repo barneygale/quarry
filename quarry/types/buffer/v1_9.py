@@ -67,12 +67,11 @@ class Buffer1_9(Buffer1_7):
         value_width = self.unpack('B')
         palette = self.unpack_chunk_section_palette(value_width)
         array = self.unpack_chunk_section_array(value_width)
-        blocks = BlockArray.from_bytes(
-            bytes=array,
-            palette=palette,
-            registry=self.registry,
-            non_air=None,
-            value_width=value_width)
+        blocks = BlockArray.from_bytes(bytes=array,
+                                       palette=palette,
+                                       registry=self.registry,
+                                       non_air=None,
+                                       value_width=value_width)
         block_lights = PackedArray.from_light_bytes(self.read(2048))
         if overworld:
             sky_lights = PackedArray.from_light_bytes(self.read(2048))
@@ -100,16 +99,16 @@ class Buffer1_9(Buffer1_7):
         for ty_key, val in metadata.items():
             ty, key = ty_key
             out += cls.pack('BB', key, ty)
-            if   ty == 0:  out += cls.pack('b', val)
-            elif ty == 1:  out += cls.pack_varint(val)
-            elif ty == 2:  out += cls.pack('f', val)
-            elif ty == 3:  out += cls.pack_string(val)
-            elif ty == 4:  out += cls.pack_chat(val)
-            elif ty == 5:  out += cls.pack_slot(**val)
-            elif ty == 6:  out += cls.pack('?', val)
-            elif ty == 7:  out += cls.pack_rotation(*val)
-            elif ty == 8:  out += cls.pack_position(*val)
-            elif ty == 9:  out += cls.pack_optional(pack_position, val)
+            if ty == 0: out += cls.pack('b', val)
+            elif ty == 1: out += cls.pack_varint(val)
+            elif ty == 2: out += cls.pack('f', val)
+            elif ty == 3: out += cls.pack_string(val)
+            elif ty == 4: out += cls.pack_chat(val)
+            elif ty == 5: out += cls.pack_slot(**val)
+            elif ty == 6: out += cls.pack('?', val)
+            elif ty == 7: out += cls.pack_rotation(*val)
+            elif ty == 8: out += cls.pack_position(*val)
+            elif ty == 9: out += cls.pack_optional(pack_position, val)
             elif ty == 10: out += cls.pack_direction(val)
             elif ty == 11: out += cls.pack_optional(cls.pack_uuid, val)
             elif ty == 12: out += cls.pack_block(val)
@@ -129,16 +128,16 @@ class Buffer1_9(Buffer1_7):
             if key == 255:
                 return metadata
             ty = self.unpack('B')
-            if   ty == 0:  val = self.unpack('b')
-            elif ty == 1:  val = self.unpack_varint()
-            elif ty == 2:  val = self.unpack('f')
-            elif ty == 3:  val = self.unpack_string()
-            elif ty == 4:  val = self.unpack_chat()
-            elif ty == 5:  val = self.unpack_slot()
-            elif ty == 6:  val = self.unpack('?')
-            elif ty == 7:  val = self.unpack_rotation()
-            elif ty == 8:  val = self.unpack_position()
-            elif ty == 9:  val = self.unpack_optional(self.unpack_position)
+            if ty == 0: val = self.unpack('b')
+            elif ty == 1: val = self.unpack_varint()
+            elif ty == 2: val = self.unpack('f')
+            elif ty == 3: val = self.unpack_string()
+            elif ty == 4: val = self.unpack_chat()
+            elif ty == 5: val = self.unpack_slot()
+            elif ty == 6: val = self.unpack('?')
+            elif ty == 7: val = self.unpack_rotation()
+            elif ty == 8: val = self.unpack_position()
+            elif ty == 9: val = self.unpack_optional(self.unpack_position)
             elif ty == 10: val = self.unpack_direction()
             elif ty == 11: val = self.unpack_optional(self.unpack_uuid)
             elif ty == 12: val = self.unpack_block()

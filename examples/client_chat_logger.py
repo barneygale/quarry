@@ -11,6 +11,7 @@ from quarry.net.auth import ProfileCLI
 
 
 class ChatLoggerProtocol(SpawningClientProtocol):
+
     def packet_chat_message(self, buff):
         p_text = buff.unpack_chat()
         p_position = 0
@@ -51,6 +52,7 @@ def main(argv):
 
     run(args)
     reactor.run()
+
 
 if __name__ == "__main__":
     import sys

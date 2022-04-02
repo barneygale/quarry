@@ -11,6 +11,7 @@ from quarry.net.server import ServerFactory, ServerProtocol
 
 
 class DowntimeProtocol(ServerProtocol):
+
     def packet_login_start(self, buff):
         buff.discard()
         self.close(self.factory.motd)
@@ -24,9 +25,18 @@ def main(argv):
     # Parse options
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--host", default="", help="address to listen on")
-    parser.add_argument("-p", "--port", default=25565, type=int, help="port to listen on")
-    parser.add_argument("-m", "--message", default="We're down for maintenance",
+    parser.add_argument("-a",
+                        "--host",
+                        default="",
+                        help="address to listen on")
+    parser.add_argument("-p",
+                        "--port",
+                        default=25565,
+                        type=int,
+                        help="port to listen on")
+    parser.add_argument("-m",
+                        "--message",
+                        default="We're down for maintenance",
                         help="message to kick users with")
     args = parser.parse_args(argv)
 

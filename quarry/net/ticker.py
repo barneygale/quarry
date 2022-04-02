@@ -9,6 +9,7 @@ class Task(object):
 
 
 class LoopTask(Task):
+
     def __init__(self, ticker, interval, callback):
         self.ticker = ticker
         self.interval = interval
@@ -20,6 +21,7 @@ class LoopTask(Task):
 
 
 class DelayTask(Task):
+
     def __init__(self, ticker, delay, callback):
         self.ticker = ticker
         self.delay = delay
@@ -40,7 +42,7 @@ class Ticker(object):
     tick = 0
 
     #: Interval between ticks, in seconds
-    interval = 1.0/20
+    interval = 1.0 / 20
 
     #: Maximum number of delayed ticks before they're all skipped
     max_lag = 40
@@ -117,9 +119,11 @@ class Ticker(object):
             self.tick += 1
 
     def _wrap(self, callback):
+
         def fn():
             try:
                 callback()
             except Exception as e:
                 self._logger.exception(e)
+
         return fn

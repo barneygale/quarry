@@ -6,12 +6,7 @@ from quarry.types.buffer import BufferUnderrun, buff_types
 from quarry.net.crypto import Cipher
 from quarry.net.ticker import Ticker
 
-protocol_modes = {
-    0: 'init',
-    1: 'status',
-    2: 'login',
-    3: 'play'
-}
+protocol_modes = {0: 'init', 1: 'status', 2: 'login', 3: 'play'}
 protocol_modes_inv = dict(((v, k) for k, v in protocol_modes.items()))
 
 
@@ -20,6 +15,7 @@ class ProtocolError(Exception):
 
 
 class PacketDispatcher(object):
+
     def dispatch(self, lookup_args, buff):
         handler = getattr(self, f"packet_{'_'.join(lookup_args)}", None)
         if handler is not None:
@@ -64,9 +60,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         self.recv_buff = self.buff_type()
         self.cipher = Cipher()
 
-        self.logger = logging.getLogger("%s{%s}" % (
-            self.__class__.__name__,
-            self.remote_addr.host))
+        self.logger = logging.getLogger(
+            "%s{%s}" % (self.__class__.__name__, self.remote_addr.host))
         self.logger.setLevel(self.factory.log_level)
 
         self.ticker = self.factory.ticker_type(self.logger)
@@ -92,15 +87,12 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     # Convenience functions ---------------------------------------------------
 
     def check_protocol_mode_switch(self, mode):
-        transitions = [
-            ("init", "status"),
-            ("init", "login"),
-            ("login", "play")
-        ]
+        transitions = [("init", "status"), ("init", "login"),
+                       ("login", "play")]
 
         if (self.protocol_mode, mode) not in transitions:
-            raise ProtocolError("Cannot switch protocol mode from %s to %s"
-                                % (self.protocol_mode, mode))
+            raise ProtocolError("Cannot switch protocol mode from %s to %s" %
+                                (self.protocol_mode, mode))
 
     def switch_protocol_mode(self, mode):
         self.check_protocol_mode_switch(mode)
@@ -108,8 +100,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
     def set_compression(self, compression_threshold):
         self.compression_threshold = compression_threshold
-        self.logger.debug("Compression threshold set to %d bytes"
-                          % compression_threshold)
+        self.logger.debug("Compression threshold set to %d bytes" %
+                          compression_threshold)
 
     def close(self, reason=None):
         """Closes the connection"""
@@ -131,10 +123,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
     def log_packet(self, prefix, name):
         """Logs a packet at debug level"""
 
-        self.logger.debug("Packet %s %s/%s" % (
-            prefix,
-            self.protocol_mode,
-            name))
+        self.logger.debug("Packet %s %s/%s" %
+                          (prefix, self.protocol_mode, name))
 
     # General callbacks -------------------------------------------------------
 
@@ -204,7 +194,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         try:
             return packets.packet_names[key]
         except KeyError:
-            raise ProtocolError("No name known for packet: %s" % (key,))
+            raise ProtocolError("No name known for packet: %s" % (key, ))
 
     def get_packet_ident(self, name):
         key = (self.protocol_version, self.protocol_mode, self.send_direction,
@@ -212,7 +202,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
         try:
             return packets.packet_idents[key]
         except KeyError:
-            raise ProtocolError("No ID known for packet: %s" % (key,))
+            raise ProtocolError("No ID known for packet: %s" % (key, ))
 
     def data_received(self, data):
         # Decrypt data
@@ -228,9 +218,8 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
             # Read the packet
             try:
-                buff = self.recv_buff.unpack_packet(
-                    self.buff_type,
-                    self.compression_threshold)
+                buff = self.recv_buff.unpack_packet(self.buff_type,
+                                                    self.compression_threshold)
 
             except BufferUnderrun:
                 self.recv_buff.restore()
@@ -264,7 +253,7 @@ class Protocol(protocol.Protocol, PacketDispatcher, object):
 
         self.log_packet(". recv", name)
 
-        dispatched = self.dispatch((name,), buff)
+        dispatched = self.dispatch((name, ), buff)
 
         if not dispatched:
             self.packet_unhandled(buff, name)

@@ -10,6 +10,7 @@ from zope.interface import implementer
 
 
 class HTTPException(Exception):
+
     def __init__(self, error_type, error_message):
         self.error_type = error_type
         self.error_message = error_message
@@ -20,6 +21,7 @@ class HTTPException(Exception):
 
 @implementer(IBodyProducer)
 class BytesProducer:
+
     def __init__(self, body):
         self.body = body
         self.length = len(body)
@@ -39,8 +41,10 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
     d0 = defer.Deferred()
 
     def _callback(response):
+
         def _callback2(body):
             d0.callback(json.loads(body.decode('ascii')))
+
         d = readBody(response)
         d.addCallback(_callback2)
         return d
@@ -49,17 +53,16 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
         if isinstance(err.value, error.Error):
             if err.value.status == b"204":
                 if expect_content:
-                    err = failure.Failure(err_type(
-                        "No Content",
-                        "No content was returned by the server"))
+                    err = failure.Failure(
+                        err_type("No Content",
+                                 "No content was returned by the server"))
                 else:
                     d0.callback(None)
                     return
             else:
                 data = json.loads(err.value.response.decode('ascii'))
-                err = failure.Failure(err_type(
-                    data['error'],
-                    data['errorMessage']))
+                err = failure.Failure(
+                    err_type(data['error'], data['errorMessage']))
         d0.errback(err)
 
     agent = Agent(reactor)

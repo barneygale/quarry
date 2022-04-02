@@ -8,10 +8,8 @@ from quarry.types.nbt import NBTFile, TagRoot
 def _load():
     data_packs = {}
     dimension_types = {}
-    nbt_paths = os.path.abspath(os.path.join(
-        os.path.dirname(__file__),
-        "data_packs",
-        "*.nbt"))
+    nbt_paths = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "data_packs", "*.nbt"))
     for nbt_path in glob.glob(nbt_paths):
         match = re.match('(\d{4})_(.+)\.nbt', os.path.basename(nbt_path))
         if not match:

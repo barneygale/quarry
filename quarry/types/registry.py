@@ -12,7 +12,6 @@ class Registry(object):
     #: Number of bits needed to represent the greatest block ID.
     max_bits = None
 
-
     def encode(self, kind, obj):
         """
         Encodes a thing to an integer ID.
@@ -49,6 +48,7 @@ class Registry(object):
 
         raise NotImplementedError
 
+
 class OpaqueRegistry(Registry):
     """
     Registry that passes IDs through unchanged. This is the default.
@@ -57,13 +57,20 @@ class OpaqueRegistry(Registry):
     def __init__(self, max_bits):
         self.max_bits = max_bits
 
+    def encode(self, kind, obj):
+        return obj
 
-    def encode(self, kind, obj): return obj
-    def decode(self, kind, val): return val
+    def decode(self, kind, val):
+        return val
 
-    def encode_block(self, obj): return obj
-    def decode_block(self, val): return val
-    def is_air_block(self, obj): return obj == 0
+    def encode_block(self, obj):
+        return obj
+
+    def decode_block(self, val):
+        return val
+
+    def is_air_block(self, obj):
+        return obj == 0
 
 
 class BitShiftRegistry(OpaqueRegistry):
@@ -76,9 +83,14 @@ class BitShiftRegistry(OpaqueRegistry):
 
     max_bits = 13
 
-    def encode_block(self, obj): return (obj[0] << 4) | obj[1]
-    def decode_block(self, val): return val >> 4, val & 0x0F
-    def is_air_block(self, obj): return obj[0] == 0
+    def encode_block(self, obj):
+        return (obj[0] << 4) | obj[1]
+
+    def decode_block(self, val):
+        return val >> 4, val & 0x0F
+
+    def is_air_block(self, obj):
+        return obj[0] == 0
 
 
 class LookupRegistry(Registry):
@@ -92,19 +104,21 @@ class LookupRegistry(Registry):
     the official server.
     """
 
-
     def __init__(self, blocks, registries):
         self.max_bits = int(math.ceil(math.log(max(blocks.keys()), 2)))
 
         self.decode_block_map = blocks
         self.encode_block_map = {
             frozenset(value.items()): key
-            for key, value in blocks.items()}
+            for key, value in blocks.items()
+        }
 
         self.decode_map = registries
         self.encode_map = {
-            registry_name: {value: key for key, value in registry.items()}
-            for registry_name, registry in registries.items()}
+            registry_name: {value: key
+                            for key, value in registry.items()}
+            for registry_name, registry in registries.items()
+        }
 
     def encode(self, registry, obj):
         return self.encode_map[registry][obj]
@@ -146,10 +160,10 @@ class LookupRegistry(Registry):
 
         # Export reports
         if not os.path.exists(reports_path):
-            subprocess.check_call(
-                ["java", "-cp", jar_name, "net.minecraft.data.Main",
-                 "--reports"],
-                cwd=root_path)
+            subprocess.check_call([
+                "java", "-cp", jar_name, "net.minecraft.data.Main", "--reports"
+            ],
+                                  cwd=root_path)
 
         # Load data
         return cls.from_json(reports_path)

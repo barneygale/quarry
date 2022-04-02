@@ -9,10 +9,8 @@ def _load():
     minecraft_versions = {}
     packet_names = {}
     packet_idents = {}
-    csv_paths = os.path.abspath(os.path.join(
-        os.path.dirname(__file__),
-        "packets",
-        "*.csv"))
+    csv_paths = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "packets", "*.csv"))
     for csv_path in glob.glob(csv_paths):
         match = re.match('(\d{4})_(.+)\.csv', os.path.basename(csv_path))
         if not match:
@@ -54,8 +52,8 @@ def _load():
 
                 packet_ident += 1
 
-    return (default_protocol_version, minecraft_versions,
-            packet_names, packet_idents)
+    return (default_protocol_version, minecraft_versions, packet_names,
+            packet_idents)
 
 default_protocol_version, minecraft_versions, \
 packet_names, packet_idents = _load()

@@ -44,13 +44,17 @@ class Profile(object):
         self.uuid = uuid
 
     def join(self, digest, refresh=True):
-        d1 = http.request(
-            url=SESSION_SERVER + b"join",
-            timeout=self.timeout,
-            err_type=AuthException,
-            data={"accessToken": self.access_token,
-                  "selectedProfile": self.uuid.to_hex(with_dashes=False),
-                  "serverId": digest})
+        d1 = http.request(url=SESSION_SERVER + b"join",
+                          timeout=self.timeout,
+                          err_type=AuthException,
+                          data={
+                              "accessToken":
+                              self.access_token,
+                              "selectedProfile":
+                              self.uuid.to_hex(with_dashes=False),
+                              "serverId":
+                              digest
+                          })
 
         if not refresh:
             return d1
@@ -60,6 +64,7 @@ class Profile(object):
             def _errback(err):
                 self.refresh().chainDeferred(
                     self.join(digest, refresh=False).chainDeferred(d0))
+
             d1.addCallbacks(d0.callback, _errback)
             return d0
 
@@ -79,10 +84,9 @@ class Profile(object):
         def _callback(data):
             d0.callback(self)
 
-        d1 = self._request(
-            b"refresh",
-            clientToken=self.client_token,
-            accessToken=self.access_token)
+        d1 = self._request(b"refresh",
+                           clientToken=self.client_token,
+                           accessToken=self.access_token)
         d1.addCallbacks(_callback, d0.errback)
         return d0
 
@@ -91,14 +95,18 @@ class Profile(object):
             profiles_path = self._get_profiles_path()
 
         with open(profiles_path, "w") as fd:
-            json.dump({
-                "selectedUser": self.uuid.to_hex(False),
-                "clientToken": self.client_token,
-                "authenticationDatabase": {
-                    self.uuid.to_hex(False): {
-                        "displayName": self.display_name,
-                        "accessToken": self.access_token,
-                        "uuid": self.uuid.to_hex(True)}}}, fd)
+            json.dump(
+                {
+                    "selectedUser": self.uuid.to_hex(False),
+                    "clientToken": self.client_token,
+                    "authenticationDatabase": {
+                        self.uuid.to_hex(False): {
+                            "displayName": self.display_name,
+                            "accessToken": self.access_token,
+                            "uuid": self.uuid.to_hex(True)
+                        }
+                    }
+                }, fd)
 
     @classmethod
     def from_credentials(cls, email, password):
@@ -110,27 +118,23 @@ class Profile(object):
         def _errback(err):
             d0.errback(err)
 
-        agent = {
-            "name": "Minecraft",
-            "version": 1
-        }
+        agent = {"name": "Minecraft", "version": 1}
 
         client_token = "foo"  # TODO
 
-        d1 = cls._request(
-            b"authenticate",
-            username=email,
-            password=password,
-            agent=agent,
-            clientToken=client_token)
+        d1 = cls._request(b"authenticate",
+                          username=email,
+                          password=password,
+                          agent=agent,
+                          clientToken=client_token)
         d1.addCallbacks(_callback, _errback)
 
         return d0
 
     @classmethod
     def from_token(cls, client_token, access_token, display_name, uuid):
-        obj = cls(client_token, access_token,
-                  display_name, UUID.from_hex(uuid))
+        obj = cls(client_token, access_token, display_name,
+                  UUID.from_hex(uuid))
         return obj.validate()
 
     @classmethod
@@ -160,19 +164,16 @@ class Profile(object):
 
     @classmethod
     def _from_response(cls, response):
-        return cls(
-            response['clientToken'],
-            response['accessToken'],
-            response['selectedProfile']['name'],
-            UUID.from_hex(response['selectedProfile']['id']))
+        return cls(response['clientToken'], response['accessToken'],
+                   response['selectedProfile']['name'],
+                   UUID.from_hex(response['selectedProfile']['id']))
 
     @classmethod
     def _request(cls, endpoint, **data):
-        return http.request(
-            url=b"https://authserver.mojang.com/" + endpoint,
-            timeout=cls.timeout,
-            err_type=ProfileException,
-            data=data)
+        return http.request(url=b"https://authserver.mojang.com/" + endpoint,
+                            timeout=cls.timeout,
+                            err_type=ProfileException,
+                            data=data)
 
     @classmethod
     def _get_profiles_path(cls):
@@ -184,11 +185,11 @@ class Profile(object):
             dot_minecraft = "minecraft"
         else:
             app_data = os.path.expanduser("~")
-        return os.path.join(
-            app_data, dot_minecraft, "launcher_profiles.json")
+        return os.path.join(app_data, dot_minecraft, "launcher_profiles.json")
 
 
 class ProfileCLI(object):
+
     @classmethod
     def make_parser(cls, parser=None):
         if parser is None:
@@ -198,20 +199,20 @@ class ProfileCLI(object):
             "--auth",
             metavar="EMAIL:PASSWORD",
             help="Sets the Mojang account email address and password with "
-                 "which to log in.")
+            "which to log in.")
         group.add_argument(
             "--session-name",
             metavar="DISPLAY_NAME",
             help="Sets the display name to look up in the "
-                 "~/.minecraft/launcher_profiles.json file. This is used to "
-                 "resume an existing logged-in session from the official "
-                 "client.")
+            "~/.minecraft/launcher_profiles.json file. This is used to "
+            "resume an existing logged-in session from the official "
+            "client.")
         group.add_argument(
             "--offline-name",
             metavar="DISPLAY_NAME",
             help="Sets the offline display name to use. If none of these "
-                 "options are given, quarry uses 'quarry' as an offline "
-                 "display name.")
+            "options are given, quarry uses 'quarry' as an offline "
+            "display name.")
         return parser
 
     @classmethod
@@ -230,8 +231,8 @@ def has_joined(timeout, digest, display_name, remote_host=None):
     if remote_host:
         data["ip"] = remote_host
 
-    return http.request(
-        url=SESSION_SERVER + b"hasJoined?" + urlencode(data).encode('ascii'),
-        timeout=timeout,
-        err_type=AuthException,
-        expect_content=True)
+    return http.request(url=SESSION_SERVER + b"hasJoined?" +
+                        urlencode(data).encode('ascii'),
+                        timeout=timeout,
+                        err_type=AuthException,
+                        expect_content=True)

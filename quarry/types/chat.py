@@ -52,6 +52,7 @@ class Message(object):
     """
     Represents a Minecraft chat message.
     """
+
     def __init__(self, value):
         self.value = value
 

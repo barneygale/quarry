@@ -11,6 +11,7 @@ from quarry.net.auth import ProfileCLI
 
 
 class PlayerListProtocol(ClientProtocol):
+
     def setup(self):
         self.players = {}
 
