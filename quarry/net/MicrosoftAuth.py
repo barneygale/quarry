@@ -73,7 +73,7 @@ def getMicrosoftAccessToken(authCode):
 
 def getXBLToken(msftAccessToken):
     data = {
-        "RelyingParty": "http://auth.xboxlive.com",
+        "RelyingParty": "https://auth.xboxlive.com",
         "TokenType": "JWT",
         "properties": {
             "AuthMethod": "RPS",
@@ -122,3 +122,6 @@ def login(email,password):
     mcAccessToken = getMinecraftAccessToken(UHSToken,xstsToken)
     profile = getMinecraftProfile(mcAccessToken)
     return mcAccessToken, profile['name'], profile['id']
+
+if __name__ == '__main__':
+    print(login('koliw.br@gmail.com','Koliw123'))
