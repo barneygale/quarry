@@ -2,7 +2,7 @@
 Example "chat room" server
 
 This server authenticates players, then spawns them in an empty world and does
-the bare minimum to keep them in-game. Players can speak to eachother using
+the bare minimum to keep them in-game. Players can speak to each other using
 chat.
 
 Supports Minecraft 1.16.3+.
@@ -64,7 +64,7 @@ class ChatRoomProtocol(ServerProtocol):
             "player_position_and_look",
             self.buff_type.pack("dddff?",
                 0,                         # x
-                255,                       # y
+                500,                       # y  Must be >= build height to pass the "Loading Terrain" screen on 1.18.2
                 0,                         # z
                 0,                         # yaw
                 0,                         # pitch
