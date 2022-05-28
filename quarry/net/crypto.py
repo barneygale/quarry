@@ -1,16 +1,20 @@
+import base64
 import os
 import sys
 import hashlib
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import ciphers, serialization
+from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.hashes import SHA1
 
 backend = default_backend()
 
 PY3 = sys.version_info > (3,)
-
+_yggdrasil_key = None
 
 class Cipher(object):
     def __init__(self):
@@ -98,3 +102,33 @@ def decrypt_secret(keypair, data):
     return keypair.decrypt(
         ciphertext=data,
         padding=padding.PKCS1v15())
+
+
+def get_yggdrasil_session_key():
+    global _yggdrasil_key
+
+    if _yggdrasil_key is not None:
+        return _yggdrasil_key
+
+    yggdrasil_key_path = os.path.abspath(os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "data",
+            "keys",
+            "yggdrasil_session_pubkey.der"))
+    yggdrasil_key_file = open(yggdrasil_key_path, "rb")
+    _yggdrasil_key = import_public_key(yggdrasil_key_file.read())
+
+    return _yggdrasil_key
+
+
+def verify_mojang_signature(signature, key, timestamp):
+    # Need key in PEM format
+    e = "-----BEGIN RSA PUBLIC KEY-----\n" + base64.encodebytes(key).decode('ISO-8859-1') + "-----END RSA PUBLIC KEY-----\n"
+
+    try:
+        # Signature is timestamp as string + public key in PEM format
+        get_yggdrasil_session_key().verify(signature, bytes(str(timestamp) + e, 'ascii'), PKCS1v15(), SHA1())
+        return True
+    except InvalidSignature:
+        return False
