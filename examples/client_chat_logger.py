@@ -11,20 +11,43 @@ from quarry.net.auth import ProfileCLI
 
 
 class ChatLoggerProtocol(SpawningClientProtocol):
+    # 1.19+
+    def packet_system_message(self, buff):
+        p_text = buff.unpack_chat().to_string()
+        p_position = buff.unpack_varint()
+        buff.discard()
+
+        if p_position != 2 and p_text.strip():  # Ignore game info messages
+            self.logger.info(":: %s" % p_text)
+
     def packet_chat_message(self, buff):
-        p_text = buff.unpack_chat()
+        p_text = buff.unpack_chat().to_string()
+        p_unsigned_text = None
         p_position = 0
-        p_sender = None
 
-        # 1.8.x+
-        if self.protocol_version >= 47:
+        # 1.19+
+        if self.protocol_version >= 759:
+            if buff.unpack('?'):
+                p_unsigned_text = buff.unpack_chat().to_string()
+
+            p_position = buff.unpack_varint()
+            p_sender_uuid = buff.unpack_uuid()
+            p_sender_name = buff.unpack_chat()
+            buff.discard()
+
+            if p_position not in (1, 2):  # Ignore system and game info messages
+                # Sender name is now sent separately to the message text
+                self.logger.info(":: <%s> %s" % (p_sender_name, p_text or p_unsigned_text))
+
+        elif self.protocol_version >= 47:  # 1.8.x+
             p_position = buff.unpack('B')
+            buff.discard()
 
-        # 1.16.x+
-        if self.protocol_version >= 736:
-            p_sender = buff.unpack_uuid()
+            if p_position not in (1, 2) and p_text.strip():  # Ignore system and game info messages
+                self.logger.info(":: %s" % p_text)
 
-        self.logger.info(":: %s" % p_text)
+        elif p_text.strip():
+            self.logger.info(":: %s" % p_text)
 
 
 class ChatLoggerFactory(ClientFactory):

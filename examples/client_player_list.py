@@ -54,6 +54,15 @@ class PlayerListProtocol(ClientProtocol):
                     else:
                         p_display_name = None
 
+                    # 1.19+
+                    if self.protocol_version >= 759:
+                        if buff.unpack('?'):
+                            timestamp = buff.unpack("Q")
+                            key_length = buff.unpack_varint()
+                            key_bytes = buff.read(key_length)
+                            signature_length = buff.unpack_varint()
+                            signature = buff.read(signature_length)
+
                     self.players[p_uuid] = {
                         'name': p_player_name,
                         'properties': p_properties,
