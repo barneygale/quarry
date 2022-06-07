@@ -40,8 +40,14 @@ class ClientProtocol(Protocol):
 
         elif mode == "login":
             # Send login start
-            self.send_packet("login_start", self.buff_type.pack_string(
-                self.factory.profile.display_name))
+            if self.protocol_version >= 759:  # 1.19+
+                self.send_packet("login_start",
+                                 self.buff_type.pack_string(self.factory.profile.display_name),
+                                 self.buff_type.pack("?", False))  # No signature as we haven't implemented them here
+            else:
+                # Send login start
+                self.send_packet("login_start", self.buff_type.pack_string(
+                    self.factory.profile.display_name))
 
     # Callbacks ---------------------------------------------------------------
 
@@ -86,10 +92,18 @@ class ClientProtocol(Protocol):
             pack_array = lambda d: self.buff_type.pack_varint(
                 len(d), max_bits=16) + d
 
-        self.send_packet(
-            "login_encryption_response",
-            pack_array(p_shared_secret) +
-            pack_array(p_verify_token))
+        # 1.19+
+        if self.protocol_version >= 759:
+            self.send_packet(
+                "login_encryption_response",
+                pack_array(p_shared_secret),
+                self.buff_type.pack('?', True),  # Indicate we are still doing things the old way
+                pack_array(p_verify_token))
+        else:
+            self.send_packet(
+                "login_encryption_response",
+                pack_array(p_shared_secret) +
+                pack_array(p_verify_token))
 
         # Enable encryption
         self.cipher.enable(self.shared_secret)
@@ -175,6 +189,9 @@ class ClientProtocol(Protocol):
         else:
             p_uuid = buff.unpack_string()
         p_display_name = buff.unpack_string()
+
+        if self.protocol_version >= 759:
+            buff.read()  # Properties
 
         self.switch_protocol_mode("play")
         self.player_joined()
