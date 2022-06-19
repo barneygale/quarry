@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='quarry',
-    version='1.9.2',  # Also update doc/conf.py
+    version='1.9.3',  # Also update doc/conf.py
     author='Barney Gale',
     author_email='barney@barneygale.co.uk',
     url='https://github.com/barneygale/quarry',
@@ -29,5 +29,7 @@ setup(
     ],
     package_data={'quarry': [
         'data/packets/*.csv',
-        'data/data_packs/*.nbt']},
+        'data/data_packs/*.nbt',
+        'data/keys/*',
+    ]},
 )
