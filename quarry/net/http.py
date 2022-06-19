@@ -40,7 +40,10 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
 
     def _callback(response):
         def _callback2(body):
-            d0.callback(json.loads(body.decode('ascii')))
+            if len(body):
+                d0.callback(json.loads(body.decode('ascii')))
+            else:
+                d0.callback(None)
         d = readBody(response)
         d.addCallback(_callback2)
         return d

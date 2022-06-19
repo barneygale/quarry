@@ -1,7 +1,11 @@
 import base64
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
+from cryptography.hazmat.primitives.hashes import SHA256
 from twisted.internet import reactor, defer
 from cached_property import cached_property
 
+from quarry.net.crypto import import_public_key, verify_mojang_signature
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes
 from quarry.net import auth, crypto
@@ -17,6 +21,7 @@ class ServerProtocol(Protocol):
     uuid = None
     display_name = None
     display_name_confirmed = False
+    public_key = None
 
     # the hostname/port that the client claims it connected to. Useful for
     # implementing virtual hosting.
@@ -52,7 +57,13 @@ class ServerProtocol(Protocol):
                 self.set_compression(self.factory.compression_threshold)
 
             # Send login success
-            if self.protocol_version > 578:
+            if self.protocol_version >= 759:  # 1.19+
+                self.send_packet(
+                    "login_success",
+                    self.buff_type.pack_uuid(self.uuid) +
+                    self.buff_type.pack_string(self.display_name) +
+                    self.buff_type.pack_varint(0))  # Profile properties
+            elif self.protocol_version > 578:
                 self.send_packet(
                     "login_success",
                     self.buff_type.pack_uuid(self.uuid) +
@@ -164,6 +175,23 @@ class ServerProtocol(Protocol):
 
         self.display_name = buff.unpack_string()
 
+        # 1.19+ may send a Mojang signed public key which needs to be verified
+        if self.protocol_version >= 759:
+            if buff.unpack('?'):
+                timestamp = buff.unpack("Q")
+                key_length = buff.unpack_varint()
+                key_bytes = buff.read(key_length)
+                signature_length = buff.unpack_varint()
+                signature = buff.read(signature_length)
+
+                try:
+                    self.public_key = import_public_key(key_bytes)
+                except ValueError:
+                    raise ProtocolError("Unable to parse profile public key")
+
+                if verify_mojang_signature(signature, key_bytes, timestamp) is False:
+                    raise ProtocolError("Invalid signature for profile public key")
+
         if self.factory.online_mode:
             self.login_expecting = 1
 
@@ -203,20 +231,33 @@ class ServerProtocol(Protocol):
             unpack_array = lambda b: b.read(b.unpack_varint(max_bits=16))
 
         p_shared_secret = unpack_array(buff)
+        salt = None
+
+        # 1.19 can now sign the verify token + a salt with the players public key, rather than encrypting the token
+        if self.protocol_version >= 759:
+            if buff.unpack("?") is False:
+                salt = buff.unpack("Q").to_bytes(8, 'big')
+
         p_verify_token = unpack_array(buff)
 
         shared_secret = crypto.decrypt_secret(
             self.factory.keypair,
             p_shared_secret)
 
-        verify_token = crypto.decrypt_secret(
-            self.factory.keypair,
-            p_verify_token)
+        if salt is not None:
+            try:
+                self.public_key.verify(p_verify_token, self.verify_token + salt, PKCS1v15(), SHA256())
+            except InvalidSignature:
+                raise ProtocolError("Verify token incorrect")
+        else:
+            verify_token = crypto.decrypt_secret(
+                self.factory.keypair,
+                p_verify_token)
+
+            if verify_token != self.verify_token:
+                raise ProtocolError("Verify token incorrect")
 
         self.login_expecting = None
-
-        if verify_token != self.verify_token:
-            raise ProtocolError("Verify token incorrect")
 
         # enable encryption
         self.cipher.enable(shared_secret)

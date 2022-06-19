@@ -12,36 +12,49 @@ from quarry.net.proxy import DownstreamFactory, Bridge
 class QuietBridge(Bridge):
     quiet_mode = False
 
+    def packet_upstream_chat_command(self, buff):
+        command = buff.unpack_string()
+
+        if command == "quiet":
+            self.toggle_quiet_mode()
+            buff.discard()
+
+        else:
+            buff.restore()
+            self.upstream.send_packet("chat_command", buff.read())
+
     def packet_upstream_chat_message(self, buff):
         buff.save()
         chat_message = self.read_chat(buff, "upstream")
         self.logger.info(" >> %s" % chat_message)
 
         if chat_message.startswith("/quiet"):
-            # Switch mode
-            self.quiet_mode = not self.quiet_mode
-
-            action = self.quiet_mode and "enabled" or "disabled"
-            msg = "Quiet mode %s" % action
-            self.downstream.send_packet("chat_message",
-                                        self.write_chat(msg, "downstream"))
+            self.toggle_quiet_mode()
 
         elif self.quiet_mode and not chat_message.startswith("/"):
             # Don't let the player send chat messages in quiet mode
             msg = "Can't send messages while in quiet mode"
-            self.downstream.send_packet("chat_message",
-                                        self.write_chat(msg, "downstream"))
+            self.send_system(msg)
 
         else:
             # Pass to upstream
             buff.restore()
             self.upstream.send_packet("chat_message", buff.read())
 
+    def toggle_quiet_mode(self):
+        # Switch mode
+        self.quiet_mode = not self.quiet_mode
+
+        action = self.quiet_mode and "enabled" or "disabled"
+        msg = "Quiet mode %s" % action
+
+        self.send_system(msg)
+
     def packet_downstream_chat_message(self, buff):
         chat_message = self.read_chat(buff, "downstream")
         self.logger.info(" :: %s" % chat_message)
 
-        if self.quiet_mode and chat_message.startswith("<"):
+        if chat_message is not None and self.quiet_mode and chat_message.startswith("<"):
             # Ignore message we're in quiet mode and it looks like chat
             pass
 
@@ -54,38 +67,49 @@ class QuietBridge(Bridge):
         buff.save()
         if direction == "upstream":
             p_text = buff.unpack_string()
+            buff.discard()
+
             return p_text
         elif direction == "downstream":
-            p_text = str(buff.unpack_chat())
+            p_text = buff.unpack_chat().to_string()
+            p_unsigned_text = None
             p_position = 0
-            p_sender = None
 
-            # 1.8.x+
-            if self.upstream.protocol_version >= 47:
+            # 1.19+
+            if self.downstream.protocol_version >= 759:
+                if buff.unpack('?'):
+                    p_unsigned_text = buff.unpack_chat().to_string()
+
+                p_position = buff.unpack_varint()
+                p_sender_uuid = buff.unpack_uuid()
+                p_sender_name = buff.unpack_chat()
+                buff.discard()
+
+                if p_position not in (1, 2):  # Ignore system and game info messages
+                    # Sender name is now sent separately to the message text
+                    return "<%s> %s" % (p_sender_name, p_text or p_unsigned_text)
+
+            elif self.downstream.protocol_version >= 47:  # 1.8.x+
                 p_position = buff.unpack('B')
+                buff.discard()
 
-            # 1.16.x+
-            if self.upstream.protocol_version >= 736:
-                p_sender = buff.unpack_uuid()
+                if p_position not in (1, 2) and p_text.strip():  # Ignore system and game info messages
+                    return p_text
 
-            if p_position in (0, 1):
+            else:
                 return p_text
 
-    def write_chat(self, text, direction):
-        if direction == "upstream":
-            return self.buff_type.pack_string(text)
-        elif direction == "downstream":
-            data = self.buff_type.pack_chat(text)
-
-            # 1.8.x+
-            if self.downstream.protocol_version >= 47:
-                data += self.buff_type.pack('B', 0)
-
-            # 1.16.x+
-            if self.downstream.protocol_version >= 736:
-                data += self.buff_type.pack_uuid(UUID(int=0))
-
-            return data
+    def send_system(self, message):
+        # 1.19+, use system message packet
+        if self.downstream.protocol_version >= 759:
+            self.downstream.send_packet("system_message",
+                                        self.downstream.buff_type.pack_chat(message),
+                                        self.downstream.buff_type.pack_varint(1))
+        else:
+            self.downstream.send_packet("chat_message",
+                                        self.downstream.buff_type.pack_chat(message),
+                                        self.downstream.buff_type.pack('B', 0),
+                                        self.downstream.buff_type.pack_uuid(UUID(int=0)))
 
 
 class QuietDownstreamFactory(DownstreamFactory):
