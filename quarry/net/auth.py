@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 import sys
+
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from twisted.internet import defer
 from quarry.net import http
 from quarry.types.uuid import UUID
@@ -223,6 +225,13 @@ class ProfileCLI(object):
             return Profile.from_file(args.session_name)
         return defer.succeed(
             OfflineProfile.from_display_name(args.offline_name or "quarry"))
+
+
+class PlayerPublicKey:
+    def __init__(self, expiry: int, key: RSAPublicKey, signature: bytes):
+        self.key = key
+        self.signature = signature
+        self.expiry = expiry
 
 
 def has_joined(timeout, digest, display_name, remote_host=None):
