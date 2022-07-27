@@ -1,11 +1,14 @@
 import base64
+import time
+
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.hashes import SHA256
 from twisted.internet import reactor, defer
 from cached_property import cached_property
 
-from quarry.net.crypto import import_public_key, verify_mojang_signature
+from quarry.net.auth import PlayerPublicKey
+from quarry.net.crypto import verify_mojang_v1_signature, verify_mojang_v2_signature
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes
 from quarry.net import auth, crypto
@@ -21,7 +24,7 @@ class ServerProtocol(Protocol):
     uuid = None
     display_name = None
     display_name_confirmed = False
-    public_key = None
+    public_key_data: PlayerPublicKey = None
 
     # the hostname/port that the client claims it connected to. Useful for
     # implementing virtual hosting.
@@ -175,25 +178,33 @@ class ServerProtocol(Protocol):
 
         self.display_name = buff.unpack_string()
 
-        # 1.19+ may send a Mojang signed public key which needs to be verified
-        if self.protocol_version >= 759:
-            if buff.unpack('?'):
-                timestamp = buff.unpack("Q")
-                key_length = buff.unpack_varint()
-                key_bytes = buff.read(key_length)
-                signature_length = buff.unpack_varint()
-                signature = buff.read(signature_length)
+        if self.factory.online_mode:
+            self.login_expecting = 1
 
+            # 1.19+ may send a Mojang signed public key which needs to be verified
+            if self.protocol_version >= 759:
                 try:
-                    self.public_key = import_public_key(key_bytes)
+                    self.public_key_data = buff.unpack_optional(buff.unpack_player_public_key)
                 except ValueError:
                     raise ProtocolError("Unable to parse profile public key")
 
-                if verify_mojang_signature(signature, key_bytes, timestamp) is False:
-                    raise ProtocolError("Invalid signature for profile public key")
+                # Validate public key if present
+                if self.public_key_data is not None:
+                    if self.public_key_data.expiry < time.time():
+                        raise ProtocolError("Expired profile public key")
 
-        if self.factory.online_mode:
-            self.login_expecting = 1
+                    if self.protocol_version >= 760:
+                        uuid = buff.unpack_optional(buff.unpack_uuid)  # 1.19.1+ may also send player UUID
+                        valid = verify_mojang_v2_signature(self.public_key_data, uuid)
+                    else:
+                        valid = verify_mojang_v1_signature(self.public_key_data)
+
+                    if not valid:
+                        raise ProtocolError("Invalid profile public key signature")
+
+                # If secure profiles are required, throw if no public key provided
+                elif self.factory.enforce_secure_profile:
+                    raise ProtocolError("Missing profile public key")
 
             # send encryption request
 
@@ -218,6 +229,8 @@ class ServerProtocol(Protocol):
             self.uuid = UUID.from_offline_player(self.display_name)
 
             self.player_joined()
+
+        buff.discard()
 
     def packet_login_encryption_response(self, buff):
         if self.login_expecting != 1:
@@ -246,7 +259,7 @@ class ServerProtocol(Protocol):
 
         if salt is not None:
             try:
-                self.public_key.verify(p_verify_token, self.verify_token + salt, PKCS1v15(), SHA256())
+                self.public_key_data.key.verify(p_verify_token, self.verify_token + salt, PKCS1v15(), SHA256())
             except InvalidSignature:
                 raise ProtocolError("Verify token incorrect")
         else:
@@ -321,6 +334,7 @@ class ServerFactory(Factory):
     max_players = 20
     icon_path = None
     online_mode = True
+    enforce_secure_profile = False
     prevent_proxy_connections = True
     compression_threshold = 256
     auth_timeout = 30
