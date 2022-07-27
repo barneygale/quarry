@@ -40,7 +40,13 @@ class ClientProtocol(Protocol):
 
         elif mode == "login":
             # Send login start
-            if self.protocol_version >= 759:  # 1.19+
+            # TODO: Implement signatures/1.19.1 UUID sending
+            if self.protocol_version >= 760:  # 1.19.1+
+                self.send_packet("login_start",
+                                 self.buff_type.pack_string(self.factory.profile.display_name),
+                                 self.buff_type.pack("?", False),  # No signature as we haven't implemented them here
+                                 self.buff_type.pack("?", False))  # No UUID as we haven't implemented them yet
+            elif self.protocol_version == 759:  # 1.19
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
                                  self.buff_type.pack("?", False))  # No signature as we haven't implemented them here
