@@ -10,6 +10,9 @@ from cryptography.hazmat.primitives.ciphers import algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+from quarry.net.auth import PlayerPublicKey
 
 backend = default_backend()
 
@@ -122,13 +125,30 @@ def get_yggdrasil_session_key():
     return _yggdrasil_key
 
 
-def verify_mojang_signature(signature, key, timestamp):
+# Verify 1.19 signature
+def verify_mojang_v1_signature(data: PlayerPublicKey):
     # Need key in PEM format
-    e = "-----BEGIN RSA PUBLIC KEY-----\n" + base64.encodebytes(key).decode('ISO-8859-1') + "-----END RSA PUBLIC KEY-----\n"
+    key_text = base64.encodebytes(data.key.public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)).decode('ISO-8859-1')
+    e = "-----BEGIN RSA PUBLIC KEY-----\n" + key_text + "-----END RSA PUBLIC KEY-----\n"
 
     try:
         # Signature is timestamp as string + public key in PEM format
-        get_yggdrasil_session_key().verify(signature, bytes(str(timestamp) + e, 'ascii'), PKCS1v15(), SHA1())
+        get_yggdrasil_session_key().verify(data.signature, bytes(str(data.expiry) + e, 'ascii'), PKCS1v15(), SHA1())
+        return True
+    except InvalidSignature:
+        return False
+
+
+# Verify 1.19.1+ signature
+def verify_mojang_v2_signature(data: PlayerPublicKey, uuid):
+    if uuid is None:
+        return False
+
+    try:
+        # Signature is uuid bytes + timestamp bytes + public key bytes
+        key_bytes = data.key.public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
+        get_yggdrasil_session_key()\
+            .verify(data.signature, uuid.bytes + data.expiry.to_bytes(8, 'big') + key_bytes, PKCS1v15(), SHA1())
         return True
     except InvalidSignature:
         return False

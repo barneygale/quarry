@@ -5,6 +5,10 @@ This server authenticates players, then spawns them in an empty world and does
 the bare minimum to keep them in-game. Players can speak to each other using
 chat.
 
+No attempt is made to handle signed chat messages. 1.19+ clients will receive
+system messages instead. See server_chat_room_advanced.py for an implementation
+which does handle signed chat.
+
 Supports Minecraft 1.16.3+.
 """
 
@@ -84,13 +88,13 @@ class ChatRoomProtocol(ServerProtocol):
         self.ticker.add_loop(20, self.update_keep_alive)
 
         # Announce player joined
-        self.factory.send_system("\u00a7e%s has joined." % self.display_name)
+        self.factory.send_chat("\u00a7e%s has joined." % self.display_name)
 
     def player_left(self):
         ServerProtocol.player_left(self)
 
         # Announce player left
-        self.factory.send_system("\u00a7e%s has left." % self.display_name)
+        self.factory.send_chat("\u00a7e%s has left." % self.display_name)
 
     def update_keep_alive(self):
         # Send a "Keep Alive" packet
@@ -99,67 +103,37 @@ class ChatRoomProtocol(ServerProtocol):
     def packet_chat_message(self, buff):
         # When we receive a chat message from the player, ask the factory
         # to relay it to all connected players
-        self.factory.send_chat(buff, self.uuid, self.display_name, self.protocol_version >= 759)
+        p_text = buff.unpack_string()
+        self.factory.send_chat("<%s> %s" % (self.display_name, p_text),
+                               sender=self.uuid)
+
+        buff.discard()
 
 
 class ChatRoomFactory(ServerFactory):
     protocol = ChatRoomProtocol
     motd = "Chat Room Server"
 
-    def send_chat(self, packet, sender, sender_name, signed):
-        message = packet.unpack_string()
-        timestamp = None
-        salt = None
-        signature_length = 0
-        signature = None
-        previewed = False
-
-        if signed:
-            timestamp = packet.unpack('Q')
-            salt = packet.unpack('Q')
-            signature_length = packet.unpack_varint()
-            signature = packet.read(signature_length)
-            previewed = packet.unpack('?')
+    def send_chat(self, message, sender=None):
+        if sender is None:
+            sender = UUID(int=0)
 
         for player in self.players:
-            # 1.19+, type is now varint
+            # 1.19+: Use new system message packet to avoid dealing with signatures
             if player.protocol_version >= 759:
-                # Signed, send message with signature
-                if signature is not None and len(signature):
-                    player.send_packet("chat_message",
-                                       player.buff_type.pack_chat(message),  # Signed message
-                                       player.buff_type.pack('?', False),  # No unsigned content
-                                       player.buff_type.pack_varint(0),  # Message type
-                                       player.buff_type.pack_uuid(sender),  # Sender UUID
-                                       player.buff_type.pack_chat(sender_name),  # Sender display name
-                                       player.buff_type.pack('?', False),  # No team name
-                                       player.buff_type.pack('QQ', timestamp, salt),  # Timestamp, salt
-                                       player.buff_type.pack_varint(signature_length),  # Signature length
-                                       # Timestamp, signature length
-                                       signature)  # Signature
-                else:  # Not signed, send as system message to avoid client warnings
+                if player.protocol_version >= 760:  # 1.19.1 uses a boolean for whether to show message in action bar
                     player.send_packet("system_message",
-                                       player.buff_type.pack_chat("<%s> %s" % (sender_name, message)),
+                                       player.buff_type.pack_chat(message),
+                                       player.buff_type.pack('?', False))
+                else:  # 1.19 uses varint for message location like regular chat
+                    player.send_packet("system_message",
+                                       player.buff_type.pack_chat(message),
                                        player.buff_type.pack_varint(1))
             else:
-                # Ignore signature as not supported by client
                 player.send_packet("chat_message",
-                                   player.buff_type.pack_chat("<%s> %s" % (sender_name, message)),
+                                   player.buff_type.pack_chat(message),
                                    player.buff_type.pack('B', 0),
                                    player.buff_type.pack_uuid(sender))
-
-    def send_system(self, message):
-        for player in self.players:
-            # 1.19+, use system message packet
-            if player.protocol_version >= 759:
-                player.send_packet("system_message",
-                                   player.buff_type.pack_chat(message),
-                                   player.buff_type.pack_varint(1))
-            else:
-                player.send_packet("chat_message",
-                                   player.buff_type.pack_chat(message),
-                                   player.buff_type.pack('B', 0),
-                                   player.buff_type.pack_uuid(UUID(int=0)))
 
 
 def main(argv):
