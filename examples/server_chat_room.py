@@ -71,7 +71,6 @@ class ChatRoomProtocol(ServerProtocol):
         # Send "Join Game" packet
         self.send_packet("join_game", *join_game)
 
-
         # Send "Player Position and Look" packet
         self.send_packet(
             "player_position_and_look",
@@ -106,6 +105,8 @@ class ChatRoomProtocol(ServerProtocol):
         p_text = buff.unpack_string()
         self.factory.send_chat("<%s> %s" % (self.display_name, p_text),
                                sender=self.uuid)
+
+        print("<%s> %s" % (self.display_name, p_text))
 
         buff.discard()
 
