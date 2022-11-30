@@ -6,6 +6,7 @@ import sys
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from twisted.internet import defer
 from quarry.net import http
+from quarry.types.certificate import CertificatePair
 from quarry.types.uuid import UUID
 
 if sys.version_info[0] == 2:
@@ -39,11 +40,13 @@ class Profile(object):
     online = True
     timeout = 30
 
-    def __init__(self, client_token, access_token, display_name, uuid):
+    def __init__(self, client_token, access_token, display_name, uuid, certificates=None):
         self.client_token = client_token
         self.access_token = access_token
         self.display_name = display_name
         self.uuid = uuid
+        self.certificates = CertificatePair.from_dict(certificates) if certificates else None
+        self.enable_signing = self.certificates is not None
 
     def join(self, digest, refresh=True):
         d1 = http.request(
@@ -75,6 +78,35 @@ class Profile(object):
         d1.addCallbacks(_callback, d0.errback)
         return d0
 
+    def _get_certificates(self):
+        d0 = defer.Deferred()
+
+        def _callback(data):
+            keyPair = data["keyPair"]
+            d0.callback(CertificatePair(keyPair["privateKey"], keyPair["publicKey"], data["publicKeySignature"],
+                                        data["publicKeySignatureV2"], data["expiresAt"]))
+
+        # TODO "post" is to force http.request to send a POST request, which shouldn't be required
+        d1 = self._request_services(b"player/certificates", post=True)
+        d1.addCallbacks(_callback, d0.errback)
+        return d0
+
+    def use_signing(self):
+        d0 = defer.Deferred()
+
+        def _callback(data):
+            self.certificates = data
+            self.enable_signing = True
+            d0.callback(self.certificates)
+
+        if not self.certificates or self.certificates.is_expired():
+            d1 = self._get_certificates()
+            d1.addCallbacks(_callback, d0.errback)
+            return d0
+        else:
+            self.enable_signing = True
+            return self.certificates
+
     def refresh(self):
         d0 = defer.Deferred()
 
@@ -100,7 +132,11 @@ class Profile(object):
                     self.uuid.to_hex(False): {
                         "displayName": self.display_name,
                         "accessToken": self.access_token,
-                        "uuid": self.uuid.to_hex(True)}}}, fd)
+                        "uuid": self.uuid.to_hex(True)
+                    }
+                },
+                "certificates": self.certificates.to_dict() if self.certificates else None
+            }, fd)
 
     @classmethod
     def from_credentials(cls, email, password):
@@ -130,9 +166,9 @@ class Profile(object):
         return d0
 
     @classmethod
-    def from_token(cls, client_token, access_token, display_name, uuid):
+    def from_token(cls, client_token, access_token, display_name, uuid, certificates=None):
         obj = cls(client_token, access_token,
-                  display_name, UUID.from_hex(uuid))
+                  display_name, UUID.from_hex(uuid), certificates=certificates)
         return obj.validate()
 
     @classmethod
@@ -144,6 +180,7 @@ class Profile(object):
             data = json.load(fd)
 
         client_token = data["clientToken"]
+        certificates = data["certificates"]
 
         if display_name is None and uuid is None:
             uuid = data["selectedUser"]["profile"]
@@ -158,7 +195,7 @@ class Profile(object):
                 if display_name and display_name != p_display_name:
                     continue
                 return cls.from_token(client_token, access_token,
-                                      p_display_name, p_uuid)
+                                      p_display_name, p_uuid, certificates=certificates)
 
     @classmethod
     def _from_response(cls, response):
@@ -175,6 +212,15 @@ class Profile(object):
             timeout=cls.timeout,
             err_type=ProfileException,
             data=data)
+
+    def _request_services(self, endpoint, **data):
+        return http.request(
+            url=b"https://api.minecraftservices.com/" + endpoint,
+            timeout=self.timeout,
+            err_type=ProfileException,
+            data=data,
+            headers={"Authorization": [f"Bearer {self.access_token}"]}
+        )
 
     @classmethod
     def _get_profiles_path(cls):
