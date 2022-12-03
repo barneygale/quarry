@@ -162,7 +162,7 @@ class Profile(object):
                                       p_display_name, p_uuid)
 
     @classmethod
-    def from_token(cls, bearer_token):
+    def from_bearer_token(cls, bearer_token):
         headers = {'Authorization': f'Bearer {bearer_token}'}
         response = requests.get("https://api.minecraftservices.com/minecraft/profile", headers=headers).json()
         player_uuid = UUID.from_hex(response['id'])
@@ -239,7 +239,7 @@ class ProfileCLI(object):
         if args.session_name:
             return Profile.from_file(args.session_name)
         if args.bearer_token:
-            return Profile.from_token(args.bearer_token)
+            return Profile.from_bearer_token(args.bearer_token)
         return defer.succeed(
             OfflineProfile.from_display_name(args.offline_name or "quarry"))
 
