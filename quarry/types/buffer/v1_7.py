@@ -224,7 +224,7 @@ class Buffer1_7(object):
     @classmethod
     def pack_packet(cls, data, compression_threshold=-1):
         """
-        Unpacks a packet frame. This method handles length-prefixing and
+        Packs a packet frame. This method handles length-prefixing and
         compression.
         """
 
