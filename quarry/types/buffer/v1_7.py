@@ -138,13 +138,13 @@ class Buffer1_7(object):
     @classmethod
     def pack_byte_array(cls, data):
         """
-        Packs an array of bytes preceded by variant denoting the array length.
+        Packs an array of bytes preceded by varint denoting the array length.
         """
         return cls.pack_varint(len(data)) + data
 
     def unpack_byte_array(self):
         """
-        Unpack an array of bytes preceded by variant denoting the array length.
+        Unpack an array of bytes preceded by varint denoting the array length.
         """
         return self.read(self.unpack_varint())
 
