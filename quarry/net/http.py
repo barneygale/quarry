@@ -35,7 +35,7 @@ class BytesProducer:
         pass
 
 
-def request(url, timeout, err_type=Exception, expect_content=False, data=None):
+def request(url, timeout, err_type=Exception, expect_content=False, data=None, headers=None):
     d0 = defer.Deferred()
 
     def _callback(response):
@@ -67,15 +67,19 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
 
     agent = Agent(reactor)
 
+    if headers is None:
+        headers = {}
+
     if data:
+        headers.update({"Content-Type": ["application/json"]})
         d1 = agent.request(
             b'POST',
             url,
-            Headers({"Content-Type": ["application/json"]}),
+            Headers(headers),
             BytesProducer(json.dumps(data).encode('ascii')),
         )
     else:
-        d1 = agent.request(b'GET', url)
+        d1 = agent.request(b'GET', url, Headers(headers))
 
     d1.addCallbacks(_callback, _errback)
 

@@ -1,9 +1,17 @@
+import re
+
+import base64
+import os
+from OpenSSL import crypto as ssl_crypto
+
 from twisted.internet import reactor, protocol, defer
 from twisted.python import failure
+from quarry.types.certificate import CertificatePair
 
 from quarry.types.chat import Message
 from quarry.net.protocol import Factory, Protocol, ProtocolError, \
     protocol_modes_inv
+from quarry.net.auth import Profile, OfflineProfile
 from quarry.net import auth, crypto
 
 
@@ -41,15 +49,37 @@ class ClientProtocol(Protocol):
         elif mode == "login":
             # Send login start
             # TODO: Implement signatures/1.19.1 UUID sending
+            profile: Profile = self.factory.profile
+            can_use_signing_data = (
+                    profile.online
+                    and isinstance(profile, Profile)
+                    and profile.enable_signing
+                    and profile.certificates is not None
+            )
+            signature = [self.buff_type.pack("?", can_use_signing_data)]
+            uuid = [self.buff_type.pack("?", can_use_signing_data)]
+            if can_use_signing_data:
+                cert = profile.certificates
+                public_key = CertificatePair.convert_public_key(cert.public)
+                pk_len = len(public_key)
+                signature += [
+                    self.buff_type.pack("q", int(cert.expires.timestamp() * 1000)),  # Time the certificate expires
+                    self.buff_type.pack_varint(pk_len),
+                    self.buff_type.pack(f'{pk_len}s', public_key),  # Public Key (incl. Length)
+                    self.buff_type.pack_byte_array(base64.b64decode(cert.signature2)),  # Signature (incl. Length)
+                ]
+                uuid += [
+                    self.buff_type.pack_uuid(profile.uuid),
+                ]
             if self.protocol_version >= 760:  # 1.19.1+
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
-                                 self.buff_type.pack("?", False),  # No signature as we haven't implemented them here
-                                 self.buff_type.pack("?", False))  # No UUID as we haven't implemented them yet
+                                 *signature,
+                                 *uuid)
             elif self.protocol_version == 759:  # 1.19
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
-                                 self.buff_type.pack("?", False))  # No signature as we haven't implemented them here
+                                 *signature)  # No signature as we haven't implemented them here
             else:
                 # Send login start
                 self.send_packet("login_start", self.buff_type.pack_string(
@@ -98,13 +128,60 @@ class ClientProtocol(Protocol):
             pack_array = lambda d: self.buff_type.pack_varint(
                 len(d), max_bits=16) + d
 
+        # Notes on 1.19+ encryption (from wiki.vg, testing, and Yarn mappings of a 1.19.2 Fabric server)
+        # Mapping help: https://linkie.shedaniel.me/mappings?namespace=yarn&version=1.19.2&translateAs=mojang&search=
+        #
+        # read_either: one bit (true/false) to indicate which of the following two fields is present
+        # token case:
+        # + first bit is 1
+        # + send over pre-encrypted p_verify_token as-is
+        #
+        # signature case:
+        # - first bit is 0
+        # - vanilla server calls SignatureData::new (Yarn 1.19.2)
+        # - ordering in packet: readLong -> salt; readByteArray -> signature
+        # - !! Don't sign the encrypted p_verify_token, sign the UNENCRYPTED self.verify_token !!
+        # - 1. generate random 8 bytes ("salt" or "seed" depending on context)
+        # - 2. sign the verify_token with the private key, specifically verify_token concat with salt
+        # - 3. send the signed verify_token + salt (bytes) back
+
         # 1.19+
         if self.protocol_version >= 759:
+            profile: Profile = self.factory.profile
+            can_use_signing_data = (
+                    profile.online
+                    and isinstance(profile, Profile)
+                    and profile.enable_signing
+                    and profile.certificates is not None
+            )
+            # true = old way; false = new way
+            verify = [self.buff_type.pack("?", not can_use_signing_data)]
+            if not can_use_signing_data:
+                verify += [pack_array(p_verify_token)]
+            else:
+                salt = bytearray(os.urandom(8))
+                nonce = self.verify_token  # NOT p_verify_token!!
+                salt_number = int.from_bytes(salt, "big")
+
+                # Can't + bytes to concatenate, temporarily switch to bytearray
+                what_to_sign = bytearray(nonce) + salt
+                key = ssl_crypto.load_privatekey(
+                    ssl_crypto.FILETYPE_PEM,
+                    profile.certificates.private
+                )
+                signature = ssl_crypto.sign(
+                    key,
+                    bytes(what_to_sign),  # Switch back to bytes for signing
+                    "sha256"
+                )
+                verify += [
+                    self.buff_type.pack('Q', salt_number),
+                    self.buff_type.pack_byte_array(signature)
+                ]
             self.send_packet(
                 "login_encryption_response",
                 pack_array(p_shared_secret),
-                self.buff_type.pack('?', True),  # Indicate we are still doing things the old way
-                pack_array(p_verify_token))
+                *verify)
         else:
             self.send_packet(
                 "login_encryption_response",
