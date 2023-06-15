@@ -68,8 +68,13 @@ class ChatRoomProtocol(ServerProtocol):
 
         if self.protocol_version >= 759:  # 1.19
             join_game.append(self.buff_type.pack("?", False))
+
         # Send "Join Game" packet
         self.send_packet("join_game", *join_game)
+
+        # 1.19.3+ Send default spawn position, required to hide Loading Terrain screen
+        if self.protocol_version >= 761:
+            self.send_packet("spawn_position", self.buff_type.pack("iii", 0, 0, 0))
 
         # Send "Player Position and Look" packet
         self.send_packet(

@@ -40,13 +40,17 @@ class ClientProtocol(Protocol):
 
         elif mode == "login":
             # Send login start
-            # TODO: Implement signatures/1.19.1 UUID sending
-            if self.protocol_version >= 760:  # 1.19.1+
+            # TODO: Implement signature/UUID sending
+            if self.protocol_version >= 761:  # 1.19.3+ sends optional UUID
+                self.send_packet("login_start",
+                                 self.buff_type.pack_string(self.factory.profile.display_name),
+                                 self.buff_type.pack("?", False))  # No UUID as we haven't implemented them yet
+            elif self.protocol_version >= 760:  # 1.19.1 sends optional signature and uuid
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
                                  self.buff_type.pack("?", False),  # No signature as we haven't implemented them here
                                  self.buff_type.pack("?", False))  # No UUID as we haven't implemented them yet
-            elif self.protocol_version == 759:  # 1.19
+            elif self.protocol_version == 759:  # 1.19 sends optional signature
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
                                  self.buff_type.pack("?", False))  # No signature as we haven't implemented them here
@@ -98,8 +102,8 @@ class ClientProtocol(Protocol):
             pack_array = lambda d: self.buff_type.pack_varint(
                 len(d), max_bits=16) + d
 
-        # 1.19+
-        if self.protocol_version >= 759:
+        # 1.19 - 1.19.2
+        if 759 <= self.protocol_version < 761:
             self.send_packet(
                 "login_encryption_response",
                 pack_array(p_shared_secret),

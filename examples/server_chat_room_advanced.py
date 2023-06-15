@@ -34,19 +34,15 @@ class ChatRoomProtocol(ServerProtocol):
         #   in-game, and does some logging.
         ServerProtocol.player_joined(self)
 
-        # Send server data packet on 1.19+
-        if self.protocol_version >= 760:
-            self.send_packet('server_data',
-                             self.buff_type.pack('????',
-                                                 False,                      # Optional description
-                                                 False,                      # Optional favicon
-                                                 False,                      # Disable chat previews
-                                                 self.factory.online_mode))  # Enforce chat signing when in online mode
-        elif self.protocol_version == 759:  # 1.19 lacks enforce chat signing field
-            self.send_packet('server_data', self.buff_type.pack('???', False, False, False))
+        # Send server data
+        self.factory.send_server_data(self)
 
         # Send join game packet
         self.factory.send_join_game(self)
+
+        # 1.19.3+ Send default spawn position, required to hide Loading Terrain screen
+        if self.protocol_version >= 761:
+            self.send_packet("spawn_position", self.buff_type.pack("iii", 0, 0, 0))
 
         # Send "Player Position and Look" packet
         self.send_packet(
@@ -225,6 +221,27 @@ class ChatRoomFactory(ServerFactory):
     protocol = ChatRoomProtocol
     motd = "Chat Room Server"
 
+    def send_server_data(self, player):
+        # 1.19.3+ removed chat preview field
+        if player.protocol_version >= 761:
+            player.send_packet('server_data',
+                               player.buff_type.pack('???',
+                                                     False,
+                                                     False,
+                                                     self.online_mode))  # Enforce chat signing when in online mode
+
+        # 1.19 added enforce chat signing field
+        elif player.protocol_version >= 760:
+            player.send_packet('server_data',
+                               player.buff_type.pack('????',
+                                                     False,
+                                                     False,
+                                                     False,
+                                                     self.online_mode))  # Enforce chat signing when in online mode
+
+        elif player.protocol_version == 759:
+            player.send_packet('server_data', self.buff_type.pack('???', False, False, False))
+
     def send_join_game(self, player):
         # Build up fields for "Join Game" packet
         entity_id = 0
@@ -375,10 +392,17 @@ class ChatRoomFactory(ServerFactory):
 
     @staticmethod
     def send_player_list_add(player: ChatRoomProtocol, added: List[ChatRoomProtocol]):
-        data = [
-            player.buff_type.pack_varint(0),  # Action - 0 = Player add
-            player.buff_type.pack_varint(len(added)),  # Player entry count
-        ]
+        data = []
+
+        # 1.19.3+ splits the player list into separate remove and update packets (which also add players)
+        # Update packets use a bitset to indicate which player information is being added/updated
+        if player.protocol_version >= 761:
+            data.append(player.buff_type.pack('B', 63))  # Set first 6 bits to indicate all fields are being updated
+
+        else:  # Older versions have a single packet with a varint for "action", 0 being adding a player
+            data.append(player.buff_type.pack_varint(0))
+
+        data.append(player.buff_type.pack_varint(len(added)))  # Player entry count
 
         for entry in added:
             if entry.protocol_mode != 'play':
@@ -387,12 +411,22 @@ class ChatRoomFactory(ServerFactory):
             data.append(player.buff_type.pack_uuid(entry.uuid))  # Player UUID
             data.append(player.buff_type.pack_string(entry.display_name))  # Player name
             data.append(player.buff_type.pack_varint(0))  # Empty properties list
+
+            # 1.19.3+ include the players public key here
+            if player.protocol_version >= 761:
+                data.append(player.buff_type.pack('?', False))
+
             data.append(player.buff_type.pack_varint(3))  # Gamemode
+
+            # 1.19.3+ includes an extra field for whether to update the tab list
+            if player.protocol_version >= 761:
+                data.append(player.buff_type.pack('?', True))
+
             data.append(player.buff_type.pack_varint(0))  # Latency
             data.append(player.buff_type.pack('?', False))  # No display name
 
-            # Add signature for 1.19+ clients if it exists
-            if player.protocol_version >= 759:
+            # 1.19 - 1.19.1 include the players public key here
+            if 759 <= player.protocol_version < 761:
                 data.append(player.buff_type.pack_optional(player.buff_type.pack_player_public_key, entry.public_key_data))
 
         player.send_packet('player_list_item', *data)
@@ -401,10 +435,16 @@ class ChatRoomFactory(ServerFactory):
     def broadcast_player_list_remove(self, removed: ChatRoomProtocol):
         for player in self.players:
             if player.protocol_mode == 'play' and player != removed:
-                player.send_packet('player_list_item',
-                                   player.buff_type.pack_varint(4),  # Action - 4 = Player remove
-                                   player.buff_type.pack_varint(1),  # Player entry count
-                                   player.buff_type.pack_uuid(removed.uuid))  # Player UUID
+
+                if player.protocol_version >= 761:  # 1.19.3 has separate packet for player list removals
+                    player.send_packet('player_list_remove',
+                                       player.buff_type.pack_varint(1),  # Player entry count
+                                       player.buff_type.pack_uuid(removed.uuid))  # Player UUID
+                else:
+                    player.send_packet('player_list_item',
+                                       player.buff_type.pack_varint(4),  # Action - 4 = Player remove
+                                       player.buff_type.pack_varint(1),  # Player entry count
+                                       player.buff_type.pack_uuid(removed.uuid))  # Player UUID
 
 
 def main(argv):

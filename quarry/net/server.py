@@ -181,8 +181,8 @@ class ServerProtocol(Protocol):
         if self.factory.online_mode:
             self.login_expecting = 1
 
-            # 1.19+ may send a Mojang signed public key which needs to be verified
-            if self.protocol_version >= 759:
+            # 1.19 - 1.19.2 may send a Mojang signed public key which needs to be verified
+            if 759 <= self.protocol_version < 761:
                 try:
                     self.public_key_data = buff.unpack_optional(buff.unpack_player_public_key)
                 except ValueError:
@@ -246,8 +246,8 @@ class ServerProtocol(Protocol):
         p_shared_secret = unpack_array(buff)
         salt = None
 
-        # 1.19 can now sign the verify token + a salt with the players public key, rather than encrypting the token
-        if self.protocol_version >= 759:
+        # 1.19 - 1.19.2 can now sign the verify token + a salt with the players public key, rather than encrypting the token
+        if 759 <= self.protocol_version < 761:
             if buff.unpack("?") is False:
                 salt = buff.unpack("Q").to_bytes(8, 'big')
 
