@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import sys
+import requests
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from twisted.internet import defer
@@ -161,6 +162,14 @@ class Profile(object):
                                       p_display_name, p_uuid)
 
     @classmethod
+    def from_bearer_token(cls, bearer_token):
+        headers = {'Authorization': f'Bearer {bearer_token}'}
+        response = requests.get("https://api.minecraftservices.com/minecraft/profile", headers=headers).json()
+        player_uuid = UUID.from_hex(response['id'])
+        player_username = response['name']
+        return Profile('(skip)', bearer_token, player_username, player_uuid)
+
+    @classmethod
     def _from_response(cls, response):
         return cls(
             response['clientToken'],
@@ -214,6 +223,12 @@ class ProfileCLI(object):
             help="Sets the offline display name to use. If none of these "
                  "options are given, quarry uses 'quarry' as an offline "
                  "display name.")
+        group.add_argument(
+            "--bearer-token",
+            metavar="BEARER_TOKEN",
+            help="Logs in using a bearer token. This is used by the official "
+                 "client to log in to a Microsoft account."
+                 "See https://kqzz.github.io/mc-bearer-token/ for more info.")
         return parser
 
     @classmethod
@@ -223,6 +238,8 @@ class ProfileCLI(object):
             return Profile.from_credentials(email, password)
         if args.session_name:
             return Profile.from_file(args.session_name)
+        if args.bearer_token:
+            return Profile.from_bearer_token(args.bearer_token)
         return defer.succeed(
             OfflineProfile.from_display_name(args.offline_name or "quarry"))
 
