@@ -41,7 +41,11 @@ class ClientProtocol(Protocol):
         elif mode == "login":
             # Send login start
             # TODO: Implement signatures/1.19.1 UUID sending
-            if self.protocol_version >= 760:  # 1.19.1+
+            if self.protocol_version >= 765:
+                self.send_packet("login_start",
+                                 self.buff_type.pack_string(self.factory.profile.display_name),
+                                 self.buff_type.pack_uuid(self.factory.profile.uuid)) 
+            elif self.protocol_version >= 760:  # 1.19.1+
                 self.send_packet("login_start",
                                  self.buff_type.pack_string(self.factory.profile.display_name),
                                  self.buff_type.pack("?", False),  # No signature as we haven't implemented them here
@@ -198,7 +202,10 @@ class ClientProtocol(Protocol):
 
         if self.protocol_version >= 759:
             buff.read()  # Properties
-
+        
+        if self.protocol_version >= 765:
+            self.send_packet("login_acknowledged", self.buff_type.pack_loginAck())
+            
         self.switch_protocol_mode("play")
         self.player_joined()
 
@@ -207,7 +214,7 @@ class ClientProtocol(Protocol):
 
     def packet_set_compression(self, buff):
         self.set_compression(buff.unpack_varint())
-
+        
     packet_disconnect = packet_login_disconnect
 
 

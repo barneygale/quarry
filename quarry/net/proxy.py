@@ -98,7 +98,7 @@ class Bridge(PacketDispatcher):
         Returns the profile to use for the upstream connection. By default, use
         an offline profile with the same display name as the remote client.
         """
-        return OfflineProfile(self.downstream.display_name)
+        return OfflineProfile(self.downstream.display_name, self.downstream.uuid)
 
     def connect(self):
         """

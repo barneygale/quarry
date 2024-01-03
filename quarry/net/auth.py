@@ -27,12 +27,17 @@ class AuthException(http.HTTPException):
 class OfflineProfile(object):
     online = False
 
-    def __init__(self, display_name="quarry"):
+    def __init__(self, display_name="quarry", uuid="00000000-0000-0000-0000-000000000000"):
         self.display_name = display_name
+        self.uuid = uuid
 
     @classmethod
     def from_display_name(cls, display_name):
         return cls(display_name)
+    
+    @classmethod
+    def from_uuid(cls, uuid):
+        return cls(uuid)
 
 
 class Profile(object):
