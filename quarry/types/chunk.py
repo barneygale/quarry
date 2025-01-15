@@ -150,7 +150,7 @@ class PackedArray(Sequence):
         values_per_sector = self.sector_width // self.value_width
         sector_count = 1 + (self.length - 1) // values_per_sector
         self.storage.clear()
-        self.storage.append(self.sector_width * sector_count)
+        self.storage.append(BitArray(self.sector_width * sector_count))
 
     def pos(self, idx):
         """
@@ -193,12 +193,12 @@ class PackedArray(Sequence):
         if isinstance(item, slice):
             for idx, value in zip(range(*item.indices(len(self))), value):
                 self.storage._overwrite(
-                    bs=Bits(uint=value, length=self.value_width),
-                    pos=self.pos(idx)[0])
+                    Bits(uint=value, length=self.value_width),
+                    self.pos(idx)[0])
         else:
             self.storage._overwrite(
-                bs=Bits(uint=value, length=self.value_width),
-                pos=self.pos(item)[0])
+                Bits(uint=value, length=self.value_width),
+                self.pos(item)[0])
 
 
 class BlockArray(Sequence):

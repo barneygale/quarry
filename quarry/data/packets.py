@@ -14,7 +14,7 @@ def _load():
         "packets",
         "*.csv"))
     for csv_path in glob.glob(csv_paths):
-        match = re.match('(\d{4})_(.+)\.csv', os.path.basename(csv_path))
+        match = re.match(r'(\d{4})_(.+)\.csv', os.path.basename(csv_path))
         if not match:
             continue
 
