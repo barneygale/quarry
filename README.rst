@@ -19,7 +19,7 @@ Features
 --------
 
 - Supports Minecraft versions 1.7 through 1.19.2
-- Supports Python 3.7+
+- Supports Python 3.9+
 - Built upon ``twisted`` and ``cryptography``
 - Exposes base classes and hooks for implementing your own client, server or
   proxy
