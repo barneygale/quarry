@@ -72,27 +72,14 @@ class Buffer1_7(object):
         return data
 
     def hexdump(self):
-        data = self.buff[self.pos:]
-        lines = ['']
-        bytes_read = 0
-        while len(data) > 0:
-            data_line, data = data[:16], data[16:]
-
-            l_hex = []
-            l_str = []
-            for i, c in enumerate(data_line):
-                l_hex.append(f"{c:02x}")
-                c_str = data_line[i:i + 1]
-                l_str.append(c_str if c_str in string.printable else ".")
-
-            l_hex.extend(['  '] * (16 - len(l_hex)))
-            l_hex.insert(8, '')
-
-            lines.append(f"{bytes_read:08x}  {' '.join(l_hex)}  |{''.join(l_str)}|")
-
-            bytes_read += len(data_line)
-
-        return "\n    ".join(lines + [f"{bytes_read:08x}"])
+        data = self.buff[0:]
+        dump = ""
+        for chunk in [data[i:i+16] for i in range(0, len(data), 16)]:
+            #print(chunk)
+            hexes = " ".join(["{:02X}".format(n) for n in chunk]).ljust(49)
+            asciirep = "".join([chr(n) if chr(n).isprintable() else "." for n in chunk])
+            dump += hexes + asciirep + "\n"
+        return dump
 
     # Basic data types --------------------------------------------------------
 
