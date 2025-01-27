@@ -40,6 +40,12 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
 
     def _callback(response):
         def _callback2(body):
+            if expect_content:
+                if len(body) == 0 or response.code == 204:
+                    err = failure.Failure(err_type(
+                        "No Content",
+                        f"No content was returned by the server for the url {url}"))
+                    d0.errback(err)
             if len(body):
                 d0.callback(json.loads(body.decode('ascii')))
             else:
@@ -54,7 +60,7 @@ def request(url, timeout, err_type=Exception, expect_content=False, data=None):
                 if expect_content:
                     err = failure.Failure(err_type(
                         "No Content",
-                        "No content was returned by the server"))
+                        f"No content was returned by the server for the url {url}"))
                 else:
                     d0.callback(None)
                     return
